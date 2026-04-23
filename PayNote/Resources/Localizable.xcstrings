@@ -1124,13 +1124,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add Payment"
+            "value": "Pay or Charge"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "新しいキャッシュレス決済"
+            "value": "新しい決済やチャージ"
           }
         }
       }
@@ -1855,13 +1855,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add Payment"
+            "value": "Pay or Charge"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "新しいキャッシュレス決済"
+            "value": "新しい決済やチャージ"
           }
         }
       }
