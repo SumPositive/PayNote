@@ -789,6 +789,51 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Reset Database" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "データベースをリセット" } }
       }
+    },
+
+    "button.ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "OK" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "OK" } }
+      }
+    },
+
+    "label.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "すべて" } }
+      }
+    },
+    "label.total" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Total" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "合計" } }
+      }
+    },
+    "label.cards" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "cards" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "枚" } }
+      }
+    },
+    "label.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No Items" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "データなし" } }
+      }
+    },
+
+    "alert.saved" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Saved" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "保存しました" } }
+      }
     }
 
   },

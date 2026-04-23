@@ -92,7 +92,7 @@ struct NumericKeypadSheet: View {
             next = digits + suffix
         }
         guard let value = Decimal(string: next), value >= 0 else { return }
-        let maxStr = "\(Int(maxValue.roundedAmount()))"
+        let maxStr = "\((maxValue.roundedAmount() as NSDecimalNumber).intValue)"
         guard next.count <= maxStr.count else { return }
         guard value <= maxValue else { return }
         digits = next

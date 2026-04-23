@@ -6,6 +6,8 @@ enum AppStorageKey {
     static let enableInstallment = "setting.enableInstallment"
     static let roundBankers      = "setting.roundBankers"
     static let appearanceMode    = "setting.appearanceMode"
+    static let shopSortMode      = "setting.shopSortMode"
+    static let categorySortMode  = "setting.categorySortMode"
 }
 
 /// 外観モード

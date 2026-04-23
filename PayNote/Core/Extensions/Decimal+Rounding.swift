@@ -5,14 +5,6 @@ extension Decimal {
     func roundedAmount(bankersRounding: Bool = false) -> Decimal {
         var result = Decimal()
         var value = self
-        let behavior = NSDecimalNumberHandler(
-            roundingMode: bankersRounding ? .bankers : .plain,
-            scale: 0,
-            raiseOnExactness: false,
-            raiseOnOverflow: false,
-            raiseOnUnderflow: false,
-            raiseOnDivideByZero: false
-        )
         NSDecimalRound(&result, &value, 0, bankersRounding ? .bankers : .plain)
         return result
     }

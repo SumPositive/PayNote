@@ -231,7 +231,7 @@ private struct LegacyCoreDataStack {
         )
         let ctx = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         ctx.persistentStoreCoordinator = coordinator
-        ctx.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        ctx.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)
         self.context = ctx
     }
 
