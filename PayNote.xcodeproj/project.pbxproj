@@ -78,7 +78,7 @@
 		483AE700971FC77C80FC3F80 /* E5category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E5category.swift; sourceTree = "<group>"; };
 		4DDA39225A4BEA8B500F61FB /* CategoryEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryEditView.swift; sourceTree = "<group>"; };
 		4F8B9D625DF47B15550D7F4C /* MigratingFromCoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigratingFromCoreData.swift; sourceTree = "<group>"; };
-		54F1C265A3492ECBB8AD9300 /* PayNote.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PayNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		54F1C265A3492ECBB8AD9300 /* PayNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PayNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		54FAFE5527EBAC98E2BDA7D3 /* PayNoteUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PayNoteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5D1DFD33101839DCB19540E9 /* InvoiceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvoiceListView.swift; sourceTree = "<group>"; };
 		612855EBB9B4EB1E945C4A9B /* E7payment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E7payment.swift; sourceTree = "<group>"; };
@@ -712,14 +712,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 0;
 				INFOPLIST_FILE = PayNote/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PayNote;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.3.0;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.AzCreditS1;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -734,14 +736,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 0;
 				INFOPLIST_FILE = PayNote/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PayNote;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.3.0;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.AzCreditS1;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
