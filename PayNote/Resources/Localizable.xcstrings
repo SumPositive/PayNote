@@ -1,0 +1,796 @@
+{
+  "sourceLanguage" : "ja",
+  "strings" : {
+
+    "app.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "PayNote" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "クレメモ" } }
+      }
+    },
+    "app.selectMenu" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Select a menu item" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "メニューを選択してください" } }
+      }
+    },
+
+    "button.save" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "保存" } }
+      }
+    },
+    "button.cancel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャンセル" } }
+      }
+    },
+    "button.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Done" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "完了" } }
+      }
+    },
+    "button.delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "削除" } }
+      }
+    },
+    "button.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "追加" } }
+      }
+    },
+    "button.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "編集" } }
+      }
+    },
+    "button.close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Close" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "閉じる" } }
+      }
+    },
+
+    "top.addRecord" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Record" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "明細追加" } }
+      }
+    },
+    "top.recordList" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent Records" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最近の明細" } }
+      }
+    },
+    "top.paymentList" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Payment Schedule" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "支払予定" } }
+      }
+    },
+    "top.cardList" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cards" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "カード一覧" } }
+      }
+    },
+    "top.bankList" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Accounts" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "口座一覧" } }
+      }
+    },
+    "top.shopList" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shops" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "利用店一覧" } }
+      }
+    },
+    "top.categoryList" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Categories" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "分類一覧" } }
+      }
+    },
+    "top.settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "基本設定" } }
+      }
+    },
+    "top.about" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About PayNote" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "このアプリについて" } }
+      }
+    },
+
+    "card.list.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cards" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "カード一覧" } }
+      }
+    },
+    "card.edit.title.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "New Card" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "カード追加" } }
+      }
+    },
+    "card.edit.title.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Card" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "カード編集" } }
+      }
+    },
+    "card.field.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Card Name" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "カード名" } }
+      }
+    },
+    "card.field.bank" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Account" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "口座・銀行" } }
+      }
+    },
+    "card.field.closingDay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Closing Day" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "締日" } }
+      }
+    },
+    "card.field.payDay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Payment Day" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "支払日" } }
+      }
+    },
+    "card.field.payMonth" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Payment Month" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "支払月" } }
+      }
+    },
+    "card.field.bonus1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bonus Month 1" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ボーナス月①" } }
+      }
+    },
+    "card.field.bonus2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bonus Month 2" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ボーナス月②" } }
+      }
+    },
+    "card.field.note" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notes" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "メモ" } }
+      }
+    },
+    "card.closingDay.end" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "End of Month" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "末日" } }
+      }
+    },
+    "card.closingDay.debit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Debit (Same Day)" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "デビット（当日）" } }
+      }
+    },
+    "card.payMonth.current" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Same Month" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "当月" } }
+      }
+    },
+    "card.payMonth.next" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Next Month" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "翌月" } }
+      }
+    },
+    "card.payMonth.twoMonths" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "2 Months Later" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "翌々月" } }
+      }
+    },
+    "card.bonus.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "None" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "なし" } }
+      }
+    },
+    "card.sumUnpaid.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unpaid" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未払合計" } }
+      }
+    },
+    "card.sumPaid.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Paid" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "支払済合計" } }
+      }
+    },
+
+    "bank.list.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Accounts" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "口座一覧" } }
+      }
+    },
+    "bank.edit.title.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "New Account" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "口座追加" } }
+      }
+    },
+    "bank.edit.title.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Account" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "口座編集" } }
+      }
+    },
+    "bank.field.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Account Name" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "口座名" } }
+      }
+    },
+
+    "record.list.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Records" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "利用明細" } }
+      }
+    },
+    "record.edit.title.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "New Record" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "明細追加" } }
+      }
+    },
+    "record.edit.title.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Record" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "明細編集" } }
+      }
+    },
+    "record.field.date" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Date Used" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "利用日" } }
+      }
+    },
+    "record.field.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Description" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "利用内容" } }
+      }
+    },
+    "record.field.amount" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Amount" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "金額" } }
+      }
+    },
+    "record.field.card" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Card" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "カード" } }
+      }
+    },
+    "record.field.shop" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shop" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "利用店" } }
+      }
+    },
+    "record.field.category" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Category" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "分類" } }
+      }
+    },
+    "record.field.payType" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Payment Type" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "支払方法" } }
+      }
+    },
+    "record.field.repeat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Repeat" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "〃繰り返し" } }
+      }
+    },
+    "record.field.note" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notes" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "メモ" } }
+      }
+    },
+    "record.unit.yen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "¥" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "円" } }
+      }
+    },
+
+    "payType.lumpSum" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Lump Sum" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "一括" } }
+      }
+    },
+    "payType.twoPayments" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "2 Payments" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "二回払い" } }
+      }
+    },
+    "payType.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Use within interest-free limits." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "金利無料の範囲でお使いください。" } }
+      }
+    },
+
+    "repeat.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "None" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "なし" } }
+      }
+    },
+    "repeat.nextMonth" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Next Month" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "翌月" } }
+      }
+    },
+    "repeat.2months" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "In 2 Months" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "2ヶ月後" } }
+      }
+    },
+    "repeat.12months" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "In 1 Year" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "1年後" } }
+      }
+    },
+    "repeat.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Copies to the next date when marked PAID." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "PAIDになった時、指定月へコピーします。" } }
+      }
+    },
+
+    "invoice.list.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Invoices" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "請求書" } }
+      }
+    },
+    "invoice.status.paid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "PAID" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "PAID" } }
+      }
+    },
+    "invoice.status.unpaid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "UNPAID" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "UNPAID" } }
+      }
+    },
+
+    "payment.list.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Payments" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "支払予定" } }
+      }
+    },
+    "payment.markPaid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mark as Paid" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "PAID にする" } }
+      }
+    },
+    "payment.markUnpaid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mark as Unpaid" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "UNPAID に戻す" } }
+      }
+    },
+
+    "splitPay.list.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Installments" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "分割払い" } }
+      }
+    },
+    "splitPay.part" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Payment" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "回" } }
+      }
+    },
+    "splitPay.interest" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Interest" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "利息" } }
+      }
+    },
+    "splitPay.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Use within interest-free limits only." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "無利息の二回払いにのみ対応します。" } }
+      }
+    },
+
+    "shop.list.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shops" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "利用店一覧" } }
+      }
+    },
+    "shop.edit.title.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "New Shop" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "利用店追加" } }
+      }
+    },
+    "shop.edit.title.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Shop" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "利用店編集" } }
+      }
+    },
+    "shop.field.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shop Name" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "利用店名" } }
+      }
+    },
+    "shop.field.sortMode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sort By" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "並び順" } }
+      }
+    },
+
+    "category.list.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Categories" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "分類一覧" } }
+      }
+    },
+    "category.edit.title.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "New Category" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "分類追加" } }
+      }
+    },
+    "category.edit.title.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Category" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "分類編集" } }
+      }
+    },
+    "category.field.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Category Name" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "分類名" } }
+      }
+    },
+
+    "settings.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "基本設定" } }
+      }
+    },
+    "settings.enableInstallment" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Installments" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "分割払い" } }
+      }
+    },
+    "settings.enableInstallment.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enables 2-payment installments" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "無利息の二回払いに対応します" } }
+      }
+    },
+    "settings.roundBankers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Banker's Rounding" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "偶数丸め" } }
+      }
+    },
+    "settings.roundBankers.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Uses JIS banker's rounding" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "金額計算に偶数(JIS)丸めを使用します" } }
+      }
+    },
+    "settings.appearance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Appearance" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "外観" } }
+      }
+    },
+    "settings.appearance.automatic" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Auto" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "自動" } }
+      }
+    },
+    "settings.appearance.light" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Light" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ライト" } }
+      }
+    },
+    "settings.appearance.dark" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Dark" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ダーク" } }
+      }
+    },
+    "settings.jsonExport" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Export as JSON" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "JSONエクスポート" } }
+      }
+    },
+    "settings.jsonExport.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Share all data as a JSON file" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "全データをJSONファイルで共有します" } }
+      }
+    },
+
+    "about.docs" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Help & Docs" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "取扱説明" } }
+      }
+    },
+    "about.version" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Version" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "バージョン" } }
+      }
+    },
+    "about.productName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Product" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アプリ名" } }
+      }
+    },
+    "about.copyright" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "© 2010-2026 Azukid / Masakazu Matsuyama" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "© 2010-2026 Azukid / 松山和正" } }
+      }
+    },
+
+    "sort.recent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最近" } }
+      }
+    },
+    "sort.count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Times Used" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "回数" } }
+      }
+    },
+    "sort.amount" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Amount" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "金額" } }
+      }
+    },
+    "sort.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Name" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "名前" } }
+      }
+    },
+
+    "label.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Name" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "名前" } }
+      }
+    },
+    "label.note" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notes" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "メモ" } }
+      }
+    },
+    "label.optional" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optional" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "任意" } }
+      }
+    },
+    "label.noSelection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not Set" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "未設定" } }
+      }
+    },
+
+    "alert.deleteConfirm.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "削除しますか？" } }
+      }
+    },
+    "alert.deleteConfirm.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This cannot be undone." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "この操作は取り消せません。" } }
+      }
+    },
+    "alert.saveFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save failed." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "保存に失敗しました。" } }
+      }
+    },
+
+    "error.db.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Database Error" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "データベースエラー" } }
+      }
+    },
+    "error.db.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The database could not be opened. You can reset it, but all data will be lost." } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "データベースを開けませんでした。リセットすることができますが、データはすべて失われます。" } }
+      }
+    },
+    "error.db.reset" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reset Database" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "データベースをリセット" } }
+      }
+    }
+
+  },
+  "version" : "1.0"
+}

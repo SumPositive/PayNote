@@ -1,0 +1,531 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1698067491EBDA300104D152 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 461FBECA42994F0A6C9BEA37 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		90D8C5AE47C0F8F221A14693 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AFACF2F53EE3B4B2DBE3D35E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5C23C5DE3A3D3E947CA0B053;
+			remoteInfo = PayNote;
+		};
+		CDB0A7A526B5161AE08A095D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AFACF2F53EE3B4B2DBE3D35E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5C23C5DE3A3D3E947CA0B053;
+			remoteInfo = PayNote;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		461FBECA42994F0A6C9BEA37 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		54F1C265A3492ECBB8AD9300 /* PayNote.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PayNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		54FAFE5527EBAC98E2BDA7D3 /* PayNoteUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PayNoteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9AFC963C5C24B15862ECE64B /* PayNoteTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PayNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA5C86233C4FE3247A2D008B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		02B702B021CFC34BA6592EBF = {
+			isa = PBXGroup;
+			children = (
+				ED2C6CB4EC8872FC2CDBC64C /* PayNote */,
+				4134DBA93A3D961EE17AAB13 /* PayNoteTests */,
+				940C603D5A38298CEAF215E4 /* PayNoteUITests */,
+				106FEC0C099A14C294BEC41D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		106FEC0C099A14C294BEC41D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				54F1C265A3492ECBB8AD9300 /* PayNote.app */,
+				9AFC963C5C24B15862ECE64B /* PayNoteTests.xctest */,
+				54FAFE5527EBAC98E2BDA7D3 /* PayNoteUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		348DE8935A9144677E2B857C /* Core */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		4134DBA93A3D961EE17AAB13 /* PayNoteTests */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = PayNoteTests;
+			sourceTree = "<group>";
+		};
+		5B155411FD36B0C994228CCD /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				461FBECA42994F0A6C9BEA37 /* Assets.xcassets */,
+				FA5C86233C4FE3247A2D008B /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		6E92F55323A0B7797C36B8E0 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		940C603D5A38298CEAF215E4 /* PayNoteUITests */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = PayNoteUITests;
+			sourceTree = "<group>";
+		};
+		ED2C6CB4EC8872FC2CDBC64C /* PayNote */ = {
+			isa = PBXGroup;
+			children = (
+				348DE8935A9144677E2B857C /* Core */,
+				6E92F55323A0B7797C36B8E0 /* Features */,
+				5B155411FD36B0C994228CCD /* Resources */,
+			);
+			path = PayNote;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2428C92422D18A829E2F0849 /* PayNoteTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C451D4092B60567630D400F /* Build configuration list for PBXNativeTarget "PayNoteTests" */;
+			buildPhases = (
+				7A11F7329FC1735604B31383 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				469BFD816D32CA76A685B29C /* PBXTargetDependency */,
+			);
+			name = PayNoteTests;
+			packageProductDependencies = (
+			);
+			productName = PayNoteTests;
+			productReference = 9AFC963C5C24B15862ECE64B /* PayNoteTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		5C23C5DE3A3D3E947CA0B053 /* PayNote */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3F0D4022A29402A6F70361F5 /* Build configuration list for PBXNativeTarget "PayNote" */;
+			buildPhases = (
+				FAB38D551A5A3B48DB07B7D4 /* Sources */,
+				AE60322F60504161EF7F3E87 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PayNote;
+			packageProductDependencies = (
+			);
+			productName = PayNote;
+			productReference = 54F1C265A3492ECBB8AD9300 /* PayNote.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B55591E6E567FD40E199B0D8 /* PayNoteUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1BEA44F0517EBE4E24E01FD5 /* Build configuration list for PBXNativeTarget "PayNoteUITests" */;
+			buildPhases = (
+				3684EE7005B793E89A989F96 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4C686B3A162BB44BAD60EF8F /* PBXTargetDependency */,
+			);
+			name = PayNoteUITests;
+			packageProductDependencies = (
+			);
+			productName = PayNoteUITests;
+			productReference = 54FAFE5527EBAC98E2BDA7D3 /* PayNoteUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AFACF2F53EE3B4B2DBE3D35E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					2428C92422D18A829E2F0849 = {
+						DevelopmentTeam = 5C2UYK6F45;
+					};
+					5C23C5DE3A3D3E947CA0B053 = {
+						DevelopmentTeam = 5C2UYK6F45;
+					};
+					B55591E6E567FD40E199B0D8 = {
+						DevelopmentTeam = 5C2UYK6F45;
+						TestTargetID = 5C23C5DE3A3D3E947CA0B053;
+					};
+				};
+			};
+			buildConfigurationList = 1D61FF227BC03B6487B89B74 /* Build configuration list for PBXProject "PayNote" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 02B702B021CFC34BA6592EBF;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 106FEC0C099A14C294BEC41D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				5C23C5DE3A3D3E947CA0B053 /* PayNote */,
+				2428C92422D18A829E2F0849 /* PayNoteTests */,
+				B55591E6E567FD40E199B0D8 /* PayNoteUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AE60322F60504161EF7F3E87 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1698067491EBDA300104D152 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3684EE7005B793E89A989F96 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7A11F7329FC1735604B31383 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FAB38D551A5A3B48DB07B7D4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		469BFD816D32CA76A685B29C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5C23C5DE3A3D3E947CA0B053 /* PayNote */;
+			targetProxy = CDB0A7A526B5161AE08A095D /* PBXContainerItemProxy */;
+		};
+		4C686B3A162BB44BAD60EF8F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5C23C5DE3A3D3E947CA0B053 /* PayNote */;
+			targetProxy = 90D8C5AE47C0F8F221A14693 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		040225AD6A3E760922B95967 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 5C2UYK6F45;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		158E78196CC0B28694BA4FD9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.PayNoteTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PayNote.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PayNote";
+			};
+			name = Release;
+		};
+		25B62AA92DAB598C94487EA2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 5C2UYK6F45;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		53ADE461B553335074E06002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.PayNoteUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = PayNote;
+			};
+			name = Release;
+		};
+		983EEC013E74D95089D82CFF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = PayNote/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.3.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.AzCreditS1;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AAC81ABBFDF3041914DBD2FB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = PayNote/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.3.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.AzCreditS1;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B5D445021615F902F3BB5AA7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.PayNoteTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PayNote.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PayNote";
+			};
+			name = Debug;
+		};
+		D2FE2C9BBFC79228F3D6C2A1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.PayNoteUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = PayNote;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1BEA44F0517EBE4E24E01FD5 /* Build configuration list for PBXNativeTarget "PayNoteUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D2FE2C9BBFC79228F3D6C2A1 /* Debug */,
+				53ADE461B553335074E06002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		1D61FF227BC03B6487B89B74 /* Build configuration list for PBXProject "PayNote" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				040225AD6A3E760922B95967 /* Debug */,
+				25B62AA92DAB598C94487EA2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		3F0D4022A29402A6F70361F5 /* Build configuration list for PBXNativeTarget "PayNote" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				983EEC013E74D95089D82CFF /* Debug */,
+				AAC81ABBFDF3041914DBD2FB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7C451D4092B60567630D400F /* Build configuration list for PBXNativeTarget "PayNoteTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B5D445021615F902F3BB5AA7 /* Debug */,
+				158E78196CC0B28694BA4FD9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AFACF2F53EE3B4B2DBE3D35E /* Project object */;
+}

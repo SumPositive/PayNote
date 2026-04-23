@@ -1,0 +1,60 @@
+import SwiftUI
+import SafariServices
+
+struct AboutView: View {
+    @State private var showSafari = false
+
+    var body: some View {
+        List {
+            Section {
+                Button {
+                    showSafari = true
+                } label: {
+                    HStack {
+                        Label("about.docs", systemImage: "book.pages")
+                        Spacer()
+                        Image(systemName: "arrow.up.right.square")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            Section {
+                HStack {
+                    Text("about.version")
+                    Spacer()
+                    Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
+                        .foregroundStyle(.secondary)
+                }
+                HStack {
+                    Text("about.productName")
+                    Spacer()
+                    Text("PayNote / クレメモ")
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Section(footer: Text("about.copyright").font(.caption).foregroundStyle(.secondary)) {
+                EmptyView()
+            }
+        }
+        .navigationTitle("top.about")
+        .navigationBarTitleDisplayMode(.large)
+        .sheet(isPresented: $showSafari) {
+            SafariView(url: helpDocURL())
+                .ignoresSafeArea()
+        }
+    }
+}
+
+// MARK: - SafariServices ラッパー
+
+struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        SFSafariViewController(url: url)
+    }
+
+    func updateUIViewController(_ vc: SFSafariViewController, context: Context) {}
+}
