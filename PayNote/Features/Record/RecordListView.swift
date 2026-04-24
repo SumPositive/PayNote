@@ -42,8 +42,7 @@ struct RecordListView: View {
                 }
             }
         }
-        .navigationTitle("record.list.title")
-        .navigationBarTitleDisplayMode(.large)
+        .scalableNavigationTitle("record.list.title")
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 cardFilterPicker

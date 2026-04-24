@@ -9,105 +9,143 @@ struct CardEditView: View {
     @Query(sort: \E1card.nRow)   private var allCards: [E1card]
     @Query(sort: \E8bank.nRow)   private var banks: [E8bank]
 
-    // Basic
-    @State private var zName    = ""
-    @State private var zNote    = ""
-    @State private var isDebit  = false
+    @State private var zName       = ""
+    @State private var zNote       = ""
     @State private var selectedBank: E8bank?
-
-    // Credit card dates
+    @State private var bankSelection: BankSelection = .none
+    @State private var previousBankSelection: BankSelection = .none
+    @State private var showBankAddSheet = false
+    @State private var bankCountBeforeAdd = 0
     @State private var closingDay: Int16 = 20
     @State private var payDay:     Int16 = 27
     @State private var payMonth:   Int16 = 1
-
-    // Bonus months (0=none, 1-12)
-    @State private var bonus1: Int16 = 0
-    @State private var bonus2: Int16 = 0
+    @State private var bonus1:       Int16 = 0
+    @State private var bonus2:       Int16 = 0
+    @State private var manageLevel:  ManagementLevel = .precise
+    @State private var showPresetDialog = false
+    @State private var hasInitialized = false
+    @State private var initialDraft: DraftState?
+    @FocusState private var focusName: Bool
 
     private var isNew:   Bool { card == nil }
     private var isValid: Bool { !zName.trimmingCharacters(in: .whitespaces).isEmpty }
-
-    // Closing day picker options: 0(debit), 1-28, 29(末日)
-    private let closingDayOptions: [Int16] = [0] + Array(1...28) + [29]
-    // Pay day options: 1-28, 29(末日)
-    private let payDayOptions:    [Int16] = Array(1...28) + [29]
-    private let payMonthOptions:  [Int16] = [0, 1, 2]
-    private let bonusMonthOptions:[Int16] = Array(0...12)
+    private var presetTemplates: [SeedData.Preset] { SeedData.presetsForCurrentLocale() }
+    private var hasChanges: Bool {
+        guard let base = initialDraft else { return false }
+        return currentDraft() != base
+    }
 
     var body: some View {
         Form {
+            // 説明文
+            Section {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("card.edit.description")
+                        .font(.footnote)
+                        .foregroundStyle(.primary)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.secondarySystemFill))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                    // プリセットを呼び出すボタン
+                    Button("プリセットから引用") {
+                        showPresetDialog = true
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+
             // 基本情報
             Section {
                 TextField("card.field.name", text: $zName)
                     .autocorrectionDisabled()
-                Picker("card.field.bank", selection: $selectedBank) {
-                    Text("label.noSelection").tag(Optional<E8bank>(nil))
-                    ForEach(banks) { b in
-                        Text(b.zName).tag(Optional(b))
+                    .focused($focusName)
+
+                LabeledContent("card.field.bank") {
+                    Picker("", selection: $bankSelection) {
+                        Text("label.noSelection").tag(BankSelection.none)
+                        Text("新しい口座").tag(BankSelection.addNew)
+                        ForEach(banks) { b in
+                            Text(b.zName).tag(BankSelection.existing(b.id))
+                        }
                     }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                }
+
+                LabeledContent("card.field.manageLevel") {
+                    Picker("", selection: $manageLevel) {
+                        ForEach(ManagementLevel.allCases, id: \.self) { level in
+                            Text(LocalizedStringKey(level.labelKey)).tag(level)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
                 }
             }
 
-            // デビット切替
+            // 締日〜ボーナス月を1パネルにまとめる
             Section {
-                Toggle("card.closingDay.debit", isOn: $isDebit)
-            }
-
-            // クレジット設定
-            if !isDebit {
-                Section("card.field.closingDay") {
-                    Picker("card.field.closingDay", selection: $closingDay) {
+                LabeledContent("締日") {
+                    Picker("", selection: $closingDay) {
                         ForEach(Array(1...28), id: \.self) { d in
                             Text("\(d)").tag(Int16(d))
                         }
                         Text("card.closingDay.end").tag(Int16(29))
                     }
-                    .pickerStyle(.wheel)
-                    .frame(height: 120)
+                    .pickerStyle(.menu)
+                    .labelsHidden()
                 }
 
-                Section("card.field.payDay") {
-                    Picker("card.field.payDay", selection: $payDay) {
-                        ForEach(Array(1...28), id: \.self) { d in
-                            Text("\(d)").tag(Int16(d))
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("支払（引き落とし）")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+
+                    LabeledContent("月") {
+                        Picker("", selection: $payMonth) {
+                            Text("card.payMonth.current").tag(Int16(0))
+                            Text("card.payMonth.next").tag(Int16(1))
+                            Text("card.payMonth.twoMonths").tag(Int16(2))
                         }
-                        Text("card.closingDay.end").tag(Int16(29))
+                        .pickerStyle(.menu)
+                        .labelsHidden()
                     }
-                    .pickerStyle(.wheel)
-                    .frame(height: 120)
-                }
 
-                Section("card.field.payMonth") {
-                    Picker("card.field.payMonth", selection: $payMonth) {
-                        Text("card.payMonth.current").tag(Int16(0))
-                        Text("card.payMonth.next").tag(Int16(1))
-                        Text("card.payMonth.twoMonths").tag(Int16(2))
-                    }
-                    .pickerStyle(.segmented)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(.init(top: 8, leading: 16, bottom: 8, trailing: 16))
-                }
-
-                Section("card.field.bonus1") {
-                    Picker("card.field.bonus1", selection: $bonus1) {
-                        Text("card.bonus.none").tag(Int16(0))
-                        ForEach(Array(1...12), id: \.self) { m in
-                            Text(monthName(m)).tag(Int16(m))
+                    LabeledContent("日") {
+                        Picker("", selection: $payDay) {
+                            ForEach(Array(1...28), id: \.self) { d in
+                                Text("\(d)").tag(Int16(d))
+                            }
+                            Text("card.closingDay.end").tag(Int16(29))
                         }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
                     }
-                    .pickerStyle(.wheel)
-                    .frame(height: 120)
-                }
 
-                Section("card.field.bonus2") {
-                    Picker("card.field.bonus2", selection: $bonus2) {
-                        Text("card.bonus.none").tag(Int16(0))
-                        ForEach(Array(1...12), id: \.self) { m in
-                            Text(monthName(m)).tag(Int16(m))
+                    LabeledContent("card.field.bonus1") {
+                        Picker("", selection: $bonus1) {
+                            Text("card.bonus.none").tag(Int16(0))
+                            ForEach(Array(1...12), id: \.self) { m in
+                                Text(monthName(m)).tag(Int16(m))
+                            }
                         }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
                     }
-                    .pickerStyle(.wheel)
-                    .frame(height: 120)
+
+                    LabeledContent("card.field.bonus2") {
+                        Picker("", selection: $bonus2) {
+                            Text("card.bonus.none").tag(Int16(0))
+                            ForEach(Array(1...12), id: \.self) { m in
+                                Text(monthName(m)).tag(Int16(m))
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                    }
                 }
             }
 
@@ -118,19 +156,46 @@ struct CardEditView: View {
                     .autocorrectionDisabled()
             }
         }
-        .navigationTitle(isNew ? "card.edit.title.add" : "card.edit.title.edit")
-        .navigationBarTitleDisplayMode(.inline)
+        .scalableNavigationTitle("card.list.title")
+        .navigationBarBackButtonHidden(isNew || hasChanges)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                if isNew { Button("button.cancel") { dismiss() } }
+                if isNew || hasChanges {
+                    Button("button.cancel") { dismiss() }
+                }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("button.save") { save() }.disabled(!isValid)
+                Button("button.save") { save() }
+                    .disabled(!isValid)
+                    .fontWeight(hasChanges ? .semibold : .regular)
+                    .foregroundStyle(hasChanges ? .blue : .secondary)
             }
         }
-        .onAppear { loadFields() }
-        .onChange(of: isDebit) { _, newVal in
-            if newVal { closingDay = 0 } else if closingDay == 0 { closingDay = 20 }
+        .onAppear {
+            if !hasInitialized {
+                loadFields()
+                initialDraft = currentDraft()
+                hasInitialized = true
+                // 新規追加時は最初の入力欄へフォーカスする
+                if isNew {
+                    DispatchQueue.main.async { focusName = true }
+                }
+            }
+        }
+        .onChange(of: bankSelection) { _, newValue in
+            handleBankSelectionChange(newValue)
+        }
+        .sheet(isPresented: $showBankAddSheet, onDismiss: applyAddedBankIfNeeded) {
+            NavigationStack { BankEditView(bank: nil) }
+        }
+        .confirmationDialog("プリセットから引用", isPresented: $showPresetDialog) {
+            // 候補を選ぶと日付設定と名称を反映する
+            ForEach(presetTemplates, id: \.name) { preset in
+                Button(preset.name) {
+                    applyPreset(preset)
+                }
+            }
+            Button("button.cancel", role: .cancel) {}
         }
     }
 
@@ -144,47 +209,128 @@ struct CardEditView: View {
 
     private func loadFields() {
         guard let card else { return }
-        zName       = card.zName
-        zNote       = card.zNote
-        isDebit     = card.isDebit
-        closingDay  = card.isDebit ? 20 : card.nClosingDay
-        payDay      = card.nPayDay
-        payMonth    = card.nPayMonth
-        bonus1      = card.nBonus1
-        bonus2      = card.nBonus2
+        zName        = card.zName
+        zNote        = card.zNote
+        closingDay   = 0 < card.nClosingDay ? card.nClosingDay : 20
+        payDay       = 0 < card.nPayDay ? card.nPayDay : 27
+        payMonth     = card.nPayMonth
+        bonus1       = card.nBonus1
+        bonus2       = card.nBonus2
+        manageLevel  = card.manageLevel
         selectedBank = card.e8bank
+        bankSelection = selectionFromBank(selectedBank)
+        previousBankSelection = bankSelection
     }
 
     private func save() {
         let name = zName.trimmingCharacters(in: .whitespaces)
         guard !name.isEmpty else { return }
 
-        let closing: Int16 = isDebit ? 0 : closingDay
-        let pay: Int16     = isDebit ? 0 : payDay
-        let month: Int16   = isDebit ? 0 : payMonth
-        let b1: Int16      = isDebit ? 0 : bonus1
-        let b2: Int16      = isDebit ? 0 : bonus2
-
         if let card {
-            card.zName        = name
-            card.zNote        = zNote
-            card.nClosingDay  = closing
-            card.nPayDay      = pay
-            card.nPayMonth    = month
-            card.nBonus1      = b1
-            card.nBonus2      = b2
+            card.zName       = name
+            card.zNote       = zNote
+            card.nClosingDay = closingDay
+            card.nPayDay     = payDay
+            card.nPayMonth   = payMonth
+            card.nBonus1      = bonus1
+            card.nBonus2      = bonus2
+            card.nManageLevel = manageLevel.rawValue
             card.e8bank       = selectedBank
             card.dateUpdate   = Date()
         } else {
             let row = Int32((allCards.map { Int($0.nRow) }.max() ?? -1) + 1)
             let c = E1card(
                 zName: name, zNote: zNote, nRow: row,
-                nClosingDay: closing, nPayDay: pay, nPayMonth: month,
-                nBonus1: b1, nBonus2: b2, dateUpdate: Date()
+                nClosingDay: closingDay, nPayDay: payDay, nPayMonth: payMonth,
+                nBonus1: bonus1, nBonus2: bonus2,
+                nManageLevel: manageLevel.rawValue, dateUpdate: Date()
             )
             c.e8bank = selectedBank
             context.insert(c)
         }
         dismiss()
+    }
+
+    // MARK: - Bank Picker
+
+    /// 口座選択用の疑似項目（未設定 / 追加 / 既存）
+    private enum BankSelection: Hashable {
+        case none
+        case addNew
+        case existing(String)
+    }
+
+    private func selectionFromBank(_ bank: E8bank?) -> BankSelection {
+        if let id = bank?.id {
+            return .existing(id)
+        }
+        return .none
+    }
+
+    private func bankFromSelection(_ selection: BankSelection) -> E8bank? {
+        if case let .existing(id) = selection {
+            return banks.first { $0.id == id }
+        }
+        return nil
+    }
+
+    private func handleBankSelectionChange(_ newValue: BankSelection) {
+        if case .addNew = newValue {
+            bankCountBeforeAdd = banks.count
+            bankSelection = previousBankSelection
+            showBankAddSheet = true
+            return
+        }
+        previousBankSelection = newValue
+        selectedBank = bankFromSelection(newValue)
+    }
+
+    private func applyAddedBankIfNeeded() {
+        // 追加後のみ、最新行の口座を自動選択する
+        if bankCountBeforeAdd < banks.count {
+            if let added = banks.max(by: { $0.nRow < $1.nRow }) {
+                selectedBank = added
+                bankSelection = .existing(added.id)
+                previousBankSelection = bankSelection
+            }
+        }
+    }
+
+    private func applyPreset(_ preset: SeedData.Preset) {
+        zName = preset.name
+        closingDay = preset.closingDay
+        payDay = preset.payDay
+        payMonth = preset.payMonth
+        bonus1 = 0
+        bonus2 = 0
+    }
+
+    // MARK: - Draft Diff
+
+    /// 変更検知用の編集スナップショット
+    private struct DraftState: Equatable {
+        let zName: String
+        let zNote: String
+        let bankID: String?
+        let closingDay: Int16
+        let payDay: Int16
+        let payMonth: Int16
+        let bonus1: Int16
+        let bonus2: Int16
+        let manageLevel: ManagementLevel
+    }
+
+    private func currentDraft() -> DraftState {
+        DraftState(
+            zName: zName,
+            zNote: zNote,
+            bankID: selectedBank?.id,
+            closingDay: closingDay,
+            payDay: payDay,
+            payMonth: payMonth,
+            bonus1: bonus1,
+            bonus2: bonus2,
+            manageLevel: manageLevel
+        )
     }
 }

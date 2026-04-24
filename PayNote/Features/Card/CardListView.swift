@@ -5,7 +5,6 @@ struct CardListView: View {
     @Query(sort: \E1card.nRow) private var cards: [E1card]
     @Environment(\.modelContext) private var context
 
-    @State private var editMode        = EditMode.inactive
     @State private var showAddSheet    = false
     @State private var deleteTarget: E1card?
     @State private var showDeleteAlert = false
@@ -29,11 +28,8 @@ struct CardListView: View {
             }
             .onMove(perform: move)
         }
-        .navigationTitle("card.list.title")
-        .navigationBarTitleDisplayMode(.large)
-        .environment(\.editMode, $editMode)
+        .scalableNavigationTitle("card.list.title")
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) { EditButton() }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button { showAddSheet = true } label: { Image(systemName: "plus") }
             }
@@ -78,8 +74,15 @@ private struct CardRow: View {
                 if let bank = card.e8bank {
                     Text(bank.zName).font(.caption).foregroundStyle(.secondary)
                 }
+                if !card.manageLevel.isDefault {
+                    Text(LocalizedStringKey(card.manageLevel.labelKey))
+                        .font(.caption2)
+                        .padding(.horizontal, 5).padding(.vertical, 2)
+                        .background(Color(.systemFill))
+                        .clipShape(Capsule())
+                }
                 if card.isDebit {
-                    Text("card.closingDay.debit")
+                    Text("card.closingDay.debitLegacy")
                         .font(.caption2)
                         .padding(.horizontal, 5).padding(.vertical, 2)
                         .background(Color(.systemFill))

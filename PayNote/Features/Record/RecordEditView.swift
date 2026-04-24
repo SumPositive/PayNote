@@ -51,6 +51,7 @@ struct RecordEditView: View {
 
     // Save feedback (addNew mode)
     @State private var savedBanner = false
+    @FocusState private var focusName: Bool
 
     private var isNew: Bool {
         if case .addNew = mode { return true }
@@ -92,6 +93,7 @@ struct RecordEditView: View {
 
                 TextField("record.field.name", text: $zName)
                     .autocorrectionDisabled()
+                    .focused($focusName)
             }
 
             // カード・店・分類
@@ -187,7 +189,13 @@ struct RecordEditView: View {
                     .fontWeight(.semibold)
             }
         }
-        .onAppear { loadFields() }
+        .onAppear {
+            loadFields()
+            // 新規追加時は最初の入力欄へフォーカスする
+            if isNew {
+                DispatchQueue.main.async { focusName = true }
+            }
+        }
         // 金額テンキー
         .sheet(isPresented: $showAmountPad) {
             NumericKeypadSheet(

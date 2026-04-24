@@ -10,6 +10,7 @@ struct BankEditView: View {
 
     @State private var zName = ""
     @State private var zNote = ""
+    @FocusState private var focusName: Bool
 
     private var isNew:   Bool { bank == nil }
     private var isValid: Bool { !zName.trimmingCharacters(in: .whitespaces).isEmpty }
@@ -19,6 +20,7 @@ struct BankEditView: View {
             Section {
                 TextField("bank.field.name", text: $zName)
                     .autocorrectionDisabled()
+                    .focused($focusName)
             }
             Section {
                 TextField("label.note", text: $zNote)
@@ -35,7 +37,13 @@ struct BankEditView: View {
                 Button("button.save") { save() }.disabled(!isValid)
             }
         }
-        .onAppear { loadFields() }
+        .onAppear {
+            loadFields()
+            // 新規追加時は最初の入力欄へフォーカスする
+            if isNew {
+                DispatchQueue.main.async { focusName = true }
+            }
+        }
     }
 
     private func loadFields() {

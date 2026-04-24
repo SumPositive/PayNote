@@ -40,8 +40,7 @@ struct ShopListView: View {
                 }
             }
         }
-        .navigationTitle("shop.list.title")
-        .navigationBarTitleDisplayMode(.large)
+        .scalableNavigationTitle("shop.list.title")
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Menu {

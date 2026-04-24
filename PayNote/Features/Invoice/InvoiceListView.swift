@@ -67,8 +67,7 @@ struct InvoiceListView: View {
                 }
             }
         }
-        .navigationTitle(payment.date.formatted(date: .abbreviated, time: .omitted))
-        .navigationBarTitleDisplayMode(.large)
+        .scalableNavigationTitle(verbatim: payment.date.formatted(date: .abbreviated, time: .omitted))
     }
 
     private func toggleInvoicePaid(_ invoice: E2invoice) {

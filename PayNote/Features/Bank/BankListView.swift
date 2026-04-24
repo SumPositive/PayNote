@@ -5,7 +5,6 @@ struct BankListView: View {
     @Query(sort: \E8bank.nRow) private var banks: [E8bank]
     @Environment(\.modelContext) private var context
 
-    @State private var editMode        = EditMode.inactive
     @State private var showAddSheet    = false
     @State private var deleteTarget: E8bank?
     @State private var showDeleteAlert = false
@@ -29,11 +28,8 @@ struct BankListView: View {
             }
             .onMove(perform: move)
         }
-        .navigationTitle("bank.list.title")
-        .navigationBarTitleDisplayMode(.large)
-        .environment(\.editMode, $editMode)
+        .scalableNavigationTitle("bank.list.title")
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) { EditButton() }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button { showAddSheet = true } label: { Image(systemName: "plus") }
             }

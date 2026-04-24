@@ -6,7 +6,8 @@ import SwiftData
 /// - iPad:    サイドバー(TopMenuView) ＋ 詳細エリア
 struct ContentView: View {
 
-    @State private var selectedDestination: AppDestination? = .recordList
+    @Environment(\.modelContext) private var modelContext
+    @State private var selectedDestination: AppDestination?
 
     var body: some View {
         NavigationSplitView {
@@ -29,6 +30,7 @@ struct ContentView: View {
                 }
             }
         }
+        .task { SeedData.seedIfNeeded(context: modelContext) }
     }
 }
 

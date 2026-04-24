@@ -44,10 +44,9 @@ struct SplitPayListView: View {
                 Text("splitPay.footer")
             }
         }
-        .navigationTitle(record.zName.isEmpty
+        .scalableNavigationTitle(verbatim: record.zName.isEmpty
             ? (record.e4shop?.zName ?? "—")
             : record.zName)
-        .navigationBarTitleDisplayMode(.large)
     }
 
     private func togglePart(_ part: E6part) {

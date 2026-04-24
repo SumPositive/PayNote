@@ -40,8 +40,7 @@ struct CategoryListView: View {
                 }
             }
         }
-        .navigationTitle("category.list.title")
-        .navigationBarTitleDisplayMode(.large)
+        .scalableNavigationTitle("category.list.title")
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Menu {

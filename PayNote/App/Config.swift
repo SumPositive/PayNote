@@ -24,6 +24,24 @@ let APP_MAX_PART_COUNT = 99   // 分割払い最大回数
 let APP_MIN_DATE = Calendar.current.date(from: DateComponents(year: 2000, month: 1, day: 1))!
 let APP_MAX_DATE = Calendar.current.date(from: DateComponents(year: 2100, month: 12, day: 31))!
 
+// MARK: - 管理レベル
+
+enum ManagementLevel: Int16, CaseIterable {
+    case precise     = 0  // きっちり
+    case approximate = 1  // おおよそ
+    case largeOnly   = 2  // 高額のみ
+
+    var labelKey: String {
+        switch self {
+        case .precise:     return "card.manageLevel.precise"
+        case .approximate: return "card.manageLevel.approximate"
+        case .largeOnly:   return "card.manageLevel.largeOnly"
+        }
+    }
+
+    var isDefault: Bool { self == .precise }
+}
+
 // MARK: - Layout
 
 let COLOR_AMOUNT_POSITIVE: Color = .primary

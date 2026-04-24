@@ -3,9 +3,9 @@ import SwiftData
 
 /// クレジットカード
 ///
-/// 締日 (nClosingDay): 1-28=締日, 29=末日, 0=デビット（当日）
-/// 支払日 (nPayDay):   1-28=支払日, 29=末日, 0-99=デビット後払日数
-/// 支払月 (nPayMonth): -1/0/1/2 = 支払月(利用月からの月数)
+/// 締日 (nClosingDay): 1-28=締日, 29=末日, 0=デビット（当日・旧データ互換）
+/// 支払日 (nPayDay):   1-28=支払日, 29=末日
+/// 支払月 (nPayMonth): 0/1/2 = 支払月(利用月からの月数)
 /// ボーナス月 (nBonus1/2): 0=なし, 1-12=月
 @Model
 final class E1card {
@@ -18,6 +18,7 @@ final class E1card {
     var nPayMonth: Int16
     var nBonus1: Int16
     var nBonus2: Int16
+    var nManageLevel: Int16 = 0
     var dateUpdate: Date?
     // 集計値（子レコード変更時に更新）
     var sumPaid: Decimal
@@ -28,7 +29,9 @@ final class E1card {
     @Relationship(deleteRule: .cascade) var e2invoices: [E2invoice]
     @Relationship(deleteRule: .cascade) var e3records: [E3record]
 
+    /// 旧データ互換: nClosingDay=0 は即日デビット（新規作成不可）
     var isDebit: Bool { nClosingDay == 0 }
+    var manageLevel: ManagementLevel { ManagementLevel(rawValue: nManageLevel) ?? .precise }
 
     init(
         id: String = UUID().uuidString,
@@ -36,10 +39,11 @@ final class E1card {
         zNote: String = "",
         nRow: Int32 = 0,
         nClosingDay: Int16 = 20,
-        nPayDay: Int16 = 20,
+        nPayDay: Int16 = 27,
         nPayMonth: Int16 = 1,
         nBonus1: Int16 = 0,
         nBonus2: Int16 = 0,
+        nManageLevel: Int16 = 0,
         dateUpdate: Date? = nil,
         sumPaid: Decimal = 0,
         sumUnpaid: Decimal = 0,
@@ -54,6 +58,7 @@ final class E1card {
         self.nPayMonth = nPayMonth
         self.nBonus1 = nBonus1
         self.nBonus2 = nBonus2
+        self.nManageLevel = nManageLevel
         self.dateUpdate = dateUpdate
         self.sumPaid = sumPaid
         self.sumUnpaid = sumUnpaid

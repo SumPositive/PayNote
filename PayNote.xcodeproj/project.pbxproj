@@ -15,11 +15,13 @@
 		2921018F4FA6C238795FFF40 /* RecordEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3733DDAFE02614F6EA7B3BC9 /* RecordEditView.swift */; };
 		2FEDE3564704BC980B8C9B9C /* RecordService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A1B2E2DD399FBFF391B2C5 /* RecordService.swift */; };
 		40D3FC4B9A6E4F56FE8D485C /* ShopEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D0B3C93B518431C1ED8CA94 /* ShopEditView.swift */; };
+		4531D860CDB0FDF2415DD421 /* View+ScalableTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F95EF3EE0B184C7D267B8C7 /* View+ScalableTitle.swift */; };
 		490F8CBDAB27E8464CFC9A8C /* SplitPayListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97721A91036068831138735 /* SplitPayListView.swift */; };
 		4DDA8A04C30B6B86A07A2D68 /* E8bank.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BB8D0C0693934C17D3BFD21 /* E8bank.swift */; };
 		5036733F44C02792D514BAB7 /* CategoryEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA39225A4BEA8B500F61FB /* CategoryEditView.swift */; };
 		5D16A4DE800A0F01FA95B662 /* PayNoteUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DFCCAE92513D9BAEE0F5EF /* PayNoteUITests.swift */; };
 		6B4262F22E9995FB3C3A513D /* DatabaseErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F79355C01D775C52E0C34B50 /* DatabaseErrorView.swift */; };
+		6B962B07029AF00C00FE072C /* SeedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2EF718F50B10EEBAAAD6744 /* SeedData.swift */; };
 		6C2049FCD813BC37C5047451 /* E1card.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97AA8DA9E2505CC1D28F9BB1 /* E1card.swift */; };
 		6C9B8A07AA474578E6EACCDA /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBA16C07E5604036601CF855 /* AboutView.swift */; };
 		75ED1A20592772802B0825F5 /* E2invoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD3E0B05EFD2A02C14116685 /* E2invoice.swift */; };
@@ -78,7 +80,7 @@
 		483AE700971FC77C80FC3F80 /* E5category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E5category.swift; sourceTree = "<group>"; };
 		4DDA39225A4BEA8B500F61FB /* CategoryEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryEditView.swift; sourceTree = "<group>"; };
 		4F8B9D625DF47B15550D7F4C /* MigratingFromCoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigratingFromCoreData.swift; sourceTree = "<group>"; };
-		54F1C265A3492ECBB8AD9300 /* PayNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PayNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		54F1C265A3492ECBB8AD9300 /* PayNote.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PayNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		54FAFE5527EBAC98E2BDA7D3 /* PayNoteUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PayNoteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5D1DFD33101839DCB19540E9 /* InvoiceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvoiceListView.swift; sourceTree = "<group>"; };
 		612855EBB9B4EB1E945C4A9B /* E7payment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E7payment.swift; sourceTree = "<group>"; };
@@ -93,6 +95,7 @@
 		90A96AFAF7BCB93A9445E45C /* Decimal+Rounding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Decimal+Rounding.swift"; sourceTree = "<group>"; };
 		97AA8DA9E2505CC1D28F9BB1 /* E1card.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E1card.swift; sourceTree = "<group>"; };
 		9AFC963C5C24B15862ECE64B /* PayNoteTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PayNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9F95EF3EE0B184C7D267B8C7 /* View+ScalableTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+ScalableTitle.swift"; sourceTree = "<group>"; };
 		ACAC65A5428E245996B921E5 /* E6part.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E6part.swift; sourceTree = "<group>"; };
 		B0AA3264A9D08B8C5FAFC814 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		CA97A05301775C91BB87CE6F /* BankListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BankListView.swift; sourceTree = "<group>"; };
@@ -104,6 +107,7 @@
 		DF2D12827F146761299C2F9A /* JSONExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONExport.swift; sourceTree = "<group>"; };
 		DF360467FE5A56224B12660D /* CategoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryListView.swift; sourceTree = "<group>"; };
 		F1A1B2E2DD399FBFF391B2C5 /* RecordService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordService.swift; sourceTree = "<group>"; };
+		F2EF718F50B10EEBAAAD6744 /* SeedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedData.swift; sourceTree = "<group>"; };
 		F79355C01D775C52E0C34B50 /* DatabaseErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseErrorView.swift; sourceTree = "<group>"; };
 		F97721A91036068831138735 /* SplitPayListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitPayListView.swift; sourceTree = "<group>"; };
 		FA5C86233C4FE3247A2D008B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -245,6 +249,7 @@
 			isa = PBXGroup;
 			children = (
 				4F8B9D625DF47B15550D7F4C /* MigratingFromCoreData.swift */,
+				F2EF718F50B10EEBAAAD6744 /* SeedData.swift */,
 			);
 			path = Migration;
 			sourceTree = "<group>";
@@ -253,6 +258,7 @@
 			isa = PBXGroup;
 			children = (
 				90A96AFAF7BCB93A9445E45C /* Decimal+Rounding.swift */,
+				9F95EF3EE0B184C7D267B8C7 /* View+ScalableTitle.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -524,11 +530,13 @@
 				2921018F4FA6C238795FFF40 /* RecordEditView.swift in Sources */,
 				A946C018695C57EED22F67DB /* RecordListView.swift in Sources */,
 				2FEDE3564704BC980B8C9B9C /* RecordService.swift in Sources */,
+				6B962B07029AF00C00FE072C /* SeedData.swift in Sources */,
 				06CE2D98750923E3AD033A00 /* SettingsView.swift in Sources */,
 				40D3FC4B9A6E4F56FE8D485C /* ShopEditView.swift in Sources */,
 				0C5D0CEC43DCDEF011811AC5 /* ShopListView.swift in Sources */,
 				490F8CBDAB27E8464CFC9A8C /* SplitPayListView.swift in Sources */,
 				C03BB2AEED264F9C4A50EAB7 /* TopMenuView.swift in Sources */,
+				4531D860CDB0FDF2415DD421 /* View+ScalableTitle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -712,16 +720,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 0;
+				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = PayNote/Resources/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = PayNote;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.AzCreditS1;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -736,16 +742,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 0;
+				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = PayNote/Resources/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = PayNote;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.AzCreditS1;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";

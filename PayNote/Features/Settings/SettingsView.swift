@@ -48,8 +48,7 @@ struct SettingsView: View {
                 Text("settings.jsonExport.detail")
             }
         }
-        .navigationTitle("top.settings")
-        .navigationBarTitleDisplayMode(.large)
+        .scalableNavigationTitle("top.settings")
         .sheet(isPresented: $showShareSheet) {
             if let url = exportedURL {
                 ExportShareSheet(url: url)

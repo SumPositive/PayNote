@@ -38,8 +38,7 @@ struct AboutView: View {
                 EmptyView()
             }
         }
-        .navigationTitle("top.about")
-        .navigationBarTitleDisplayMode(.large)
+        .scalableNavigationTitle("top.about")
         .sheet(isPresented: $showSafari) {
             SafariView(url: helpDocURL())
                 .ignoresSafeArea()

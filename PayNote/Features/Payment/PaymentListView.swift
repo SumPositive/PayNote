@@ -47,8 +47,7 @@ struct PaymentListView: View {
                     systemImage: "calendar.badge.clock")
             }
         }
-        .navigationTitle("payment.list.title")
-        .navigationBarTitleDisplayMode(.large)
+        .scalableNavigationTitle("payment.list.title")
     }
 
     private func togglePaid(_ payment: E7payment) {
