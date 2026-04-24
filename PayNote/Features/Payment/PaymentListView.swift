@@ -4,58 +4,132 @@ import SwiftData
 struct PaymentListView: View {
     @Query(sort: \E7payment.date, order: .reverse) private var payments: [E7payment]
     @Environment(\.modelContext) private var context
+    @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
+    @State private var didInitialScroll = false
+    @State private var undoAction: PaymentToggleUndoAction?
+
+    private var unpaidPayments: [E7payment] {
+        payments.filter { !$0.isPaid }
+    }
+
+    private var paidPayments: [E7payment] {
+        payments.filter { $0.isPaid }
+    }
 
     var body: some View {
-        List {
-            let unpaid = payments.filter { !$0.isPaid }
-            let paid   = payments.filter {  $0.isPaid }
-
-            if !unpaid.isEmpty {
-                Section {
-                    ForEach(unpaid) { payment in
-                        NavigationLink {
-                            InvoiceListView(payment: payment)
-                        } label: {
-                            PaymentRow(payment: payment) {
-                                togglePaid(payment)
-                            }
-                        }
-                    }
-                } header: {
-                    Text("invoice.status.unpaid")
-                }
-            }
-
-            if !paid.isEmpty {
-                Section {
-                    ForEach(paid) { payment in
-                        NavigationLink {
-                            InvoiceListView(payment: payment)
-                        } label: {
-                            PaymentRow(payment: payment) {
-                                togglePaid(payment)
-                            }
-                        }
-                    }
-                } header: {
-                    Text("invoice.status.paid")
-                }
-            }
-
+        Group {
             if payments.isEmpty {
-                ContentUnavailableView("label.empty",
-                    systemImage: "calendar.badge.clock")
+                ContentUnavailableView("label.empty", systemImage: "calendar.badge.clock")
+            } else {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            PaymentCombinedCard(
+                                unpaidPayments: unpaidPayments,
+                                paidPayments: paidPayments,
+                                onToggle: togglePaid
+                            )
+                            if userLevel == .beginner {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    // 初心者向けに未払から済みへの移動を案内する
+                                    PaymentToggleGuideFooter(
+                                        isPaidArrow: false,
+                                        trailingTextKey: "payment.footer.unpaid.trailing"
+                                    )
+                                    // 初心者向けに済みから未払への移動を案内する
+                                    PaymentToggleGuideFooter(
+                                        isPaidArrow: true,
+                                        trailingTextKey: "payment.footer.paid.trailing"
+                                    )
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 4)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                    }
+                    .onAppear {
+                        scrollToUnpaidLastIfNeeded(proxy: proxy)
+                    }
+                }
             }
         }
         .scalableNavigationTitle("payment.list.title")
+        .overlay(alignment: .bottom) {
+            if let action = undoAction {
+                PaymentUndoToast(action: action) {
+                    undoToggle()
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 10)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: undoAction != nil)
+    }
+
+    private func scrollToUnpaidLastIfNeeded(proxy: ScrollViewProxy) {
+        if didInitialScroll {
+            return
+        }
+        guard let target = unpaidPayments.first else {
+            didInitialScroll = true
+            return
+        }
+        // 行数が少ない場合は初期スクロールを行わない
+        if payments.count <= 6 {
+            didInitialScroll = true
+            return
+        }
+        DispatchQueue.main.async {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                // 未払セクションの先頭行を上側へ表示する
+                proxy.scrollTo(target.id, anchor: .top)
+            }
+            didInitialScroll = true
+        }
     }
 
     private func togglePaid(_ payment: E7payment) {
-        payment.isPaid.toggle()
+        let previousIsPaid = payment.isPaid
+        let nextIsPaid = !previousIsPaid
+        applyPaidState(payment, isPaid: nextIsPaid)
+        // トグル後に取り消しアクションを出す
+        showUndoAction(payment: payment, previousIsPaid: previousIsPaid)
+    }
+
+    private func undoToggle() {
+        guard let action = undoAction else {
+            return
+        }
+        applyPaidState(action.payment, isPaid: action.previousIsPaid)
+        undoAction = nil
+    }
+
+    private func showUndoAction(payment: E7payment, previousIsPaid: Bool) {
+        let token = UUID()
+        undoAction = PaymentToggleUndoAction(
+            payment: payment,
+            previousIsPaid: previousIsPaid,
+            movedToPaid: payment.isPaid,
+            token: token
+        )
+        Task { @MainActor in
+            // 一定時間で自動的に閉じる
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            if undoAction?.token == token {
+                undoAction = nil
+            }
+        }
+    }
+
+    private func applyPaidState(_ payment: E7payment, isPaid: Bool) {
+        payment.isPaid = isPaid
         // すべての子 invoice に伝播
         for inv in payment.e2invoices {
-            inv.isPaid = payment.isPaid
-            if payment.isPaid, let card = inv.e1card {
+            inv.isPaid = isPaid
+            if isPaid, let card = inv.e1card {
                 // repeat が必要なレコードを生成
                 for part in inv.e6parts {
                     if let record = part.e3record, record.nRepeat > 0 {
@@ -90,20 +164,16 @@ private struct PaymentRow: View {
         HStack(spacing: 12) {
             // PAID/UNPAID バッジ
             Button(action: onToggle) {
-                Text(payment.isPaid ? "invoice.status.paid" : "invoice.status.unpaid")
-                    .font(.caption2.bold())
-                    .padding(.horizontal, 6).padding(.vertical, 3)
-                    .background(payment.isPaid ? COLOR_PAID.opacity(0.2) : COLOR_UNPAID.opacity(0.2))
-                    .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                // セルと説明フッターで同じ見た目を再利用する
+                PaymentStatusPill(isPaid: payment.isPaid)
             }
+            // 切替操作の意味を読み上げでも伝える
+            .accessibilityLabel(payment.isPaid ? Text("payment.markUnpaid") : Text("payment.markPaid"))
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(Self.dateFmt.string(from: payment.date))
                     .font(.body)
-                Text("\(payment.e2invoices.count) " + NSLocalizedString("label.cards", comment: ""))
-                    .font(.caption).foregroundStyle(.secondary)
             }
 
             Spacer()
@@ -120,5 +190,178 @@ private struct PaymentRow: View {
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Helper Views
+
+private struct PaymentStatusPill: View {
+    let isPaid: Bool
+
+    var body: some View {
+        // セル内の先頭は大きい矢印アイコンのみで状態を示す
+        Image(systemName: isPaid ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
+            .font(.title2.weight(.bold))
+            .symbolRenderingMode(.hierarchical)
+        .foregroundStyle(isPaid ? COLOR_PAID : COLOR_UNPAID)
+            .frame(minWidth: 34, minHeight: 34)
+    }
+}
+
+private struct PaymentToggleGuideFooter: View {
+    let isPaidArrow: Bool
+    let trailingTextKey: LocalizedStringKey
+
+    var body: some View {
+        HStack(spacing: 2) {
+            // ボタンと同じ矢印アイコンを小さく表示する
+            Image(systemName: isPaidArrow ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
+                .font(.footnote.weight(.bold))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(isPaidArrow ? COLOR_PAID : COLOR_UNPAID)
+            Text(trailingTextKey)
+        }
+        .font(.footnote)
+        .foregroundStyle(.secondary)
+    }
+}
+
+private struct PaymentCombinedCard: View {
+    let unpaidPayments: [E7payment]
+    let paidPayments: [E7payment]
+    let onToggle: (E7payment) -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if !unpaidPayments.isEmpty {
+                ForEach(Array(unpaidPayments.enumerated()), id: \.element.id) { index, payment in
+                    NavigationLink {
+                        InvoiceListView(payment: payment)
+                    } label: {
+                        PaymentRow(payment: payment) {
+                            onToggle(payment)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.plain)
+                    .id(payment.id)
+                    if index + 1 < unpaidPayments.count {
+                        Divider()
+                            .padding(.leading, 12)
+                    }
+                }
+            } else {
+                // 未払が空のときは空セルを表示する
+                PaymentEmptyRow()
+            }
+
+            // 境目を太線で区切り、上下にラベルを置いて文脈を維持する
+            PaymentBoundaryMarker()
+
+            if !paidPayments.isEmpty {
+                ForEach(Array(paidPayments.enumerated()), id: \.element.id) { index, payment in
+                    NavigationLink {
+                        InvoiceListView(payment: payment)
+                    } label: {
+                        PaymentRow(payment: payment) {
+                            onToggle(payment)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.plain)
+                    .id(payment.id)
+                    if index + 1 < paidPayments.count {
+                        Divider()
+                            .padding(.leading, 12)
+                    }
+                }
+            } else {
+                // 済みが空のときは空セルを表示する
+                PaymentEmptyRow()
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.95))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                // セクション外枠を少し強めにする
+                .stroke(Color.primary.opacity(0.14), lineWidth: 1.5)
+        )
+        .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 1)
+    }
+}
+
+private struct PaymentEmptyRow: View {
+    var body: some View {
+        HStack {
+            Spacer()
+            Text("label.empty")
+                .font(.body)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 14)
+    }
+}
+
+private struct PaymentBoundaryMarker: View {
+    var body: some View {
+        VStack(spacing: 6) {
+            Text("payment.section.unpaidBeforeDebit")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.horizontal, 12)
+            Rectangle()
+                .fill(Color.primary.opacity(0.22))
+                .frame(height: 2)
+                .padding(.horizontal, 12)
+            Text("payment.section.paidAfterDebit")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.horizontal, 12)
+        }
+        .padding(.top, 8)
+        .padding(.bottom, 6)
+    }
+}
+
+private struct PaymentToggleUndoAction {
+    let payment: E7payment
+    let previousIsPaid: Bool
+    let movedToPaid: Bool
+    let token: UUID
+}
+
+private struct PaymentUndoToast: View {
+    let action: PaymentToggleUndoAction
+    let onUndo: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: action.movedToPaid ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
+                .foregroundStyle(action.movedToPaid ? COLOR_PAID : COLOR_UNPAID)
+            Text(action.movedToPaid ? "payment.toast.movedToPaid" : "payment.toast.movedToUnpaid")
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+            Spacer(minLength: 6)
+            Button("button.undo") {
+                onUndo()
+            }
+            .font(.subheadline.weight(.semibold))
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.primary.opacity(0.12), lineWidth: 1)
+        )
     }
 }

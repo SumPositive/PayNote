@@ -53,6 +53,8 @@ struct TopMenuView: View {
                 row(.settings, icon: "gearshape", color: .gray, key: "top.settings")
             }
         }
+        // 先頭セクション前の余白を詰めて、ヘッダ直下をコンパクトにする
+        .contentMargins(.top, 0, for: .scrollContent)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {

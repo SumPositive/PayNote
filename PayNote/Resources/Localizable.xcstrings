@@ -404,6 +404,23 @@
         }
       }
     },
+    "button.undo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Undo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "元に戻す"
+          }
+        }
+      }
+    },
     "card.bonus.none" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1135,6 +1152,40 @@
         }
       }
     },
+    "payment.footer.paid.trailing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " tap to move to Unpaid (Before Debit)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "をタップすると、未払（引き落とし前）に移動します"
+          }
+        }
+      }
+    },
+    "payment.footer.unpaid.trailing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " tap to move to Paid (Debited)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "をタップすると、済み（引き落とし済み）に移動します"
+          }
+        }
+      }
+    },
     "payment.list.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1147,7 +1198,41 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "口座引き落とし予定"
+            "value" : "口座引き落とし状況"
+          }
+        }
+      }
+    },
+    "payment.toast.movedToPaid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved to Paid."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "済み（引き落とし済み）へ移動しました。"
+          }
+        }
+      }
+    },
+    "payment.toast.movedToUnpaid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved to Unpaid."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未払（引き落とし前）へ移動しました。"
           }
         }
       }
@@ -1182,6 +1267,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未払い に戻す"
+          }
+        }
+      }
+    },
+    "payment.row.methods" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "payment methods"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "決済手段"
+          }
+        }
+      }
+    },
+    "payment.section.paidAfterDebit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paid (Debited)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "済み（引き落とし済み）"
+          }
+        }
+      }
+    },
+    "payment.section.unpaidBeforeDebit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpaid (Before Debit)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未払（引き落とし前）"
+          }
+        }
+      }
+    },
+    "payment.status.paidShort" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PAID"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "済み"
+          }
+        }
+      }
+    },
+    "payment.status.unpaidShort" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UNPAID"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未払"
           }
         }
       }
@@ -2371,7 +2541,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "口座引き落とし予定"
+            "value" : "口座引き落とし状況"
           }
         }
       }
