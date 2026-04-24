@@ -13,6 +13,7 @@ final class E5category {
     var sortName: String
 
     @Relationship(deleteRule: .nullify) var e3records: [E3record]
+    @Relationship(deleteRule: .nullify, inverse: \E3record.e5categories) var e3recordsMulti: [E3record] = []
 
     init(
         id: String = UUID().uuidString,

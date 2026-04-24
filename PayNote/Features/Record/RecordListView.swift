@@ -112,7 +112,7 @@ private struct RecordRow: View {
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(record.zName.isEmpty ? (record.e4shop?.zName ?? "—") : record.zName)
+                Text(record.zNote.isEmpty ? (record.e4shop?.zName ?? "—") : record.zNote)
                     .font(.body)
                     .lineLimit(1)
                 HStack(spacing: 6) {

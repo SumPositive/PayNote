@@ -26,7 +26,8 @@ enum RecordService {
         }
 
         updateShopStats(record.e4shop, amount: record.nAmount, date: record.dateUse)
-        updateCategoryStats(record.e5category, amount: record.nAmount, date: record.dateUse)
+        let cats = record.e5categories.isEmpty ? [record.e5category].compactMap { $0 } : record.e5categories
+        for cat in cats { updateCategoryStats(cat, amount: record.nAmount, date: record.dateUse) }
         recalculateCard(card)
         recalculatePayments(for: card)
     }
@@ -67,9 +68,10 @@ enum RecordService {
             nRepeat:  source.nRepeat,
             nAnnual:  source.nAnnual
         )
-        next.e1card     = card
-        next.e4shop     = source.e4shop
-        next.e5category = source.e5category
+        next.e1card        = card
+        next.e4shop        = source.e4shop
+        next.e5category    = source.e5category
+        next.e5categories  = source.e5categories
         context.insert(next)
         save(next, context: context)
     }
