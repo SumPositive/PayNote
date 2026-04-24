@@ -29,7 +29,7 @@ struct AboutView: View {
                 HStack {
                     Text("about.productName")
                     Spacer()
-                    Text("PayNote / クレメモ")
+                    Text("app.name")
                         .foregroundStyle(.secondary)
                 }
             }
