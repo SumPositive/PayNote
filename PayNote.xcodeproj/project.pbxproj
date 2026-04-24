@@ -80,8 +80,8 @@
 		483AE700971FC77C80FC3F80 /* E5category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E5category.swift; sourceTree = "<group>"; };
 		4DDA39225A4BEA8B500F61FB /* CategoryEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryEditView.swift; sourceTree = "<group>"; };
 		4F8B9D625DF47B15550D7F4C /* MigratingFromCoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigratingFromCoreData.swift; sourceTree = "<group>"; };
-		54F1C265A3492ECBB8AD9300 /* PayNote.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PayNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		54FAFE5527EBAC98E2BDA7D3 /* PayNoteUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PayNoteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		54F1C265A3492ECBB8AD9300 /* PayNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PayNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		54FAFE5527EBAC98E2BDA7D3 /* PayNoteUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PayNoteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5D1DFD33101839DCB19540E9 /* InvoiceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvoiceListView.swift; sourceTree = "<group>"; };
 		612855EBB9B4EB1E945C4A9B /* E7payment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E7payment.swift; sourceTree = "<group>"; };
 		6AC306E701300663C94683C4 /* RecordListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordListView.swift; sourceTree = "<group>"; };
@@ -94,7 +94,7 @@
 		8C888720898CBE1F720F736D /* PaymentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentListView.swift; sourceTree = "<group>"; };
 		90A96AFAF7BCB93A9445E45C /* Decimal+Rounding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Decimal+Rounding.swift"; sourceTree = "<group>"; };
 		97AA8DA9E2505CC1D28F9BB1 /* E1card.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E1card.swift; sourceTree = "<group>"; };
-		9AFC963C5C24B15862ECE64B /* PayNoteTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PayNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9AFC963C5C24B15862ECE64B /* PayNoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PayNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F95EF3EE0B184C7D267B8C7 /* View+ScalableTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+ScalableTitle.swift"; sourceTree = "<group>"; };
 		ACAC65A5428E245996B921E5 /* E6part.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E6part.swift; sourceTree = "<group>"; };
 		B0AA3264A9D08B8C5FAFC814 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
@@ -431,7 +431,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 2610;
 				TargetAttributes = {
 					2428C92422D18A829E2F0849 = {
 						DevelopmentTeam = 5C2UYK6F45;
@@ -560,6 +560,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -615,6 +616,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -643,6 +645,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -691,6 +694,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_STRICT_CONCURRENCY = complete;
