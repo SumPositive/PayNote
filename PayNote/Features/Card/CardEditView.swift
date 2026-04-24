@@ -16,7 +16,7 @@ struct CardEditView: View {
     @State private var previousBankSelection: BankSelection = .none
     @State private var showBankAddSheet = false
     @State private var bankCountBeforeAdd = 0
-    @State private var closingDay: Int16 = 20
+    @State private var closingDaySelection: Int16? = 20
     @State private var payDay:     Int16 = 27
     @State private var payMonth:   Int16 = 1
     @State private var bonus1:       Int16 = 0
@@ -29,7 +29,16 @@ struct CardEditView: View {
 
     private var isNew:   Bool { card == nil }
     private var isValid: Bool { !zName.trimmingCharacters(in: .whitespaces).isEmpty }
-    private var presetTemplates: [SeedData.Preset] { SeedData.presetsForCurrentLocale() }
+    private var presetTemplates: [SeedData.CardPreset] { SeedData.presetsForCurrentLocale() }
+    private var isEnglishLocale: Bool {
+        (Bundle.main.preferredLocalizations.first ?? "en") == "en"
+    }
+    private var effectiveClosingDay: Int16 {
+        if let closingDaySelection {
+            return closingDaySelection
+        }
+        return payDay
+    }
     private var hasChanges: Bool {
         guard let base = initialDraft else { return false }
         return currentDraft() != base
@@ -41,7 +50,7 @@ struct CardEditView: View {
             Section {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("card.edit.description")
-                        .font(.footnote)
+                        .font(.callout)
                         .foregroundStyle(.primary)
                         .padding(.vertical, 8)
                         .padding(.horizontal, 10)
@@ -50,11 +59,12 @@ struct CardEditView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 10))
 
                     // プリセットを呼び出すボタン
-                    Button("プリセットから引用") {
+                    Button("card.preset.quote") {
                         showPresetDialog = true
                     }
                     .buttonStyle(.borderedProminent)
                 }
+                .listRowSeparator(.hidden)
             }
 
             // 基本情報
@@ -88,33 +98,35 @@ struct CardEditView: View {
 
             // 締日〜ボーナス月を1パネルにまとめる
             Section {
-                LabeledContent("締日") {
-                    Picker("", selection: $closingDay) {
-                        ForEach(Array(1...28), id: \.self) { d in
-                            Text("\(d)").tag(Int16(d))
-                        }
-                        Text("card.closingDay.end").tag(Int16(29))
-                    }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
-                }
-
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("支払（引き落とし）")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
-
-                    LabeledContent("月") {
-                        Picker("", selection: $payMonth) {
-                            Text("card.payMonth.current").tag(Int16(0))
-                            Text("card.payMonth.next").tag(Int16(1))
-                            Text("card.payMonth.twoMonths").tag(Int16(2))
+                    if !isEnglishLocale {
+                        LabeledContent("card.field.closingDay") {
+                            Picker("", selection: $closingDaySelection) {
+                                ForEach(Array(1...28), id: \.self) { d in
+                                    Text("\(d)").tag(Optional(Int16(d)))
+                                }
+                                Text("card.closingDay.end").tag(Optional(Int16(29)))
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
                         }
-                        .pickerStyle(.menu)
-                        .labelsHidden()
+
+                        Text("支払（引き落とし）")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+
+                        LabeledContent("月") {
+                            Picker("", selection: $payMonth) {
+                                Text("card.payMonth.current").tag(Int16(0))
+                                Text("card.payMonth.next").tag(Int16(1))
+                                Text("card.payMonth.twoMonths").tag(Int16(2))
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                        }
                     }
 
-                    LabeledContent("日") {
+                    LabeledContent(isEnglishLocale ? "card.field.payDay" : "日") {
                         Picker("", selection: $payDay) {
                             ForEach(Array(1...28), id: \.self) { d in
                                 Text("\(d)").tag(Int16(d))
@@ -125,26 +137,44 @@ struct CardEditView: View {
                         .labelsHidden()
                     }
 
-                    LabeledContent("card.field.bonus1") {
-                        Picker("", selection: $bonus1) {
-                            Text("card.bonus.none").tag(Int16(0))
-                            ForEach(Array(1...12), id: \.self) { m in
-                                Text(monthName(m)).tag(Int16(m))
+                    if isEnglishLocale {
+                        LabeledContent("card.field.closingDay") {
+                            Picker("", selection: $closingDaySelection) {
+                                Text("label.noSelection").tag(Optional<Int16>.none)
+                                ForEach(Array(1...28), id: \.self) { d in
+                                    Text("\(d)").tag(Optional(Int16(d)))
+                                }
+                                Text("card.closingDay.end").tag(Optional(Int16(29)))
                             }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
                         }
-                        .pickerStyle(.menu)
-                        .labelsHidden()
-                    }
 
-                    LabeledContent("card.field.bonus2") {
-                        Picker("", selection: $bonus2) {
-                            Text("card.bonus.none").tag(Int16(0))
-                            ForEach(Array(1...12), id: \.self) { m in
-                                Text(monthName(m)).tag(Int16(m))
+                        Text("card.field.closingDay.enHelp")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        LabeledContent("card.field.bonus1") {
+                            Picker("", selection: $bonus1) {
+                                Text("card.bonus.none").tag(Int16(0))
+                                ForEach(Array(1...12), id: \.self) { m in
+                                    Text(monthName(m)).tag(Int16(m))
+                                }
                             }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
                         }
-                        .pickerStyle(.menu)
-                        .labelsHidden()
+
+                        LabeledContent("card.field.bonus2") {
+                            Picker("", selection: $bonus2) {
+                                Text("card.bonus.none").tag(Int16(0))
+                                ForEach(Array(1...12), id: \.self) { m in
+                                    Text(monthName(m)).tag(Int16(m))
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                        }
                     }
                 }
             }
@@ -188,7 +218,7 @@ struct CardEditView: View {
         .sheet(isPresented: $showBankAddSheet, onDismiss: applyAddedBankIfNeeded) {
             NavigationStack { BankEditView(bank: nil) }
         }
-        .confirmationDialog("プリセットから引用", isPresented: $showPresetDialog) {
+        .confirmationDialog("card.preset.quote", isPresented: $showPresetDialog) {
             // 候補を選ぶと日付設定と名称を反映する
             ForEach(presetTemplates, id: \.name) { preset in
                 Button(preset.name) {
@@ -208,10 +238,24 @@ struct CardEditView: View {
     }
 
     private func loadFields() {
-        guard let card else { return }
+        guard let card else {
+            if isEnglishLocale {
+                // en の新規追加は締日を未設定扱いにする
+                closingDaySelection = nil
+                payMonth = 1
+                bonus1 = 0
+                bonus2 = 0
+            }
+            return
+        }
         zName        = card.zName
         zNote        = card.zNote
-        closingDay   = 0 < card.nClosingDay ? card.nClosingDay : 20
+        if isEnglishLocale && card.nClosingDay == card.nPayDay {
+            // en では「未設定(=支払日と同じ)」を表現する
+            closingDaySelection = nil
+        } else {
+            closingDaySelection = 0 < card.nClosingDay ? card.nClosingDay : 20
+        }
         payDay       = 0 < card.nPayDay ? card.nPayDay : 27
         payMonth     = card.nPayMonth
         bonus1       = card.nBonus1
@@ -225,15 +269,19 @@ struct CardEditView: View {
     private func save() {
         let name = zName.trimmingCharacters(in: .whitespaces)
         guard !name.isEmpty else { return }
+        let closingDay = effectiveClosingDay
+        let savingPayMonth: Int16 = isEnglishLocale ? 1 : payMonth
+        let savingBonus1: Int16 = isEnglishLocale ? 0 : bonus1
+        let savingBonus2: Int16 = isEnglishLocale ? 0 : bonus2
 
         if let card {
             card.zName       = name
             card.zNote       = zNote
             card.nClosingDay = closingDay
             card.nPayDay     = payDay
-            card.nPayMonth   = payMonth
-            card.nBonus1      = bonus1
-            card.nBonus2      = bonus2
+            card.nPayMonth   = savingPayMonth
+            card.nBonus1      = savingBonus1
+            card.nBonus2      = savingBonus2
             card.nManageLevel = manageLevel.rawValue
             card.e8bank       = selectedBank
             card.dateUpdate   = Date()
@@ -241,8 +289,8 @@ struct CardEditView: View {
             let row = Int32((allCards.map { Int($0.nRow) }.max() ?? -1) + 1)
             let c = E1card(
                 zName: name, zNote: zNote, nRow: row,
-                nClosingDay: closingDay, nPayDay: payDay, nPayMonth: payMonth,
-                nBonus1: bonus1, nBonus2: bonus2,
+                nClosingDay: closingDay, nPayDay: payDay, nPayMonth: savingPayMonth,
+                nBonus1: savingBonus1, nBonus2: savingBonus2,
                 nManageLevel: manageLevel.rawValue, dateUpdate: Date()
             )
             c.e8bank = selectedBank
@@ -296,11 +344,11 @@ struct CardEditView: View {
         }
     }
 
-    private func applyPreset(_ preset: SeedData.Preset) {
+    private func applyPreset(_ preset: SeedData.CardPreset) {
         zName = preset.name
-        closingDay = preset.closingDay
+        closingDaySelection = isEnglishLocale ? nil : preset.closingDay
         payDay = preset.payDay
-        payMonth = preset.payMonth
+        payMonth = isEnglishLocale ? 1 : preset.payMonth
         bonus1 = 0
         bonus2 = 0
     }
@@ -312,7 +360,7 @@ struct CardEditView: View {
         let zName: String
         let zNote: String
         let bankID: String?
-        let closingDay: Int16
+        let closingDaySelection: Int16?
         let payDay: Int16
         let payMonth: Int16
         let bonus1: Int16
@@ -325,7 +373,7 @@ struct CardEditView: View {
             zName: zName,
             zNote: zNote,
             bankID: selectedBank?.id,
-            closingDay: closingDay,
+            closingDaySelection: closingDaySelection,
             payDay: payDay,
             payMonth: payMonth,
             bonus1: bonus1,

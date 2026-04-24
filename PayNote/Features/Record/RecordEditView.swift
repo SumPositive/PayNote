@@ -52,6 +52,8 @@ struct RecordEditView: View {
     // Save feedback (addNew mode)
     @State private var savedBanner = false
     @FocusState private var focusName: Bool
+    @State private var hasInitialized = false
+    @State private var initialDraft: DraftState?
 
     private var isNew: Bool {
         if case .addNew = mode { return true }
@@ -59,6 +61,10 @@ struct RecordEditView: View {
     }
 
     private var isValid: Bool { nAmount > 0 && selectedCard != nil }
+    private var hasChanges: Bool {
+        guard let initialDraft else { return false }
+        return currentDraft() != initialDraft
+    }
 
     private let repeatOptions: [(label: String, value: Int16)] = [
         ("repeat.none", 0),
@@ -179,21 +185,29 @@ struct RecordEditView: View {
         }
         .navigationTitle(isNew ? "record.edit.title.add" : "record.edit.title.edit")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(!isNew && hasChanges)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                if !isNew { Button("button.cancel") { dismiss() } }
+                if !isNew && hasChanges {
+                    Button("button.cancel") { dismiss() }
+                }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("button.save") { save() }
                     .disabled(!isValid)
-                    .fontWeight(.semibold)
+                    .fontWeight(hasChanges ? .semibold : .regular)
+                    .foregroundStyle(hasChanges ? .blue : .secondary)
             }
         }
         .onAppear {
-            loadFields()
-            // 新規追加時は最初の入力欄へフォーカスする
-            if isNew {
-                DispatchQueue.main.async { focusName = true }
+            if !hasInitialized {
+                loadFields()
+                initialDraft = currentDraft()
+                hasInitialized = true
+                // 新規追加時は最初の入力欄へフォーカスする
+                if isNew {
+                    DispatchQueue.main.async { focusName = true }
+                }
             }
         }
         // 金額テンキー
@@ -327,6 +341,35 @@ struct RecordEditView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
             savedBanner = false
         }
+    }
+
+    // MARK: - Draft Diff
+
+    /// 変更検知用の編集スナップショット
+    private struct DraftState: Equatable {
+        let dateUse: Date
+        let zName: String
+        let zNote: String
+        let nAmount: Decimal
+        let payType: PayType
+        let nRepeat: Int16
+        let cardID: String?
+        let shopID: String?
+        let categoryID: String?
+    }
+
+    private func currentDraft() -> DraftState {
+        DraftState(
+            dateUse: dateUse,
+            zName: zName,
+            zNote: zNote,
+            nAmount: nAmount,
+            payType: payType,
+            nRepeat: nRepeat,
+            cardID: selectedCard?.id,
+            shopID: selectedShop?.id,
+            categoryID: selectedCategory?.id
+        )
     }
 }
 

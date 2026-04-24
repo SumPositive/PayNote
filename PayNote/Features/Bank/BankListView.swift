@@ -43,7 +43,7 @@ struct BankListView: View {
             }
             Button("button.cancel", role: .cancel) {}
         } message: {
-            Text("alert.deleteConfirm.message")
+            Text("alert.deleteConfirm.bank.message")
         }
     }
 

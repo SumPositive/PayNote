@@ -10,9 +10,15 @@ struct CategoryEditView: View {
     @State private var zName = ""
     @State private var zNote = ""
     @FocusState private var focusName: Bool
+    @State private var hasInitialized = false
+    @State private var initialDraft: DraftState?
 
     private var isNew:   Bool { category == nil }
     private var isValid: Bool { !zName.trimmingCharacters(in: .whitespaces).isEmpty }
+    private var hasChanges: Bool {
+        guard let initialDraft else { return false }
+        return currentDraft() != initialDraft
+    }
 
     var body: some View {
         Form {
@@ -28,19 +34,29 @@ struct CategoryEditView: View {
         }
         .navigationTitle(isNew ? "category.edit.title.add" : "category.edit.title.edit")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(isNew || hasChanges)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                if isNew { Button("button.cancel") { dismiss() } }
+                if isNew || hasChanges {
+                    Button("button.cancel") { dismiss() }
+                }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("button.save") { save() }.disabled(!isValid)
+                Button("button.save") { save() }
+                    .disabled(!isValid)
+                    .fontWeight(hasChanges ? .semibold : .regular)
+                    .foregroundStyle(hasChanges ? .blue : .secondary)
             }
         }
         .onAppear {
-            loadFields()
-            // 新規追加時は最初の入力欄へフォーカスする
-            if isNew {
-                DispatchQueue.main.async { focusName = true }
+            if !hasInitialized {
+                loadFields()
+                initialDraft = currentDraft()
+                hasInitialized = true
+                // 新規追加時は最初の入力欄へフォーカスする
+                if isNew {
+                    DispatchQueue.main.async { focusName = true }
+                }
             }
         }
     }
@@ -63,5 +79,20 @@ struct CategoryEditView: View {
             context.insert(c)
         }
         dismiss()
+    }
+
+    // MARK: - Draft Diff
+
+    /// 変更検知用の編集スナップショット
+    private struct DraftState: Equatable {
+        let zName: String
+        let zNote: String
+    }
+
+    private func currentDraft() -> DraftState {
+        DraftState(
+            zName: zName,
+            zNote: zNote
+        )
     }
 }
