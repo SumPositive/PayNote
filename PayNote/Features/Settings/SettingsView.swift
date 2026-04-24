@@ -2,63 +2,136 @@ import SwiftUI
 import SwiftData
 
 struct SettingsView: View {
+    @AppStorage(AppStorageKey.userLevel)         private var userLevel: UserLevel = .beginner
     @AppStorage(AppStorageKey.enableInstallment) private var enableInstallment = false
-    @AppStorage(AppStorageKey.roundBankers)      private var roundBankers      = false
     @AppStorage(AppStorageKey.appearanceMode)    private var appearanceMode: AppearanceMode = .automatic
 
     @Environment(\.modelContext) private var context
 
     @State private var showShareSheet  = false
     @State private var exportedURL: URL?
-    @State private var exportError: String?
-    @State private var showErrorAlert  = false
+    @State private var showAboutSheet  = false
+    @State private var alertItem: SettingsAlertItem?
+    private var isEnglishLocale: Bool {
+        (Bundle.main.preferredLocalizations.first ?? "en") == "en"
+    }
 
     var body: some View {
         List {
-            Section {
+            Section("settings.panel.display") {
+                Picker("settings.userLevel", selection: $userLevel) {
+                    ForEach(UserLevel.allCases) { level in
+                        Text(LocalizedStringKey(level.localizedKey)).tag(level)
+                    }
+                }
+
                 Picker("settings.appearance", selection: $appearanceMode) {
                     ForEach(AppearanceMode.allCases) { mode in
                         Text(LocalizedStringKey(mode.localizedKey)).tag(mode)
                     }
                 }
-                .pickerStyle(.segmented)
-                .listRowBackground(Color.clear)
-                .listRowInsets(.init(top: 8, leading: 16, bottom: 8, trailing: 16))
-            } header: {
-                Text("settings.appearance")
             }
 
-            Section {
-                Toggle("settings.roundBankers", isOn: $roundBankers)
+            Section("settings.panel.payment") {
+                if !isEnglishLocale {
+                    Toggle("settings.enableInstallment", isOn: $enableInstallment)
+                } else {
+                    Text("settings.enableInstallment.hidden")
+                        .foregroundStyle(.secondary)
+                }
             }
 
-            Section {
-                Toggle("settings.enableInstallment", isOn: $enableInstallment)
-            } footer: {
-                Text("settings.enableInstallment.detail")
-            }
-
-            Section {
+            Section("settings.panel.share") {
                 Button {
                     exportJSON()
                 } label: {
-                    Label("settings.jsonExport", systemImage: "square.and.arrow.up")
+                    Label("settings.jsonExport.all", systemImage: "square.and.arrow.up")
                 }
-            } footer: {
-                Text("settings.jsonExport.detail")
+            }
+
+            Section("settings.panel.support") {
+                Button {
+                    showAboutSheet = true
+                } label: {
+                    Label("settings.about", systemImage: "info.circle")
+                }
+            }
+
+            Section("settings.panel.cheer") {
+                Button("settings.cheer.tip") {
+                    alertItem = .localized(
+                        id: "cheer.tip",
+                        titleKey: "settings.cheer.title",
+                        messageKey: "settings.cheer.tip.todo"
+                    )
+                }
+                Button("settings.cheer.ad") {
+                    alertItem = .localized(
+                        id: "cheer.ad",
+                        titleKey: "settings.cheer.title",
+                        messageKey: "settings.cheer.ad.todo"
+                    )
+                }
             }
         }
         .scalableNavigationTitle("top.settings")
+        .sheet(isPresented: $showAboutSheet) {
+            NavigationStack { AboutView() }
+        }
         .sheet(isPresented: $showShareSheet) {
             if let url = exportedURL {
                 ExportShareSheet(url: url)
                     .ignoresSafeArea()
             }
         }
-        .alert("alert.saveFailed", isPresented: $showErrorAlert) {
-            Button("button.ok", role: .cancel) {}
-        } message: {
-            Text(exportError ?? "")
+        .alert(item: $alertItem) { item in
+            let title: Text = {
+                if let titleKey = item.titleKey {
+                    return Text(LocalizedStringKey(titleKey))
+                }
+                return Text("alert.saveFailed")
+            }()
+
+            let message: Text = {
+                if let messageKey = item.messageKey {
+                    return Text(LocalizedStringKey(messageKey))
+                }
+                return Text(item.rawMessage ?? "")
+            }()
+
+            return Alert(
+                title: title,
+                message: message,
+                dismissButton: .cancel(Text("button.ok"))
+            )
+        }
+    }
+
+    /// 設定画面のアラート表示モデル
+    private struct SettingsAlertItem: Identifiable {
+        let id: String
+        let titleKey: String?
+        let messageKey: String?
+        let rawMessage: String?
+
+        /// ローカライズキーを使うアラート
+        static func localized(id: String, titleKey: String, messageKey: String) -> SettingsAlertItem {
+            SettingsAlertItem(
+                id: id,
+                titleKey: titleKey,
+                messageKey: messageKey,
+                rawMessage: nil
+            )
+        }
+
+        /// 例外文字列など、生メッセージを使うアラート
+        static func rawError(_ message: String) -> SettingsAlertItem {
+            SettingsAlertItem(
+                id: "error:\(message)",
+                titleKey: nil,
+                messageKey: nil,
+                rawMessage: message
+            )
         }
     }
 
@@ -73,8 +146,7 @@ struct SettingsView: View {
             exportedURL    = url
             showShareSheet = true
         } catch {
-            exportError    = error.localizedDescription
-            showErrorAlert = true
+            alertItem = .rawError(error.localizedDescription)
         }
     }
 }

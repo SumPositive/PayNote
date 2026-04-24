@@ -30,7 +30,6 @@ struct RecordEditView: View {
     @Query                        private var categories: [E5category]
 
     @AppStorage(AppStorageKey.enableInstallment) private var enableInstallment = false
-    @AppStorage(AppStorageKey.roundBankers)      private var roundBankers      = false
 
     // Form state
     @State private var dateUse:    Date     = Date()
@@ -58,6 +57,12 @@ struct RecordEditView: View {
     private var isNew: Bool {
         if case .addNew = mode { return true }
         return false
+    }
+    private var isEnglishLocale: Bool {
+        (Bundle.main.preferredLocalizations.first ?? "en") == "en"
+    }
+    private var shouldShowInstallmentUI: Bool {
+        !isEnglishLocale && enableInstallment
     }
 
     private var isValid: Bool { nAmount > 0 && selectedCard != nil }
@@ -148,7 +153,7 @@ struct RecordEditView: View {
             }
 
             // 支払方法（二回払いが有効なとき表示）
-            if enableInstallment {
+            if shouldShowInstallmentUI {
                 Section {
                     Picker("record.field.payType", selection: $payType) {
                         ForEach(PayType.allCases, id: \.self) { t in
@@ -218,7 +223,7 @@ struct RecordEditView: View {
                 placeholder: nAmount,
                 maxValue: APP_MAX_AMOUNT
             ) { value in
-                nAmount = value.roundedAmount(bankersRounding: roundBankers)
+                nAmount = value.roundedAmount()
             }
         }
         // カード選択

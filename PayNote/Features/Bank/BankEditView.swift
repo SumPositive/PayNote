@@ -13,9 +13,11 @@ struct BankEditView: View {
     @FocusState private var focusName: Bool
     @State private var hasInitialized = false
     @State private var initialDraft: DraftState?
+    @State private var showPresetDialog = false
 
     private var isNew:   Bool { bank == nil }
     private var isValid: Bool { !zName.trimmingCharacters(in: .whitespaces).isEmpty }
+    private var presetTemplates: [SeedData.BankPreset] { SeedData.bankPresetsForCurrentLocale() }
     private var hasChanges: Bool {
         guard let initialDraft else { return false }
         return currentDraft() != initialDraft
@@ -27,6 +29,14 @@ struct BankEditView: View {
                 TextField("bank.field.name", text: $zName)
                     .autocorrectionDisabled()
                     .focused($focusName)
+
+                if isNew {
+                    // 口座名をプリセットから引用できるようにする
+                    Button("card.preset.quote") {
+                        showPresetDialog = true
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
             }
             Section {
                 TextField("label.note", text: $zNote)
@@ -59,6 +69,15 @@ struct BankEditView: View {
                     DispatchQueue.main.async { focusName = true }
                 }
             }
+        }
+        .confirmationDialog("card.preset.quote", isPresented: $showPresetDialog) {
+            // 候補を選ぶと口座名へ反映する
+            ForEach(presetTemplates, id: \.name) { preset in
+                Button(preset.name) {
+                    zName = preset.name
+                }
+            }
+            Button("button.cancel", role: .cancel) {}
         }
     }
 

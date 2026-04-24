@@ -59,10 +59,12 @@ struct CardEditView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 10))
 
                     // プリセットを呼び出すボタン
-                    Button("card.preset.quote") {
-                        showPresetDialog = true
+                    if isNew {
+                        Button("card.preset.quote") {
+                            showPresetDialog = true
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
-                    .buttonStyle(.borderedProminent)
                 }
                 .listRowSeparator(.hidden)
             }

@@ -4,10 +4,25 @@ import SwiftUI
 /// AppStorage キー定数
 enum AppStorageKey {
     static let enableInstallment = "setting.enableInstallment"
-    static let roundBankers      = "setting.roundBankers"
+    static let userLevel         = "setting.userLevel"
     static let appearanceMode    = "setting.appearanceMode"
     static let shopSortMode      = "setting.shopSortMode"
     static let categorySortMode  = "setting.categorySortMode"
+}
+
+/// ユーザレベル
+enum UserLevel: String, CaseIterable, Identifiable {
+    case beginner = "beginner"
+    case expert   = "expert"
+
+    var id: String { rawValue }
+
+    var localizedKey: String {
+        switch self {
+        case .beginner: "settings.userLevel.beginner"
+        case .expert:   "settings.userLevel.expert"
+        }
+    }
 }
 
 /// 外観モード
