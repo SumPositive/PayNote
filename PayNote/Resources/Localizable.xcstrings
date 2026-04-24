@@ -705,7 +705,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "キャッシュレス決済"
+            "value": "決済手段"
           }
         }
       }
@@ -1355,7 +1355,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "キャッシュレス決済"
+            "value": "決済手段"
           }
         }
       }
@@ -2341,7 +2341,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "キャッシュレス決済"
+            "value": "決済手段"
           }
         }
       }

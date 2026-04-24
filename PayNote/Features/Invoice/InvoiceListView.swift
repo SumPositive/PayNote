@@ -114,5 +114,6 @@ private struct PartRow: View {
             }
         }
         .opacity(part.isChecked ? 0.5 : 1)
+        .contentShape(Rectangle())
     }
 }

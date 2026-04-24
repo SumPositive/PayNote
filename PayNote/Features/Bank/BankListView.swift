@@ -63,5 +63,6 @@ private struct BankRow: View {
                 Text(bank.zNote).font(.caption).foregroundStyle(.secondary)
             }
         }
+        .contentShape(Rectangle())
     }
 }

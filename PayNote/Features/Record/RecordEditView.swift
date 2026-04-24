@@ -83,6 +83,7 @@ struct RecordEditView: View {
                             .font(.title2.bold().monospacedDigit())
                             .foregroundStyle(nAmount == 0 ? Color(.tertiaryLabel) : COLOR_AMOUNT_POSITIVE)
                     }
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
 
@@ -93,7 +94,7 @@ struct RecordEditView: View {
                            displayedComponents: .date)
                 .foregroundStyle(Color(.label))
 
-                // キャッシュレス決済（必須パネル・保存は未選択でも可）
+                // 決済手段（必須パネル・保存は未選択でも可）
                 Button { showCardPicker = true } label: {
                     HStack {
                         Text("record.field.card")
@@ -107,6 +108,7 @@ struct RecordEditView: View {
                         Image(systemName: "chevron.right")
                             .font(.caption).foregroundStyle(.tertiary)
                     }
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -122,11 +124,12 @@ struct RecordEditView: View {
                         if let shop = selectedShop {
                             Text(shop.zName).foregroundStyle(.secondary)
                         } else {
-                            Text("label.optional").foregroundStyle(.secondary)
+                            Text("label.noSelection").foregroundStyle(.secondary)
                         }
                         Image(systemName: "chevron.right")
                             .font(.caption).foregroundStyle(.tertiary)
                     }
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
 
@@ -140,6 +143,7 @@ struct RecordEditView: View {
                         Image(systemName: "chevron.right")
                             .font(.caption).foregroundStyle(.tertiary)
                     }
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
 
@@ -250,7 +254,7 @@ struct RecordEditView: View {
 
     @ViewBuilder private var categoryLabel: some View {
         if selectedCategories.isEmpty {
-            Text("label.optional").foregroundStyle(.secondary)
+            Text("label.noSelection").foregroundStyle(.secondary)
         } else if selectedCategories.count == 1 {
             Text(selectedCategories[0].zName).foregroundStyle(.secondary)
         } else {
@@ -355,6 +359,7 @@ private struct PickerSheet<T: Identifiable>: View where T.ID: Equatable {
                             Spacer()
                             if selected == nil { Image(systemName: "checkmark").foregroundStyle(.blue) }
                         }
+                        .contentShape(Rectangle())
                     }
                 }
                 ForEach(items) { item in
@@ -368,6 +373,7 @@ private struct PickerSheet<T: Identifiable>: View where T.ID: Equatable {
                                 Image(systemName: "checkmark").foregroundStyle(.blue)
                             }
                         }
+                        .contentShape(Rectangle())
                     }
                 }
             }
@@ -426,6 +432,7 @@ private struct CategoryMultiPickerSheet: View {
                                 Image(systemName: "checkmark").foregroundStyle(.blue)
                             }
                         }
+                        .contentShape(Rectangle())
                     }
                 }
             }

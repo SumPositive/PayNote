@@ -141,5 +141,6 @@ private struct RecordRow: View {
                 .foregroundStyle(record.nAmount < 0 ? COLOR_AMOUNT_NEGATIVE : COLOR_AMOUNT_POSITIVE)
         }
         .padding(.vertical, 2)
+        .contentShape(Rectangle())
     }
 }

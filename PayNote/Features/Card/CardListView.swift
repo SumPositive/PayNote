@@ -91,5 +91,6 @@ private struct CardRow: View {
             }
         }
         .padding(.vertical, 2)
+        .contentShape(Rectangle())
     }
 }

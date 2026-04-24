@@ -100,5 +100,6 @@ private struct ShopRow: View {
                 EmptyView()
             }
         }
+        .contentShape(Rectangle())
     }
 }

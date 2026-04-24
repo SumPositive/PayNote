@@ -112,5 +112,6 @@ private struct PartToggleRow: View {
             .opacity(part.isChecked ? 0.5 : 1)
         }
         .buttonStyle(.plain)
+        .contentShape(Rectangle())
     }
 }

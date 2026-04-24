@@ -100,5 +100,6 @@ private struct CategoryRow: View {
                 EmptyView()
             }
         }
+        .contentShape(Rectangle())
     }
 }
