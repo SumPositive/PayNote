@@ -22,6 +22,7 @@ extension RecordEditMode: Equatable {
 
 struct RecordEditView: View {
     let mode: RecordEditMode
+    var onSaved: (() -> Void)? = nil
 
     @Environment(\.modelContext)  private var context
     @Environment(\.dismiss)       private var dismiss
@@ -30,6 +31,7 @@ struct RecordEditView: View {
     @Query                        private var categories: [E5category]
 
     @AppStorage(AppStorageKey.enableInstallment) private var enableInstallment = false
+    @AppStorage(AppStorageKey.afterSaveAction)   private var afterSaveAction: AfterSaveAction = .goBack
 
     @State private var dateUse:    Date     = Date()
     @State private var zNote:      String   = ""
@@ -175,11 +177,13 @@ struct RecordEditView: View {
         }
         .navigationTitle(isNew ? "record.edit.title.add" : "record.edit.title.edit")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
+        .navigationBarBackButtonHidden(isNew ? hasChanges : true)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 if isNew {
-                    Button("button.cancel") { dismiss() }
+                    if hasChanges {
+                        Button("button.cancel") { dismiss() }
+                    }
                 } else {
                     Button { dismiss() } label: {
                         Image(systemName: "chevron.down")
@@ -292,8 +296,17 @@ struct RecordEditView: View {
             r.e5categories = selectedCategories; r.e5category = nil
             context.insert(r)
             RecordService.save(r, context: context)
-            resetForm()
-            showBanner()
+            switch afterSaveAction {
+            case .goBack:
+                dismiss()
+            case .continuous:
+                resetForm()
+                initialDraft = currentDraft()
+                showBanner()
+                DispatchQueue.main.async { showAmountPad = true }
+            case .showHistory:
+                onSaved?()
+            }
         case .edit(let r):
             for part in r.e6parts { context.delete(part) }
             r.e6parts.removeAll()

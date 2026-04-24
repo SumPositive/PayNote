@@ -8,6 +8,7 @@ enum AppStorageKey {
     static let appearanceMode    = "setting.appearanceMode"
     static let shopSortMode      = "setting.shopSortMode"
     static let categorySortMode  = "setting.categorySortMode"
+    static let afterSaveAction   = "setting.afterSaveAction"
 }
 
 /// ユーザレベル
@@ -46,6 +47,23 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
         case .automatic: "settings.appearance.automatic"
         case .light:     "settings.appearance.light"
         case .dark:      "settings.appearance.dark"
+        }
+    }
+}
+
+/// 新しい決済入力後の動作
+enum AfterSaveAction: String, CaseIterable, Identifiable {
+    case goBack      = "goBack"
+    case continuous  = "continuous"
+    case showHistory = "showHistory"
+
+    var id: String { rawValue }
+
+    var localizedKey: String {
+        switch self {
+        case .goBack:      "settings.afterSave.goBack"
+        case .continuous:  "settings.afterSave.continuous"
+        case .showHistory: "settings.afterSave.showHistory"
         }
     }
 }

@@ -15,7 +15,7 @@ struct ContentView: View {
         } detail: {
             NavigationStack {
                 if let dest = selectedDestination {
-                    AppDestinationView(destination: dest)
+                    AppDestinationView(destination: dest, selectedDestination: $selectedDestination)
                 } else {
                     // iPad 初期表示
                     VStack(spacing: 16) {
@@ -52,10 +52,12 @@ enum AppDestination: Hashable, CaseIterable {
 
 struct AppDestinationView: View {
     let destination: AppDestination
+    @Binding var selectedDestination: AppDestination?
 
     var body: some View {
         switch destination {
-        case .addRecord:     RecordEditView(mode: .addNew)
+        case .addRecord:
+            RecordEditView(mode: .addNew, onSaved: { selectedDestination = .recordList })
         case .recordList:    RecordListView()
         case .paymentList:   PaymentListView()
         case .cardList:      CardListView()

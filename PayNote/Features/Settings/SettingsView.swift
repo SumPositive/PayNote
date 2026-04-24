@@ -5,6 +5,7 @@ struct SettingsView: View {
     @AppStorage(AppStorageKey.userLevel)         private var userLevel: UserLevel = .beginner
     @AppStorage(AppStorageKey.enableInstallment) private var enableInstallment = false
     @AppStorage(AppStorageKey.appearanceMode)    private var appearanceMode: AppearanceMode = .automatic
+    @AppStorage(AppStorageKey.afterSaveAction)   private var afterSaveAction: AfterSaveAction = .goBack
 
     @Environment(\.modelContext) private var context
 
@@ -33,6 +34,12 @@ struct SettingsView: View {
             }
 
             Section("settings.panel.payment") {
+                Picker("settings.afterSave", selection: $afterSaveAction) {
+                    ForEach(AfterSaveAction.allCases) { action in
+                        Text(LocalizedStringKey(action.localizedKey)).tag(action)
+                    }
+                }
+
                 if !isEnglishLocale {
                     Toggle("settings.enableInstallment", isOn: $enableInstallment)
                 } else {

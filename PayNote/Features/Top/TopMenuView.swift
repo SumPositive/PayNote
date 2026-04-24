@@ -50,12 +50,18 @@ struct TopMenuView: View {
 
             // アプリ
             Section {
-                row(.settings, icon: "gearshape",  color: .gray,  key: "top.settings")
-                row(.about,    icon: "questionmark.circle", color: .gray, key: "top.about")
+                row(.settings, icon: "gearshape", color: .gray, key: "top.settings")
             }
         }
-        .navigationTitle("app.name")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("app.name")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.tertiary)
+            }
+        }
     }
 
     @ViewBuilder
