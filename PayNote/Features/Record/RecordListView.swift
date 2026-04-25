@@ -31,7 +31,7 @@ struct RecordListView: View {
                 Button {
                     editTarget = record
                 } label: {
-                    RecordRow(record: record)
+                    RecordSummaryRow(record: record)
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     Button(role: .destructive) {
@@ -125,9 +125,10 @@ struct RecordListView: View {
     }
 }
 
-// MARK: - Row
+// MARK: - Shared Row
 
-private struct RecordRow: View {
+/// 決済履歴とタグ編集で共用する明細セル
+struct RecordSummaryRow: View {
     let record: E3record
 
     // 分割のどれか1つでも未払があれば未払表示にする
@@ -143,7 +144,6 @@ private struct RecordRow: View {
     }
     // ステータスはカプセルだけ着色する
     private var statusCapsuleColor: Color {
-        // 色は薄めにして主張を抑える
         (isUnpaid ? COLOR_UNPAID : COLOR_PAID).opacity(0.2)
     }
     private var statusTextColor: Color {
@@ -156,13 +156,13 @@ private struct RecordRow: View {
         // 決済ラベルを優先し、旧データは利用店名へフォールバック
         record.zName.isEmpty ? (record.e4shop?.zName ?? "—") : record.zName
     }
+
     var body: some View {
         HStack(alignment: .center, spacing: 6) {
             // 日付は2段表示で固定幅にして視認性をそろえる
             VStack(spacing: 0) {
                 Text(AppDateFormat.yearWeekdayText(record.dateUse))
                     .font(.caption2)
-                    // 年は中立色で表示し、状態色は付けない
                     .foregroundStyle(Color(.secondaryLabel))
                     .lineLimit(1)
                 Text(AppDateFormat.monthDayText(record.dateUse))
@@ -171,7 +171,6 @@ private struct RecordRow: View {
                     .lineLimit(1)
             }
             .multilineTextAlignment(.center)
-            // 固定幅を使わず、日付表示に必要な最小幅だけ確保する
             .fixedSize(horizontal: true, vertical: false)
 
             VStack(alignment: .leading, spacing: 4) {

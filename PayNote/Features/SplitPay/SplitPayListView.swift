@@ -5,9 +5,20 @@ struct SplitPayListView: View {
     let record: E3record
 
     @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+    @State private var initialCheckedByPartID: [String: Bool] = [:]
+    @State private var editedCheckedByPartID: [String: Bool] = [:]
+    @State private var hasInitialized = false
 
     private var parts: [E6part] {
         record.e6parts.sorted { $0.nPartNo < $1.nPartNo }
+    }
+    private var hasChanges: Bool {
+        parts.contains { part in
+            let current = currentChecked(for: part)
+            let initial = initialCheckedByPartID[part.id] ?? part.isChecked
+            return current != initial
+        }
     }
 
     var body: some View {
@@ -34,7 +45,7 @@ struct SplitPayListView: View {
             // 分割明細
             Section {
                 ForEach(parts) { part in
-                    PartToggleRow(part: part) {
+                    PartToggleRow(part: part, isChecked: currentChecked(for: part)) {
                         togglePart(part)
                     }
                 }
@@ -47,13 +58,67 @@ struct SplitPayListView: View {
         .scalableNavigationTitle(verbatim: record.zName.isEmpty
             ? (record.e4shop?.zName ?? "—")
             : record.zName)
+        .navigationBarBackButtonHidden(hasChanges)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                if hasChanges {
+                    Button("button.cancel") {
+                        // 下書きだけを破棄して戻る
+                        dismiss()
+                    }
+                }
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("button.save") {
+                    saveChanges()
+                }
+                .disabled(!hasChanges)
+                .fontWeight(hasChanges ? .semibold : .regular)
+                .foregroundStyle(hasChanges ? .blue : .secondary)
+            }
+        }
+        .onAppear {
+            if !hasInitialized {
+                initializeDraft()
+                hasInitialized = true
+            }
+        }
     }
 
     private func togglePart(_ part: E6part) {
-        part.isChecked.toggle()
+        editedCheckedByPartID[part.id] = !currentChecked(for: part)
+    }
+
+    private func initializeDraft() {
+        // 初期状態を保持し、以降は下書きで編集する
+        var snapshot: [String: Bool] = [:]
+        for part in parts {
+            snapshot[part.id] = part.isChecked
+        }
+        initialCheckedByPartID = snapshot
+        editedCheckedByPartID = snapshot
+    }
+
+    private func currentChecked(for part: E6part) -> Bool {
+        editedCheckedByPartID[part.id] ?? part.isChecked
+    }
+
+    private func saveChanges() {
+        var touchedInvoices: [String: E2invoice] = [:]
+
+        for part in parts {
+            let nextValue = currentChecked(for: part)
+            if part.isChecked == nextValue {
+                continue
+            }
+            part.isChecked = nextValue
+            if let invoice = part.e2invoice {
+                touchedInvoices[invoice.id] = invoice
+            }
+        }
 
         // 親 invoice の集計を更新
-        if let invoice = part.e2invoice {
+        for invoice in touchedInvoices.values {
             if let card = invoice.e1card {
                 RecordService.recalculateCard(card)
             }
@@ -61,6 +126,10 @@ struct SplitPayListView: View {
                 payment.sumNoCheck = payment.e2invoices.reduce(0) { $0 + $1.sumNoCheck }
             }
         }
+
+        // 保存後は現在値を新しい初期値として扱い、画面を閉じる
+        initializeDraft()
+        dismiss()
     }
 }
 
@@ -68,13 +137,14 @@ struct SplitPayListView: View {
 
 private struct PartToggleRow: View {
     let part: E6part
+    let isChecked: Bool
     let onToggle: () -> Void
 
     var body: some View {
         Button(action: onToggle) {
             HStack(spacing: 14) {
-                Image(systemName: part.isChecked ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(part.isChecked ? Color(.systemGreen) : Color(.systemGray3))
+                Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isChecked ? Color(.systemGreen) : Color(.systemGray3))
                     .imageScale(.large)
                     .frame(width: 28)
 
@@ -105,7 +175,7 @@ private struct PartToggleRow: View {
                     }
                 }
             }
-            .opacity(part.isChecked ? 0.5 : 1)
+            .opacity(isChecked ? 0.5 : 1)
         }
         .buttonStyle(.plain)
         .contentShape(Rectangle())

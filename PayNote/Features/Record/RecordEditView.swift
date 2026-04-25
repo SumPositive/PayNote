@@ -279,10 +279,15 @@ struct RecordEditView: View {
                         Button("button.cancel") { dismiss() }
                     }
                 } else {
-                    Button { dismiss() } label: {
-                        Image(systemName: "chevron.down")
-                            .imageScale(.large)
-                            .symbolRenderingMode(.hierarchical)
+                    if hasChanges {
+                        // 編集中に変更がある場合は「キャンセル」を表示する
+                        Button("button.cancel") { dismiss() }
+                    } else {
+                        Button { dismiss() } label: {
+                            Image(systemName: "chevron.down")
+                                .imageScale(.large)
+                                .symbolRenderingMode(.hierarchical)
+                        }
                     }
                 }
             }

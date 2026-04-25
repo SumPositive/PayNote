@@ -6,6 +6,7 @@ struct CategoryEditView: View {
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss)      private var dismiss
+    @Query(sort: \E3record.dateUse, order: .reverse) private var records: [E3record]
 
     @State private var zName = ""
     @State private var zNote = ""
@@ -19,6 +20,16 @@ struct CategoryEditView: View {
         guard let initialDraft else { return false }
         return currentDraft() != initialDraft
     }
+    private var linkedRecords: [E3record] {
+        guard let category else { return [] }
+        return records.filter { record in
+            // 新しい複数タグを優先し、旧単体タグも対象に含める
+            if record.e5categories.contains(where: { $0.id == category.id }) {
+                return true
+            }
+            return record.e5category?.id == category.id
+        }
+    }
 
     var body: some View {
         Form {
@@ -30,6 +41,22 @@ struct CategoryEditView: View {
             Section {
                 TextField("label.note", text: $zNote)
                     .autocorrectionDisabled()
+            }
+            if !isNew {
+                Section("record.list.title") {
+                    if linkedRecords.isEmpty {
+                        Text("label.empty")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(linkedRecords) { record in
+                            NavigationLink {
+                                RecordEditView(mode: .edit(record))
+                            } label: {
+                                RecordSummaryRow(record: record)
+                            }
+                        }
+                    }
+                }
             }
         }
         .navigationTitle(isNew ? "category.edit.title.add" : "category.edit.title.edit")
