@@ -9,6 +9,7 @@ enum AppStorageKey {
     static let shopSortMode      = "setting.shopSortMode"
     static let categorySortMode  = "setting.categorySortMode"
     static let afterSaveAction   = "setting.afterSaveAction"
+    static let openAddOnActive   = "setting.openAddOnActive"
 }
 
 /// ユーザレベル

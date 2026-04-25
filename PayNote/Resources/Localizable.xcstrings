@@ -1985,6 +1985,23 @@
         }
       }
     },
+    "settings.openAddOnActive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open New Payment on Foreground"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "起動時に 新しい決済 を開く"
+          }
+        }
+      }
+    },
     "settings.jsonExport" : {
       "extractionState" : "manual",
       "localizations" : {

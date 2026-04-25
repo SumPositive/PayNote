@@ -6,6 +6,7 @@ struct SettingsView: View {
     @AppStorage(AppStorageKey.enableInstallment) private var enableInstallment = false
     @AppStorage(AppStorageKey.appearanceMode)    private var appearanceMode: AppearanceMode = .automatic
     @AppStorage(AppStorageKey.afterSaveAction)   private var afterSaveAction: AfterSaveAction = .goBack
+    @AppStorage(AppStorageKey.openAddOnActive)   private var openAddOnActive = false
 
     @Environment(\.modelContext) private var context
 
@@ -34,6 +35,8 @@ struct SettingsView: View {
             }
 
             Section("settings.panel.payment") {
+                Toggle("settings.openAddOnActive", isOn: $openAddOnActive)
+
                 Picker("settings.afterSave", selection: $afterSaveAction) {
                     ForEach(AfterSaveAction.allCases) { action in
                         Text(LocalizedStringKey(action.localizedKey)).tag(action)

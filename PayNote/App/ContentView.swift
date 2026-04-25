@@ -6,8 +6,11 @@ import SwiftData
 /// - iPad:    サイドバー(TopMenuView) ＋ 詳細エリア
 struct ContentView: View {
 
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
+    @AppStorage(AppStorageKey.openAddOnActive) private var openAddOnActive = false
     @State private var selectedDestination: AppDestination?
+    @State private var addRecordRefreshID = UUID()
 
     var body: some View {
         NavigationSplitView {
@@ -15,7 +18,11 @@ struct ContentView: View {
         } detail: {
             NavigationStack {
                 if let dest = selectedDestination {
-                    AppDestinationView(destination: dest, selectedDestination: $selectedDestination)
+                    AppDestinationView(
+                        destination: dest,
+                        selectedDestination: $selectedDestination,
+                        addRecordRefreshID: addRecordRefreshID
+                    )
                 } else {
                     // iPad 初期表示
                     VStack(spacing: 16) {
@@ -31,6 +38,12 @@ struct ContentView: View {
             }
         }
         .task { SeedData.seedIfNeeded(context: modelContext) }
+        .onChange(of: scenePhase) { _, newPhase in
+            guard newPhase == .active, openAddOnActive else { return }
+            // フォアグラウンド復帰時は新しい決済を開き、日付を最新化するため再生成する
+            addRecordRefreshID = UUID()
+            selectedDestination = .addRecord
+        }
     }
 }
 
@@ -53,11 +66,13 @@ enum AppDestination: Hashable, CaseIterable {
 struct AppDestinationView: View {
     let destination: AppDestination
     @Binding var selectedDestination: AppDestination?
+    let addRecordRefreshID: UUID
 
     var body: some View {
         switch destination {
         case .addRecord:
             RecordEditView(mode: .addNew, onSaved: { selectedDestination = .recordList })
+                .id(addRecordRefreshID)
         case .recordList:    RecordListView()
         case .paymentList:   PaymentListView()
         case .cardList:      CardListView()
