@@ -99,20 +99,10 @@ struct MigratingFromCoreData {
             bankMap[b.objectID] = bank
         }
 
-        // E4shop
-        var shopMap: [NSManagedObjectID: E4shop] = [:]
-        for s in dto.shops {
-            let shop = E4shop(
-                zName: s.zName, zNote: s.zNote,
-                sortAmount: s.sortAmount, sortCount: s.sortCount,
-                sortDate: s.sortDate, sortName: s.sortName
-            )
-            context.insert(shop)
-            shopMap[s.objectID] = shop
-        }
-
-        // E5category
+        // E5category（旧分類タグ）
         var catMap: [NSManagedObjectID: E5category] = [:]
+        // 同名カテゴリへ統合するためのインデックス（利用店→分類タグ変換で利用）
+        var categoryByName: [String: E5category] = [:]
         for c in dto.categories {
             let cat = E5category(
                 zName: c.zName, zNote: c.zNote,
@@ -121,6 +111,40 @@ struct MigratingFromCoreData {
             )
             context.insert(cat)
             catMap[c.objectID] = cat
+            categoryByName[c.zName] = cat
+        }
+
+        // 旧利用店は分類タグへ変換する（同名タグがあれば統合、なければ新規作成）
+        var shopToCategoryMap: [NSManagedObjectID: E5category] = [:]
+        for s in dto.shops {
+            if let existing = categoryByName[s.zName] {
+                // 同名タグがある場合は統計値を統合する
+                existing.sortAmount += s.sortAmount
+                existing.sortCount += s.sortCount
+                if existing.sortDate == nil {
+                    existing.sortDate = s.sortDate
+                } else if let incoming = s.sortDate, let current = existing.sortDate, current < incoming {
+                    existing.sortDate = incoming
+                }
+                if existing.zNote.isEmpty, s.zNote.isEmpty == false {
+                    existing.zNote = s.zNote
+                }
+                shopToCategoryMap[s.objectID] = existing
+                continue
+            }
+
+            // 同名タグがない場合は新規タグとして作成する
+            let converted = E5category(
+                zName: s.zName,
+                zNote: s.zNote,
+                sortAmount: s.sortAmount,
+                sortCount: s.sortCount,
+                sortDate: s.sortDate,
+                sortName: s.sortName
+            )
+            context.insert(converted)
+            categoryByName[s.zName] = converted
+            shopToCategoryMap[s.objectID] = converted
         }
 
         // E7payment
@@ -164,8 +188,24 @@ struct MigratingFromCoreData {
                     nAnnual: r.nAnnual,
                     sumNoCheck: r.sumNoCheck
                 )
-                record.e4shop = r.shopObjectID.flatMap { shopMap[$0] }
-                record.e5category = r.categoryObjectID.flatMap { catMap[$0] }
+                let categoryFromLegacyTag = r.categoryObjectID.flatMap { catMap[$0] }
+                let categoryFromLegacyShop = r.shopObjectID.flatMap { shopToCategoryMap[$0] }
+
+                // 旧 利用店/分類タグ を新 分類タグ配列へ統合する
+                var mergedCategories: [E5category] = []
+                if let categoryFromLegacyTag {
+                    mergedCategories.append(categoryFromLegacyTag)
+                }
+                if let categoryFromLegacyShop,
+                   mergedCategories.contains(where: { $0.id == categoryFromLegacyShop.id }) == false {
+                    mergedCategories.append(categoryFromLegacyShop)
+                }
+
+                // 新仕様では利用店マスタを使わないため、e4shop は未設定にする
+                record.e4shop = nil
+                // 互換性のため単体参照にも先頭タグを残し、正は複数タグ側へ集約する
+                record.e5category = mergedCategories.first
+                record.e5categories = mergedCategories
                 record.e1card = card
                 context.insert(record)
                 recordMap[r.objectID] = record

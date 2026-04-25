@@ -112,7 +112,8 @@ private struct RecordRow: View {
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(record.zNote.isEmpty ? (record.e4shop?.zName ?? "—") : record.zNote)
+                // 利用点は自由入力を優先し、旧データは店舗名へフォールバックする
+                Text(record.zName.isEmpty ? (record.e4shop?.zName ?? "—") : record.zName)
                     .font(.body)
                     .lineLimit(1)
                 HStack(spacing: 6) {

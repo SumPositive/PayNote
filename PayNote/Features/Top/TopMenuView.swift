@@ -44,7 +44,6 @@ struct TopMenuView: View {
             Section {
                 row(.cardList,     icon: "creditcard",         color: .green,  key: "top.cardList")
                 row(.bankList,     icon: "building.columns",   color: .teal,   key: "top.bankList")
-                row(.shopList,     icon: "storefront",         color: .purple, key: "top.shopList")
                 row(.categoryList, icon: "tag",                color: .pink,   key: "top.categoryList")
             }
 

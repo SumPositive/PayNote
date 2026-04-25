@@ -159,6 +159,15 @@ private struct PaymentRow: View {
     private static let dateFmt: DateFormatter = {
         let f = DateFormatter(); f.dateStyle = .medium; f.timeStyle = .none; return f
     }()
+    private var bankNameText: String {
+        // 請求書に紐づく口座名の先頭を表示する（未設定時は共通ラベル）
+        if let name = payment.e2invoices
+            .compactMap({ $0.e1card?.e8bank?.zName })
+            .first(where: { !$0.isEmpty }) {
+            return name
+        }
+        return NSLocalizedString("label.noSelection", comment: "")
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -171,22 +180,25 @@ private struct PaymentRow: View {
             .accessibilityLabel(payment.isPaid ? Text("payment.markUnpaid") : Text("payment.markPaid"))
             .buttonStyle(.plain)
 
-            VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 8) {
                 Text(Self.dateFmt.string(from: payment.date))
                     .font(.body)
+                    .lineLimit(1)
+                Text(bankNameText)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
             }
+            .layoutPriority(0)
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 3) {
-                Text(payment.sumAmount.currencyString())
-                    .font(.body.monospacedDigit())
-                    .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
-                if payment.sumNoCheck > 0 {
-                    Text("✕ \(payment.sumNoCheck)")
-                        .font(.caption2).foregroundStyle(.orange)
-                }
-            }
+            Text(payment.sumAmount.currencyString())
+                .font(.body.monospacedDigit())
+                .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                .lineLimit(1)
+                .layoutPriority(1)
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
@@ -233,6 +245,7 @@ private struct PaymentCombinedCard: View {
     let unpaidPayments: [E7payment]
     let paidPayments: [E7payment]
     let onToggle: (E7payment) -> Void
+    @State private var boundaryMidY: CGFloat = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -290,10 +303,35 @@ private struct PaymentCombinedCard: View {
                 .fill(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.95))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                // セクション外枠を少し強めにする
-                .stroke(Color.primary.opacity(0.14), lineWidth: 1.5)
+            GeometryReader { proxy in
+                let cardHeight = proxy.size.height
+                let splitY = min(max(boundaryMidY, 0), cardHeight)
+                ZStack {
+                    // 境界線より上側の外枠は未払色
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(COLOR_UNPAID, lineWidth: 1.5)
+                        .mask(
+                            Rectangle()
+                                .frame(width: proxy.size.width, height: splitY)
+                                .frame(maxHeight: .infinity, alignment: .top)
+                        )
+                    // 境界線より下側の外枠は払済み色
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(COLOR_PAID, lineWidth: 1.5)
+                        .mask(
+                            Rectangle()
+                                .frame(width: proxy.size.width, height: max(cardHeight - splitY, 0))
+                                .frame(maxHeight: .infinity, alignment: .bottom)
+                        )
+                }
+            }
         )
+        .coordinateSpace(name: "paymentCombinedCard")
+        .onPreferenceChange(PaymentBoundaryMidYPreferenceKey.self) { y in
+            if y > 0 {
+                boundaryMidY = y
+            }
+        }
         .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 1)
     }
 }
@@ -354,6 +392,15 @@ private struct PaymentBoundaryMarker: View {
             Rectangle()
                 .fill(boundaryColor)
                 .frame(height: 2)
+                .background(
+                    // 境界線の位置を親へ伝える
+                    GeometryReader { proxy in
+                        Color.clear.preference(
+                            key: PaymentBoundaryMidYPreferenceKey.self,
+                            value: proxy.frame(in: .named("paymentCombinedCard")).midY
+                        )
+                    }
+                )
 
             Text("payment.section.paidAfterDebit")
                 .font(.headline.weight(.semibold))
@@ -371,6 +418,17 @@ private struct PaymentBoundaryMarker: View {
         }
         .padding(.top, 8)
         .padding(.bottom, 6)
+    }
+}
+
+private struct PaymentBoundaryMidYPreferenceKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        let next = nextValue()
+        if next > 0 {
+            value = next
+        }
     }
 }
 

@@ -5,6 +5,37 @@ struct InvoiceListView: View {
     let payment: E7payment
 
     @Environment(\.modelContext) private var context
+    private static let statementDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = .autoupdatingCurrent
+        // 日付に曜日(最短)を付ける
+        f.setLocalizedDateFormatFromTemplate("yMdEEEEE")
+        return f
+    }()
+
+    private var bankNameText: String {
+        let names = Array(
+            Set(
+                payment.e2invoices
+                    .compactMap { $0.e1card?.e8bank?.zName }
+                    .filter { !$0.isEmpty }
+            )
+        ).sorted()
+
+        if names.isEmpty {
+            return NSLocalizedString("label.noSelection", comment: "")
+        }
+        if names.count == 1 {
+            return names[0]
+        }
+        return NSLocalizedString("invoice.bank.multiple", comment: "")
+    }
+
+    private var statementTitleText: String {
+        let dateText = Self.statementDateFormatter.string(from: payment.date)
+        let suffix = NSLocalizedString("invoice.statement.debitSuffix", comment: "")
+        return "\(dateText)\(suffix)"
+    }
 
     private var invoices: [E2invoice] {
         payment.e2invoices.sorted {
@@ -14,8 +45,16 @@ struct InvoiceListView: View {
 
     var body: some View {
         List {
-            // 合計
+            // 口座名・日付・合計を同一セクションにまとめる
             Section {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(bankNameText)
+                        .font(.headline)
+                    Text(statementTitleText)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 HStack {
                     Text("label.total")
                     Spacer()
@@ -38,12 +77,14 @@ struct InvoiceListView: View {
                         }
                     }
 
-                    // 小計
-                    HStack {
-                        Spacer()
-                        Text(invoice.sumAmount.currencyString())
-                            .font(.subheadline.monospacedDigit().bold())
-                            .foregroundStyle(invoice.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                    // 明細が複数行のときのみ小計を表示する
+                    if 1 < invoice.e6parts.count {
+                        HStack {
+                            Spacer()
+                            Text(invoice.sumAmount.currencyString())
+                                .font(.subheadline.monospacedDigit().bold())
+                                .foregroundStyle(invoice.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                        }
                     }
                 } header: {
                     HStack {
@@ -67,7 +108,7 @@ struct InvoiceListView: View {
                 }
             }
         }
-        .scalableNavigationTitle(verbatim: payment.date.formatted(date: .abbreviated, time: .omitted))
+        .scalableNavigationTitle("invoice.statement.title")
     }
 
     private func toggleInvoicePaid(_ invoice: E2invoice) {
@@ -86,32 +127,52 @@ struct InvoiceListView: View {
 
 private struct PartRow: View {
     let part: E6part
+    private static let rowDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = .autoupdatingCurrent
+        // 明細行は短めの日付+曜日(最短)にする
+        f.setLocalizedDateFormatFromTemplate("yMdEEEEE")
+        return f
+    }()
+    private var usePointText: String {
+        // 利用点は自由入力の記録名を優先し、旧データは店舗名を使う
+        if let recordName = part.e3record?.zName, !recordName.isEmpty {
+            return recordName
+        }
+        if let shopName = part.e3record?.e4shop?.zName, !shopName.isEmpty {
+            return shopName
+        }
+        return "—"
+    }
+    private var dateText: String {
+        guard let record = part.e3record else { return "—" }
+        return Self.rowDateFormatter.string(from: record.dateUse)
+    }
 
     var body: some View {
-        HStack {
+        HStack(spacing: 10) {
             Image(systemName: part.isChecked ? "checkmark.circle.fill" : "circle")
                 .foregroundStyle(part.isChecked ? Color(.systemGreen) : Color(.systemGray3))
                 .imageScale(.large)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(part.e3record?.zName ?? (part.e3record?.e4shop?.zName ?? "—"))
-                    .font(.body).lineLimit(1)
-                if let record = part.e3record {
-                    Text(record.dateUse.formatted(date: .abbreviated, time: .omitted))
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-            }
+            Text(dateText)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
+            Text(usePointText)
+                .font(.body)
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .layoutPriority(0)
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(part.nAmount.currencyString())
-                    .font(.body.monospacedDigit())
-                if part.nInterest > 0 {
-                    Text("+ \(part.nInterest.currencyString())")
-                        .font(.caption2).foregroundStyle(.orange)
-                }
-            }
+            Text(part.nAmount.currencyString())
+                .font(.body.monospacedDigit())
+                .lineLimit(1)
+                .layoutPriority(1)
         }
         .opacity(part.isChecked ? 0.5 : 1)
         .contentShape(Rectangle())
