@@ -1164,7 +1164,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "をタップすると、未払（引き落とし前）に移動します"
+            "value" : "をタップすると、未払に移動します"
           }
         }
       }
@@ -1181,7 +1181,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "をタップすると、済み（引き落とし済み）に移動します"
+            "value" : "をタップすると、引き落とし済みに移動します"
           }
         }
       }
@@ -1198,7 +1198,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "口座引き落とし状況"
+            "value" : "引き落とし状況"
           }
         }
       }
@@ -1300,7 +1300,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "済み（引き落とし済み）"
+            "value" : "引き落とし済み"
           }
         }
       }
@@ -1317,7 +1317,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "未払（引き落とし前）"
+            "value" : "未払"
           }
         }
       }
@@ -2558,7 +2558,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "口座引き落とし状況"
+            "value" : "引き落とし状況"
           }
         }
       }

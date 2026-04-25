@@ -209,6 +209,8 @@ private struct PaymentStatusPill: View {
 }
 
 private struct PaymentToggleGuideFooter: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let isPaidArrow: Bool
     let trailingTextKey: LocalizedStringKey
 
@@ -222,7 +224,8 @@ private struct PaymentToggleGuideFooter: View {
             Text(trailingTextKey)
         }
         .font(.footnote)
-        .foregroundStyle(.secondary)
+        // ダーク時のみ文字色を明るくして可読性を上げる
+        .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.9) : .secondary)
     }
 }
 
@@ -310,22 +313,61 @@ private struct PaymentEmptyRow: View {
 }
 
 private struct PaymentBoundaryMarker: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var boundaryColor: Color {
+        colorScheme == .dark ? Color.black.opacity(0.9) : Color.white
+    }
+
+    private var edgeHighlightOpacity: Double {
+        // 明るすぎないように、端の発色は抑えめにする
+        colorScheme == .dark ? 0.44 : 0.26
+    }
+
+    private var edgeGradientHeight: CGFloat {
+        // グラデーションが分かる最小限の高さ
+        12
+    }
+
+    private var labelColor: Color {
+        // ダーク時のみラベル文字を見やすくする
+        colorScheme == .dark ? Color.white.opacity(0.92) : Color.secondary
+    }
+
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 0) {
             Text("payment.section.unpaidBeforeDebit")
                 .font(.headline.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(labelColor)
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(
+                    // 上端の色をラベル帯に自然に引き込む
+                    LinearGradient(
+                        colors: [COLOR_UNPAID.opacity(edgeHighlightOpacity * 0.55), .clear],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+
+            // 境界線だけ明るくする
             Rectangle()
-                .fill(Color.primary.opacity(0.22))
+                .fill(boundaryColor)
                 .frame(height: 2)
-                .padding(.horizontal, 12)
+
             Text("payment.section.paidAfterDebit")
                 .font(.headline.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(labelColor)
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(
+                    // 下端の色をラベル帯に自然に引き込む
+                    LinearGradient(
+                        colors: [.clear, COLOR_PAID.opacity(edgeHighlightOpacity * 0.55)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
         }
         .padding(.top, 8)
         .padding(.bottom, 6)
