@@ -3,7 +3,6 @@ import SwiftData
 
 struct SettingsView: View {
     @AppStorage(AppStorageKey.userLevel)         private var userLevel: UserLevel = .beginner
-    @AppStorage(AppStorageKey.enableInstallment) private var enableInstallment = false
     @AppStorage(AppStorageKey.appearanceMode)    private var appearanceMode: AppearanceMode = .automatic
     @AppStorage(AppStorageKey.afterSaveAction)   private var afterSaveAction: AfterSaveAction = .goBack
     @AppStorage(AppStorageKey.openAddOnActive)   private var openAddOnActive = false
@@ -14,9 +13,6 @@ struct SettingsView: View {
     @State private var exportedURL: URL?
     @State private var showAboutSheet  = false
     @State private var alertItem: SettingsAlertItem?
-    private var isEnglishLocale: Bool {
-        (Bundle.main.preferredLocalizations.first ?? "en") == "en"
-    }
 
     var body: some View {
         List {
@@ -41,13 +37,6 @@ struct SettingsView: View {
                     ForEach(AfterSaveAction.allCases) { action in
                         Text(LocalizedStringKey(action.localizedKey)).tag(action)
                     }
-                }
-
-                if !isEnglishLocale {
-                    Toggle("settings.enableInstallment", isOn: $enableInstallment)
-                } else {
-                    Text("settings.enableInstallment.hidden")
-                        .foregroundStyle(.secondary)
                 }
             }
 

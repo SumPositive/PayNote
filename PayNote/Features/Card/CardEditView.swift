@@ -19,8 +19,6 @@ struct CardEditView: View {
     @State private var closingDaySelection: Int16? = 20
     @State private var payDay:     Int16 = 27
     @State private var payMonth:   Int16 = 1
-    @State private var bonus1:       Int16 = 0
-    @State private var bonus2:       Int16 = 0
     @State private var manageLevel:  ManagementLevel = .precise
     @State private var showPresetDialog = false
     @State private var hasInitialized = false
@@ -98,7 +96,7 @@ struct CardEditView: View {
                 }
             }
 
-            // 締日〜ボーナス月を1パネルにまとめる
+            // 締日〜支払設定を1パネルにまとめる
             Section {
                 VStack(alignment: .leading, spacing: 8) {
                     if !isEnglishLocale {
@@ -155,28 +153,6 @@ struct CardEditView: View {
                         Text("card.field.closingDay.enHelp")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                    } else {
-                        LabeledContent("card.field.bonus1") {
-                            Picker("", selection: $bonus1) {
-                                Text("card.bonus.none").tag(Int16(0))
-                                ForEach(Array(1...12), id: \.self) { m in
-                                    Text(monthName(m)).tag(Int16(m))
-                                }
-                            }
-                            .pickerStyle(.menu)
-                            .labelsHidden()
-                        }
-
-                        LabeledContent("card.field.bonus2") {
-                            Picker("", selection: $bonus2) {
-                                Text("card.bonus.none").tag(Int16(0))
-                                ForEach(Array(1...12), id: \.self) { m in
-                                    Text(monthName(m)).tag(Int16(m))
-                                }
-                            }
-                            .pickerStyle(.menu)
-                            .labelsHidden()
-                        }
                     }
                 }
             }
@@ -233,20 +209,12 @@ struct CardEditView: View {
 
     // MARK: - Helpers
 
-    private func monthName(_ m: Int) -> String {
-        let fmt = DateFormatter()
-        fmt.locale = Locale.current
-        return fmt.monthSymbols[m - 1]
-    }
-
     private func loadFields() {
         guard let card else {
             if isEnglishLocale {
                 // en の新規追加は締日を未設定扱いにする
                 closingDaySelection = nil
                 payMonth = 1
-                bonus1 = 0
-                bonus2 = 0
             }
             return
         }
@@ -260,8 +228,6 @@ struct CardEditView: View {
         }
         payDay       = 0 < card.nPayDay ? card.nPayDay : 27
         payMonth     = card.nPayMonth
-        bonus1       = card.nBonus1
-        bonus2       = card.nBonus2
         manageLevel  = card.manageLevel
         selectedBank = card.e8bank
         bankSelection = selectionFromBank(selectedBank)
@@ -273,8 +239,6 @@ struct CardEditView: View {
         guard !name.isEmpty else { return }
         let closingDay = effectiveClosingDay
         let savingPayMonth: Int16 = isEnglishLocale ? 1 : payMonth
-        let savingBonus1: Int16 = isEnglishLocale ? 0 : bonus1
-        let savingBonus2: Int16 = isEnglishLocale ? 0 : bonus2
 
         if let card {
             card.zName       = name
@@ -282,8 +246,9 @@ struct CardEditView: View {
             card.nClosingDay = closingDay
             card.nPayDay     = payDay
             card.nPayMonth   = savingPayMonth
-            card.nBonus1      = savingBonus1
-            card.nBonus2      = savingBonus2
+            // ボーナス月は廃止し、常に未設定(0)で保存する
+            card.nBonus1      = 0
+            card.nBonus2      = 0
             card.nManageLevel = manageLevel.rawValue
             card.e8bank       = selectedBank
             card.dateUpdate   = Date()
@@ -292,7 +257,7 @@ struct CardEditView: View {
             let c = E1card(
                 zName: name, zNote: zNote, nRow: row,
                 nClosingDay: closingDay, nPayDay: payDay, nPayMonth: savingPayMonth,
-                nBonus1: savingBonus1, nBonus2: savingBonus2,
+                nBonus1: 0, nBonus2: 0,
                 nManageLevel: manageLevel.rawValue, dateUpdate: Date()
             )
             c.e8bank = selectedBank
@@ -351,8 +316,6 @@ struct CardEditView: View {
         closingDaySelection = isEnglishLocale ? nil : preset.closingDay
         payDay = preset.payDay
         payMonth = isEnglishLocale ? 1 : preset.payMonth
-        bonus1 = 0
-        bonus2 = 0
     }
 
     // MARK: - Draft Diff
@@ -365,8 +328,6 @@ struct CardEditView: View {
         let closingDaySelection: Int16?
         let payDay: Int16
         let payMonth: Int16
-        let bonus1: Int16
-        let bonus2: Int16
         let manageLevel: ManagementLevel
     }
 
@@ -378,8 +339,6 @@ struct CardEditView: View {
             closingDaySelection: closingDaySelection,
             payDay: payDay,
             payMonth: payMonth,
-            bonus1: bonus1,
-            bonus2: bonus2,
             manageLevel: manageLevel
         )
     }

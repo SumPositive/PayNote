@@ -3,7 +3,6 @@ import SwiftUI
 
 /// AppStorage キー定数
 enum AppStorageKey {
-    static let enableInstallment = "setting.enableInstallment"
     static let userLevel         = "setting.userLevel"
     static let appearanceMode    = "setting.appearanceMode"
     static let shopSortMode      = "setting.shopSortMode"

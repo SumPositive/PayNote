@@ -30,7 +30,6 @@ struct RecordEditView: View {
     @Query(sort: \E3record.dateUse, order: .reverse) private var pastRecords: [E3record]
     @Query                        private var categories: [E5category]
 
-    @AppStorage(AppStorageKey.enableInstallment) private var enableInstallment = false
     @AppStorage(AppStorageKey.afterSaveAction)   private var afterSaveAction: AfterSaveAction = .goBack
 
     @State private var dateUse:    Date     = Date()
@@ -55,12 +54,6 @@ struct RecordEditView: View {
     private var isNew: Bool {
         if case .addNew = mode { return true }
         return false
-    }
-    private var isEnglishLocale: Bool {
-        (Bundle.main.preferredLocalizations.first ?? "en") == "en"
-    }
-    private var shouldShowInstallmentUI: Bool {
-        !isEnglishLocale && enableInstallment
     }
     private var isValid:    Bool { nAmount > 0 }
     private var usePointCandidates: [String] {
@@ -234,16 +227,6 @@ struct RecordEditView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-
-                // 支払方法
-                if shouldShowInstallmentUI {
-                    Picker("record.field.payType", selection: $payType) {
-                        ForEach(PayType.allCases, id: \.self) { t in
-                            Text(LocalizedStringKey(t.localizedKey)).tag(t)
-                        }
-                    }
-                    .foregroundStyle(Color(.label))
-                }
 
                 // 繰り返し
                 if payType == .lumpSum {
@@ -430,6 +413,8 @@ struct RecordEditView: View {
         if case .addNew = mode {
             // 新規時は直近利用の決済手段を初期選択する
             selectedCard = latestUsedCard()
+            // 新規作成は一括払いのみを許可する
+            payType = .lumpSum
             return
         }
         guard case .edit(let r) = mode else { return }
@@ -454,7 +439,7 @@ struct RecordEditView: View {
         switch mode {
         case .addNew:
             let r = E3record(dateUse: dateUse, zName: usePoint, zNote: zNote,
-                             nAmount: nAmount, nPayType: payType.rawValue, nRepeat: nRepeat)
+                             nAmount: nAmount, nPayType: PayType.lumpSum.rawValue, nRepeat: nRepeat)
             r.e1card = selectedCard; r.e4shop = nil
             r.e5categories = selectedCategories; r.e5category = nil
             context.insert(r)
