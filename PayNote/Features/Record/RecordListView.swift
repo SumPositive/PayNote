@@ -7,13 +7,22 @@ struct RecordListView: View {
     @Environment(\.modelContext) private var context
 
     @State private var filterCard: E1card?
+    @State private var filterNoCard = false
     @State private var editTarget: E3record?
     @State private var deleteTarget: E3record?
     @State private var showDeleteAlert = false
 
     private var filtered: [E3record] {
+        // 「未選択」フィルタ時は決済手段が未設定の明細だけを表示
+        if filterNoCard {
+            return records.filter { $0.e1card == nil }
+        }
         guard let filterCard else { return records }
         return records.filter { $0.e1card?.id == filterCard.id }
+    }
+    private var unselectedFilterLabel: String {
+        // ロケールに応じて「未選択」ラベルを出し分ける
+        Locale.current.identifier.hasPrefix("ja") ? "未選択" : "Unselected"
     }
 
     var body: some View {
@@ -70,28 +79,47 @@ struct RecordListView: View {
         Menu {
             Button {
                 filterCard = nil
+                filterNoCard = false
             } label: {
                 HStack {
                     Text("label.all")
-                    if filterCard == nil { Image(systemName: "checkmark") }
+                    if filterCard == nil && !filterNoCard { Image(systemName: "checkmark") }
+                }
+            }
+            Button {
+                filterCard = nil
+                filterNoCard = true
+            } label: {
+                HStack {
+                    Text(verbatim: unselectedFilterLabel)
+                    if filterNoCard { Image(systemName: "checkmark") }
                 }
             }
             Divider()
             ForEach(cards) { c in
                 Button {
                     filterCard = c
+                    filterNoCard = false
                 } label: {
                     HStack {
                         Text(c.zName)
-                        if filterCard?.id == c.id { Image(systemName: "checkmark") }
+                        if !filterNoCard && filterCard?.id == c.id { Image(systemName: "checkmark") }
                     }
                 }
             }
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "creditcard")
-                Text(filterCard?.zName ?? "label.all")
-                    .font(.subheadline)
+                if filterNoCard {
+                    Text(verbatim: unselectedFilterLabel)
+                        .font(.subheadline)
+                } else if let filterCard {
+                    Text(filterCard.zName)
+                        .font(.subheadline)
+                } else {
+                    Text("label.all")
+                        .font(.subheadline)
+                }
             }
         }
     }
@@ -101,47 +129,85 @@ struct RecordListView: View {
 
 private struct RecordRow: View {
     let record: E3record
-
-    private static let dateFmt: DateFormatter = {
-        let f = DateFormatter()
-        f.dateStyle = .short
-        f.timeStyle = .none
-        return f
+    // 日本語ロケール向けの固定表示（yyyy/MM/dd(曜)）
+    private static let jaDateWithWeekdayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ja_JP")
+        formatter.dateFormat = "yyyy/MM/dd(E)"
+        return formatter
     }()
 
+    // 分割のどれか1つでも未払があれば未払表示にする
+    private var isUnpaid: Bool {
+        record.e6parts.contains(where: { ($0.e2invoice?.isPaid ?? false) == false })
+    }
+    private var statusKey: LocalizedStringKey {
+        isUnpaid ? "payment.status.unpaidShort" : "payment.status.paidShort"
+    }
+    // 金額と同じトーンで文字色を統一する
+    private var amountToneColor: Color {
+        record.nAmount < 0 ? COLOR_AMOUNT_NEGATIVE : COLOR_AMOUNT_POSITIVE
+    }
+    // ステータスはカプセルだけ着色する
+    private var statusCapsuleColor: Color {
+        // 色は薄めにして主張を抑える
+        (isUnpaid ? COLOR_UNPAID : COLOR_PAID).opacity(0.2)
+    }
+    private var statusTextColor: Color {
+        isUnpaid ? COLOR_UNPAID : COLOR_PAID
+    }
+    private var payMethodText: String {
+        record.e1card?.zName ?? "—"
+    }
+    private var recordLabelText: String {
+        // 決済ラベルを優先し、旧データは利用店名へフォールバック
+        record.zName.isEmpty ? (record.e4shop?.zName ?? "—") : record.zName
+    }
+    private var useJapaneseDateFormat: Bool {
+        Locale.current.identifier.hasPrefix("ja")
+    }
+    private var dateText: String {
+        if useJapaneseDateFormat {
+            return Self.jaDateWithWeekdayFormatter.string(from: record.dateUse)
+        }
+        return record.dateUse.formatted(.dateTime.year().month().day().weekday(.abbreviated))
+    }
+
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                // 利用点は自由入力を優先し、旧データは店舗名へフォールバックする
-                Text(record.zName.isEmpty ? (record.e4shop?.zName ?? "—") : record.zName)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(dateText)
+                    .font(.subheadline)
+                    .foregroundStyle(amountToneColor)
+                    .lineLimit(1)
+                    .layoutPriority(1)
+                Text(recordLabelText)
                     .font(.body)
                     .lineLimit(1)
-                HStack(spacing: 6) {
-                    Text(Self.dateFmt.string(from: record.dateUse))
-                        .font(.caption).foregroundStyle(.secondary)
-                    if let card = record.e1card {
-                        Text(card.zName)
-                            .font(.caption2)
-                            .padding(.horizontal, 5).padding(.vertical, 1)
-                            .background(Color(.systemFill))
-                            .clipShape(Capsule())
-                    }
-                    if record.payType == .twoPayments {
-                        Text("payType.twoPayments")
-                            .font(.caption2)
-                            .padding(.horizontal, 5).padding(.vertical, 1)
-                            .background(Color(.systemBlue).opacity(0.15))
-                            .foregroundStyle(.blue)
-                            .clipShape(Capsule())
-                    }
-                }
+                    .truncationMode(.tail)
+                    .foregroundStyle(amountToneColor)
+                Spacer(minLength: 8)
+                Text(record.nAmount.currencyString())
+                    .font(.body.monospacedDigit())
+                    .foregroundStyle(amountToneColor)
             }
-            Spacer()
-            Text(record.nAmount.currencyString())
-                .font(.body.monospacedDigit())
-                .foregroundStyle(record.nAmount < 0 ? COLOR_AMOUNT_NEGATIVE : COLOR_AMOUNT_POSITIVE)
+            HStack(spacing: 6) {
+                Text(statusKey)
+                    .font(.caption)
+                    .foregroundStyle(statusTextColor)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
+                    .background(statusCapsuleColor)
+                    .clipShape(Capsule())
+                Text(payMethodText)
+                    .font(.caption)
+                    .foregroundStyle(amountToneColor)
+                    .lineLimit(1)
+            }
         }
-        .padding(.vertical, 2)
+        // セル高さは固定で44ptにする
+        .frame(height: 44, alignment: .center)
+        .padding(.vertical, 0)
         .contentShape(Rectangle())
     }
 }

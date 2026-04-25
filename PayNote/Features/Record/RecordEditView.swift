@@ -86,6 +86,12 @@ struct RecordEditView: View {
         guard let initialDraft else { return false }
         return currentDraft() != initialDraft
     }
+    // 済みレコードはコア項目（金額・利用日・決済手段）を固定する
+    private var isCoreFieldsLocked: Bool {
+        guard case .edit(let record) = mode else { return false }
+        if record.e6parts.isEmpty { return false }
+        return record.e6parts.allSatisfy { $0.e2invoice?.isPaid ?? false }
+    }
     private var shownUsePointCandidates: [String] {
         // フォーカス時に候補をそのまま表示する
         let keyword = zName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -133,6 +139,7 @@ struct RecordEditView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .disabled(isCoreFieldsLocked)
 
                 // 利用日はセル全体のタップで選択画面を開く
                 Button { showDatePicker = true } label: {
@@ -148,6 +155,7 @@ struct RecordEditView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .disabled(isCoreFieldsLocked)
 
                 // 決済手段（必須パネル・保存は未選択でも可）
                 Button { showCardPicker = true } label: {
@@ -166,6 +174,7 @@ struct RecordEditView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .disabled(isCoreFieldsLocked)
             }
 
             // ── オプション ────────────────────
