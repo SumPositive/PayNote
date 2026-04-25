@@ -129,13 +129,6 @@ struct RecordListView: View {
 
 private struct RecordRow: View {
     let record: E3record
-    // 日本語ロケール向けの固定表示（yyyy/MM/dd(曜)）
-    private static let jaDateWithWeekdayFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ja_JP")
-        formatter.dateFormat = "yyyy/MM/dd(E)"
-        return formatter
-    }()
 
     // 分割のどれか1つでも未払があれば未払表示にする
     private var isUnpaid: Bool {
@@ -163,46 +156,50 @@ private struct RecordRow: View {
         // 決済ラベルを優先し、旧データは利用店名へフォールバック
         record.zName.isEmpty ? (record.e4shop?.zName ?? "—") : record.zName
     }
-    private var useJapaneseDateFormat: Bool {
-        Locale.current.identifier.hasPrefix("ja")
-    }
-    private var dateText: String {
-        if useJapaneseDateFormat {
-            return Self.jaDateWithWeekdayFormatter.string(from: record.dateUse)
-        }
-        return record.dateUse.formatted(.dateTime.year().month().day().weekday(.abbreviated))
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(dateText)
+        HStack(alignment: .center, spacing: 6) {
+            // 日付は2段表示で固定幅にして視認性をそろえる
+            VStack(spacing: 0) {
+                Text(AppDateFormat.yearWeekdayText(record.dateUse))
+                    .font(.caption2)
+                    // 年は中立色で表示し、状態色は付けない
+                    .foregroundStyle(Color(.secondaryLabel))
+                    .lineLimit(1)
+                Text(AppDateFormat.monthDayText(record.dateUse))
                     .font(.subheadline)
                     .foregroundStyle(amountToneColor)
                     .lineLimit(1)
-                    .layoutPriority(1)
-                Text(recordLabelText)
-                    .font(.body)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .foregroundStyle(amountToneColor)
-                Spacer(minLength: 8)
-                Text(record.nAmount.currencyString())
-                    .font(.body.monospacedDigit())
-                    .foregroundStyle(amountToneColor)
             }
-            HStack(spacing: 6) {
-                Text(statusKey)
-                    .font(.caption)
-                    .foregroundStyle(statusTextColor)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(statusCapsuleColor)
-                    .clipShape(Capsule())
-                Text(payMethodText)
-                    .font(.caption)
-                    .foregroundStyle(amountToneColor)
-                    .lineLimit(1)
+            .multilineTextAlignment(.center)
+            // 固定幅を使わず、日付表示に必要な最小幅だけ確保する
+            .fixedSize(horizontal: true, vertical: false)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(recordLabelText)
+                        .font(.body)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .foregroundStyle(amountToneColor)
+                    Spacer(minLength: 8)
+                    Text(record.nAmount.currencyString())
+                        .font(.body.monospacedDigit())
+                        .foregroundStyle(amountToneColor)
+                }
+                HStack(spacing: 6) {
+                    Text(statusKey)
+                        .font(.caption)
+                        .foregroundStyle(statusTextColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(statusCapsuleColor)
+                        .clipShape(Capsule())
+                    Text(payMethodText)
+                        .font(.caption)
+                        .foregroundStyle(amountToneColor)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
             }
         }
         // セル高さは固定で44ptにする

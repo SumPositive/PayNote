@@ -87,7 +87,7 @@ private struct ShopRow: View {
             switch sortMode {
             case .recent:
                 if let d = shop.sortDate {
-                    Text(d.formatted(date: .abbreviated, time: .omitted))
+                    Text(AppDateFormat.singleLineText(d))
                         .font(.caption).foregroundStyle(.secondary)
                 }
             case .count:

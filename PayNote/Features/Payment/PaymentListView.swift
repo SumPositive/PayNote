@@ -155,10 +155,6 @@ struct PaymentListView: View {
 private struct PaymentRow: View {
     let payment: E7payment
     let onToggle: () -> Void
-
-    private static let dateFmt: DateFormatter = {
-        let f = DateFormatter(); f.dateStyle = .medium; f.timeStyle = .none; return f
-    }()
     private var bankNameText: String {
         // 請求書に紐づく口座名の先頭を表示する（未設定時は共通ラベル）
         if let name = payment.e2invoices
@@ -181,16 +177,30 @@ private struct PaymentRow: View {
             .buttonStyle(.plain)
 
             HStack(spacing: 8) {
-                Text(Self.dateFmt.string(from: payment.date))
-                    .font(.body)
-                    .lineLimit(1)
+                // 日付は2段表示にして中央揃えにする
+                VStack(spacing: 0) {
+                    Text(AppDateFormat.yearWeekdayText(payment.date))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                    Text(AppDateFormat.monthDayText(payment.date))
+                        .font(.subheadline)
+                        .lineLimit(1)
+                }
+                .multilineTextAlignment(.center)
+                .frame(width: 76, alignment: .center)
+                // 日付は優先表示して欠けにくくする
+                .fixedSize(horizontal: true, vertical: false)
+                .layoutPriority(2)
                 Text(bankNameText)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
+                    // 省略は口座名側で受ける
+                    .layoutPriority(0)
             }
-            .layoutPriority(0)
+            .layoutPriority(1)
 
             Spacer()
 
@@ -198,7 +208,9 @@ private struct PaymentRow: View {
                 .font(.body.monospacedDigit())
                 .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
                 .lineLimit(1)
-                .layoutPriority(1)
+                // 金額は最優先で欠けないようにする
+                .fixedSize(horizontal: true, vertical: false)
+                .layoutPriority(3)
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())

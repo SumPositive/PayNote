@@ -5,13 +5,6 @@ struct InvoiceListView: View {
     let payment: E7payment
 
     @Environment(\.modelContext) private var context
-    private static let statementDateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = .autoupdatingCurrent
-        // 日付に曜日(最短)を付ける
-        f.setLocalizedDateFormatFromTemplate("yMdEEEEE")
-        return f
-    }()
 
     private var bankNameText: String {
         let names = Array(
@@ -32,7 +25,7 @@ struct InvoiceListView: View {
     }
 
     private var statementTitleText: String {
-        let dateText = Self.statementDateFormatter.string(from: payment.date)
+        let dateText = AppDateFormat.singleLineText(payment.date)
         let suffix = NSLocalizedString("invoice.statement.debitSuffix", comment: "")
         return "\(dateText)\(suffix)"
     }
@@ -93,7 +86,8 @@ struct InvoiceListView: View {
                         Button {
                             toggleInvoicePaid(invoice)
                         } label: {
-                            Text(invoice.isPaid ? "invoice.status.paid" : "invoice.status.unpaid")
+                            // 右肩ラベルは「未払 / 済み」に統一する
+                            Text(invoice.isPaid ? "payment.status.paidShort" : "payment.status.unpaidShort")
                                 .font(.caption2.bold())
                                 .padding(.horizontal, 6).padding(.vertical, 2)
                                 .background(invoice.isPaid
@@ -127,13 +121,6 @@ struct InvoiceListView: View {
 
 private struct PartRow: View {
     let part: E6part
-    private static let rowDateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = .autoupdatingCurrent
-        // 明細行は短めの日付+曜日(最短)にする
-        f.setLocalizedDateFormatFromTemplate("yMdEEEEE")
-        return f
-    }()
     private var usePointText: String {
         // 利用点は自由入力の記録名を優先し、旧データは店舗名を使う
         if let recordName = part.e3record?.zName, !recordName.isEmpty {
@@ -146,7 +133,7 @@ private struct PartRow: View {
     }
     private var dateText: String {
         guard let record = part.e3record else { return "—" }
-        return Self.rowDateFormatter.string(from: record.dateUse)
+        return AppDateFormat.singleLineText(record.dateUse)
     }
 
     var body: some View {

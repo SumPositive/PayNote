@@ -109,12 +109,6 @@ struct RecordEditView: View {
         ("repeat.none", 0), ("repeat.nextMonth", 1),
         ("repeat.2months", 2), ("repeat.12months", 12)
     ]
-    private static let useDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        return formatter
-    }()
     private var repeatLabelKey: LocalizedStringKey {
         if let option = repeatOptions.first(where: { $0.value == nRepeat }) {
             return LocalizedStringKey(option.label)
@@ -147,7 +141,7 @@ struct RecordEditView: View {
                         Text("record.field.date")
                             .foregroundStyle(.secondary)
                         Spacer()
-                        Text(Self.useDateFormatter.string(from: dateUse))
+                        Text(AppDateFormat.singleLineText(dateUse))
                             .foregroundStyle(.primary)
                         Image(systemName: "chevron.right")
                             .font(.caption).foregroundStyle(.tertiary)

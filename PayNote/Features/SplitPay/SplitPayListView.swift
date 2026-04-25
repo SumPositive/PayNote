@@ -15,7 +15,7 @@ struct SplitPayListView: View {
             // レコード情報
             Section {
                 LabeledContent("record.field.date") {
-                    Text(record.dateUse.formatted(date: .abbreviated, time: .omitted))
+                    Text(AppDateFormat.singleLineText(record.dateUse))
                 }
                 LabeledContent("record.field.amount") {
                     Text(record.nAmount.currencyString())
@@ -70,10 +70,6 @@ private struct PartToggleRow: View {
     let part: E6part
     let onToggle: () -> Void
 
-    private static let dateFmt: DateFormatter = {
-        let f = DateFormatter(); f.dateStyle = .medium; f.timeStyle = .none; return f
-    }()
-
     var body: some View {
         Button(action: onToggle) {
             HStack(spacing: 14) {
@@ -92,7 +88,7 @@ private struct PartToggleRow: View {
                             .foregroundStyle(.secondary)
                     }
                     if let invoice = part.e2invoice {
-                        Text(Self.dateFmt.string(from: invoice.date))
+                        Text(AppDateFormat.singleLineText(invoice.date))
                             .font(.subheadline)
                     }
                 }

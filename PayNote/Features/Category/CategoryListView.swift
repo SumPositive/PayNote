@@ -87,7 +87,7 @@ private struct CategoryRow: View {
             switch sortMode {
             case .recent:
                 if let d = cat.sortDate {
-                    Text(d.formatted(date: .abbreviated, time: .omitted))
+                    Text(AppDateFormat.singleLineText(d))
                         .font(.caption).foregroundStyle(.secondary)
                 }
             case .count:

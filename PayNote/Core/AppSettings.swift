@@ -87,3 +87,93 @@ enum SortMode: Int, CaseIterable, Identifiable {
         }
     }
 }
+
+/// アプリ全体で使う日付表示フォーマット
+enum AppDateFormat {
+    /// 単体表示: 年
+    static func yearText(_ date: Date) -> String {
+        yearFormatter.string(from: date)
+    }
+
+    /// 上段表示: 年(曜)
+    static func yearWeekdayText(_ date: Date) -> String {
+        if Locale.current.identifier.hasPrefix("ja") {
+            return jaYearWeekdayFormatter.string(from: date)
+        }
+        if Locale.current.identifier.hasPrefix("en") {
+            // en 2行表示: 1行目は "yyyy EEE"
+            return enYearWeekdayTwoLineFormatter.string(from: date)
+        }
+        return date.formatted(.dateTime.year().weekday(.abbreviated))
+    }
+
+    /// 下段表示: 月/日
+    static func monthDayText(_ date: Date) -> String {
+        monthDayFormatter.string(from: date)
+    }
+
+    /// 1行表示: 年 月/日(曜)
+    static func singleLineText(_ date: Date) -> String {
+        if Locale.current.identifier.hasPrefix("en") {
+            // en 1行表示: "EEE, M/d yyyy"
+            return enSingleLineFormatter.string(from: date)
+        }
+        return "\(yearText(date)) \(monthDayWeekdayText(date))"
+    }
+
+    /// 1行表示用: 月/日(曜)
+    static func monthDayWeekdayText(_ date: Date) -> String {
+        if Locale.current.identifier.hasPrefix("ja") {
+            return jaMonthDayWeekdayFormatter.string(from: date)
+        }
+        if Locale.current.identifier.hasPrefix("en") {
+            return enMonthDayWeekdayFormatter.string(from: date)
+        }
+        return date.formatted(.dateTime.month().day().weekday(.abbreviated))
+    }
+
+    private static let jaYearWeekdayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ja_JP")
+        formatter.dateFormat = "yyyy(E)"
+        return formatter
+    }()
+
+    private static let enYearWeekdayTwoLineFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.dateFormat = "yyyy EEE"
+        return formatter
+    }()
+    private static let yearFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.dateFormat = "yyyy"
+        return formatter
+    }()
+
+    private static let monthDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.dateFormat = "M/d"
+        return formatter
+    }()
+    private static let jaMonthDayWeekdayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ja_JP")
+        formatter.dateFormat = "M/d(E)"
+        return formatter
+    }()
+    private static let enMonthDayWeekdayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.dateFormat = "M/d(EEE)"
+        return formatter
+    }()
+    private static let enSingleLineFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.dateFormat = "EEE, M/d yyyy"
+        return formatter
+    }()
+}
