@@ -3,13 +3,15 @@ import SwiftData
 
 struct TopMenuView: View {
     @Binding var selectedDestination: AppDestination?
+    @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
 
-    @Query(filter: #Predicate<E1card> { _ in true },
-           sort: \E1card.nRow)
-    private var cards: [E1card]
+    @Query(filter: #Predicate<E7payment> { !$0.isPaid },
+           sort: \E7payment.date, order: .reverse)
+    private var unpaidPayments: [E7payment]
 
     private var totalUnpaid: Decimal {
-        cards.reduce(.zero) { $0 + $1.sumUnpaid }
+        // メニューの未払計は支払状態の元データ（E7payment）から直接算出する
+        unpaidPayments.reduce(.zero) { $0 + $1.sumAmount }
     }
 
     var body: some View {
@@ -27,12 +29,28 @@ struct TopMenuView: View {
                         Image(systemName: "calendar.badge.clock")
                             .foregroundStyle(.orange)
                             .frame(width: 28)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("top.paymentList")
-                            if totalUnpaid != .zero {
-                                Text(totalUnpaid.currencyString())
-                                    .font(.caption)
-                                    .foregroundStyle(COLOR_UNPAID)
+                        VStack(alignment: .leading, spacing: 8) {
+                            // 上段はタイトルと「未払計」を分け、金額を右寄せで強調する
+                            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                Text("top.paymentList")
+                                Spacer(minLength: 8)
+                                // 「未払計 + 金額」は1行で表示する
+                                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                    Text(unpaidTotalLabel)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Text(totalUnpaid.currencyString())
+                                        .font(.callout.weight(.semibold))
+                                        .foregroundStyle(COLOR_UNPAID)
+                                }
+                            }
+
+                            // 初心者モードではセル内に操作説明を表示する
+                            if userLevel == .beginner {
+                                paymentGuideText
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
                         }
                     }
@@ -80,5 +98,42 @@ struct TopMenuView: View {
             }
         }
         .tag(dest)
+    }
+
+    /// 「未払計」ラベル（ja/en）
+    private var unpaidTotalLabel: String {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return "未払計"
+        }
+        return "Unpaid Total"
+    }
+
+    /// 初心者向けガイド文（セル内表示）
+    @ViewBuilder
+    private var paymentGuideText: some View {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("適時、引き落とし状況を見てください。")
+                Text("口座からの引き落としが確認できれば、")
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Image(systemName: "arrow.down.circle.fill")
+                        .foregroundStyle(COLOR_UNPAID)
+                    Text("をタップしてください。")
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Text("済みへ移動します。いつでも未払に戻すことも可能です。")
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Check Schedule as needed.")
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("When debit is confirmed, tap")
+                    Image(systemName: "arrow.down.circle.fill")
+                        .foregroundStyle(COLOR_UNPAID)
+                    Text("to move it to Paid.")
+                }
+                Text("You can always move it back to Unpaid.")
+            }
+        }
     }
 }

@@ -39,11 +39,53 @@ enum JSONExport {
         var cardID, shopID, categoryID: String?
     }
 
-    static func exportData(context: ModelContext) throws -> Data {
+    enum Phase {
+        case readingBanks
+        case readingCards
+        case readingShops
+        case readingCategories
+        case readingRecords
+        case encoding
+
+        /// エクスポート進行テキスト（ja/en）
+        func message(locale: Locale) -> String {
+            let isJapanese = locale.language.languageCode?.identifier == "ja"
+            switch self {
+            case .readingBanks:
+                return isJapanese ? "口座データを読み込み中…" : "Reading accounts..."
+            case .readingCards:
+                return isJapanese ? "決済手段を読み込み中…" : "Reading payment methods..."
+            case .readingShops:
+                return isJapanese ? "店舗データを読み込み中…" : "Reading shops..."
+            case .readingCategories:
+                return isJapanese ? "タグデータを読み込み中…" : "Reading tags..."
+            case .readingRecords:
+                return isJapanese ? "決済履歴を読み込み中…" : "Reading records..."
+            case .encoding:
+                return isJapanese ? "JSONを生成中…" : "Generating JSON..."
+            }
+        }
+    }
+
+    static func exportData(
+        context: ModelContext,
+        onPhase: ((Phase) -> Void)? = nil
+    ) async throws -> Data {
+        // 画面へ進行表示を出せるように、工程ごとに通知する
+        onPhase?(.readingBanks)
+        await Task.yield()
         let banks      = (try? context.fetch(FetchDescriptor<E8bank>())) ?? []
+        onPhase?(.readingCards)
+        await Task.yield()
         let cards      = (try? context.fetch(FetchDescriptor<E1card>(sortBy: [SortDescriptor(\E1card.nRow)]))) ?? []
+        onPhase?(.readingShops)
+        await Task.yield()
         let shops      = (try? context.fetch(FetchDescriptor<E4shop>())) ?? []
+        onPhase?(.readingCategories)
+        await Task.yield()
         let categories = (try? context.fetch(FetchDescriptor<E5category>())) ?? []
+        onPhase?(.readingRecords)
+        await Task.yield()
         let records    = (try? context.fetch(FetchDescriptor<E3record>(sortBy: [SortDescriptor(\E3record.dateUse)]))) ?? []
 
         let bankData     = banks.map      { BankData(id: $0.id, name: $0.zName, note: $0.zNote, row: Int($0.nRow)) }
@@ -56,6 +98,8 @@ enum JSONExport {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting     = [.prettyPrinted, .sortedKeys]
+        onPhase?(.encoding)
+        await Task.yield()
         return try encoder.encode(data)
     }
 }

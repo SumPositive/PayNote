@@ -13,6 +13,8 @@ struct SettingsView: View {
     @State private var exportedURL: URL?
     @State private var showAboutSheet  = false
     @State private var alertItem: SettingsAlertItem?
+    @State private var isExporting = false
+    @State private var exportProgressMessage = ""
 
     var body: some View {
         List {
@@ -46,6 +48,8 @@ struct SettingsView: View {
                 } label: {
                     Label("settings.jsonExport.all", systemImage: "square.and.arrow.up")
                 }
+                // 書き出し中の二重実行を防止する
+                .disabled(isExporting)
             }
 
             Section("settings.panel.support") {
@@ -104,6 +108,30 @@ struct SettingsView: View {
                 dismissButton: .cancel(Text("button.ok"))
             )
         }
+        .overlay {
+            if isExporting {
+                ZStack {
+                    // エクスポート処理中は背面操作を受け付けない
+                    Color.black.opacity(0.24)
+                        .ignoresSafeArea()
+                    VStack(spacing: 10) {
+                        ProgressView()
+                            .controlSize(.large)
+                        Text(exportProgressMessage)
+                            .font(.subheadline.weight(.semibold))
+                            .multilineTextAlignment(.center)
+                        Text(exportHintText)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 18)
+                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+                    .padding(.horizontal, 24)
+                }
+            }
+        }
     }
 
     /// 設定画面のアラート表示モデル
@@ -135,18 +163,55 @@ struct SettingsView: View {
     }
 
     private func exportJSON() {
-        do {
-            let data = try JSONExport.exportData(context: context)
-            let fmt  = DateFormatter()
-            fmt.dateFormat = "yyyyMMdd_HHmmss"
-            let name = "PayNote_\(fmt.string(from: Date())).json"
-            let url  = FileManager.default.temporaryDirectory.appendingPathComponent(name)
-            try data.write(to: url)
-            exportedURL    = url
-            showShareSheet = true
-        } catch {
-            alertItem = .rawError(error.localizedDescription)
+        Task { @MainActor in
+            isExporting = true
+            exportProgressMessage = exportPreparingText
+            // オーバーレイ描画を先に反映する
+            await Task.yield()
+            defer { isExporting = false }
+
+            do {
+                let data = try await JSONExport.exportData(context: context) { phase in
+                    // 工程の説明文を逐次切り替える
+                    exportProgressMessage = phase.message(locale: Locale.current)
+                }
+                let fmt  = DateFormatter()
+                fmt.dateFormat = "yyyyMMdd_HHmmss"
+                let name = "PayNote_\(fmt.string(from: Date())).json"
+                let url  = FileManager.default.temporaryDirectory.appendingPathComponent(name)
+                exportProgressMessage = exportWritingText
+                await Task.yield()
+                try data.write(to: url)
+                exportedURL    = url
+                showShareSheet = true
+            } catch {
+                alertItem = .rawError(error.localizedDescription)
+            }
         }
+    }
+
+    /// エクスポート開始時の説明文
+    private var exportPreparingText: String {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return "エクスポート準備中…"
+        }
+        return "Preparing export..."
+    }
+
+    /// ファイル書き込み時の説明文
+    private var exportWritingText: String {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return "ファイルへ書き込み中…"
+        }
+        return "Writing file..."
+    }
+
+    /// エクスポート中の補足説明
+    private var exportHintText: String {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return "データ量により数秒かかることがあります"
+        }
+        return "This may take a few seconds depending on data volume."
     }
 }
 

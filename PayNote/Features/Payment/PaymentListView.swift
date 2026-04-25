@@ -14,6 +14,7 @@ struct PaymentListView: View {
     @State private var isLoadingPaid = false
     @State private var hasAnyPayments = true
     private let pageSize = 100
+    private let paidFirstRowAnchorID = "payment-paid-first-row-anchor"
 
     var body: some View {
         Group {
@@ -28,7 +29,8 @@ struct PaymentListView: View {
                                 paidPayments: paidPayments,
                                 onToggle: togglePaid,
                                 hasMorePaid: hasMorePaid,
-                                onLoadMorePaid: loadMorePaidIfNeeded
+                                onLoadMorePaid: loadMorePaidIfNeeded,
+                                paidFirstRowAnchorID: paidFirstRowAnchorID
                             )
                             if userLevel == .beginner {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -55,7 +57,7 @@ struct PaymentListView: View {
                         if paidPayments.isEmpty {
                             resetAndLoadPaid()
                         }
-                        scrollToUnpaidLastIfNeeded(proxy: proxy)
+                        scrollToPaidTopIfNeeded(proxy: proxy)
                     }
                 }
             }
@@ -79,23 +81,19 @@ struct PaymentListView: View {
         }
     }
 
-    private func scrollToUnpaidLastIfNeeded(proxy: ScrollViewProxy) {
+    private func scrollToPaidTopIfNeeded(proxy: ScrollViewProxy) {
         if didInitialScroll {
             return
         }
-        guard let target = unpaidPayments.first else {
-            didInitialScroll = true
-            return
-        }
-        // 行数が少ない場合は初期スクロールを行わない
-        if unpaidPayments.count + paidPayments.count <= 6 {
+        // 未払が少ない場合は、初期スクロールしなくても済み先頭が見える
+        if unpaidPayments.count <= 4 {
             didInitialScroll = true
             return
         }
         DispatchQueue.main.async {
             withAnimation(.easeInOut(duration: 0.2)) {
-                // 未払セクションの先頭行を上側へ表示する
-                proxy.scrollTo(target.id, anchor: .top)
+                // 済みの先頭（データなしを含む）が必ず見える位置へ寄せる
+                proxy.scrollTo(paidFirstRowAnchorID, anchor: .bottom)
             }
             didInitialScroll = true
         }
@@ -304,6 +302,7 @@ private struct PaymentCombinedCard: View {
     let onToggle: (E7payment) -> Void
     let hasMorePaid: Bool
     let onLoadMorePaid: () -> Void
+    let paidFirstRowAnchorID: String
     @State private var boundaryMidY: CGFloat = 0
 
     var body: some View {
@@ -346,7 +345,7 @@ private struct PaymentCombinedCard: View {
                         .padding(.vertical, 8)
                     }
                     .buttonStyle(.plain)
-                    .id(payment.id)
+                    .id(index == 0 ? paidFirstRowAnchorID : payment.id)
                     if index + 1 < paidPayments.count {
                         Divider()
                             .padding(.leading, 12)
@@ -366,6 +365,7 @@ private struct PaymentCombinedCard: View {
             } else {
                 // 済みが空のときは空セルを表示する
                 PaymentEmptyRow()
+                    .id(paidFirstRowAnchorID)
             }
         }
         .background(

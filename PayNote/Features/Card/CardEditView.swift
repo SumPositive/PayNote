@@ -6,6 +6,7 @@ struct CardEditView: View {
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss)      private var dismiss
+    @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
     @Query(sort: \E1card.nRow)   private var allCards: [E1card]
     @Query(sort: \E8bank.nRow)   private var banks: [E8bank]
 
@@ -76,7 +77,8 @@ struct CardEditView: View {
                 LabeledContent("card.field.bank") {
                     Picker("", selection: $bankSelection) {
                         Text("label.noSelection").tag(BankSelection.none)
-                        Text("新しい口座").tag(BankSelection.addNew)
+                        // 口座追加導線を目立たせる
+                        Text(newBankOptionText).tag(BankSelection.addNew)
                         ForEach(banks) { b in
                             Text(b.zName).tag(BankSelection.existing(b.id))
                         }
@@ -85,14 +87,24 @@ struct CardEditView: View {
                     .labelsHidden()
                 }
 
-                LabeledContent("card.field.manageLevel") {
-                    Picker("", selection: $manageLevel) {
-                        ForEach(ManagementLevel.allCases, id: \.self) { level in
-                            Text(LocalizedStringKey(level.labelKey)).tag(level)
+                // 管理レベルと補足を同一行にまとめ、間の区切り線を出さない
+                VStack(alignment: .leading, spacing: 6) {
+                    LabeledContent("card.field.manageLevel") {
+                        Picker("", selection: $manageLevel) {
+                            ForEach(ManagementLevel.allCases, id: \.self) { level in
+                                Text(LocalizedStringKey(level.labelKey)).tag(level)
+                            }
                         }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
                     }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
+
+                    if userLevel == .beginner {
+                        Text(manageLevelHelpText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
 
@@ -153,6 +165,14 @@ struct CardEditView: View {
                         Text("card.field.closingDay.enHelp")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                    }
+
+                    // 初心者モードのみ補足説明を表示する
+                    if userLevel == .beginner {
+                        Text(payDayHelpText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
@@ -341,5 +361,29 @@ struct CardEditView: View {
             payMonth: payMonth,
             manageLevel: manageLevel
         )
+    }
+
+    /// 口座追加メニューの強調ラベル
+    private var newBankOptionText: String {
+        if isEnglishLocale {
+            return "＋ Add New Account"
+        }
+        return "＋ 新しい口座を追加"
+    }
+
+    /// 管理レベルの初心者向け補足
+    private var manageLevelHelpText: String {
+        if isEnglishLocale {
+            return "This only expresses how strictly you self-manage. It does not affect any calculations. Choose the level that fits your style, from strict checking to rough tracking. You can change it anytime."
+        }
+        return "自己管理の程度を明示するものです。処理に関係も影響もありません。きっちり1円も漏らさずチェックする、おおよそ分かればいい、大金だけ把握できれば十分、くらいの感覚で選択してください。いつでも変更できます"
+    }
+
+    /// 締日・支払日の初心者向け補足
+    private var payDayHelpText: String {
+        if isEnglishLocale {
+            return "Set the closing day and payment day defined for this payment method. They are usually listed in your card documents. If unknown, contact your card issuer or set them after checking an actual debit date."
+        }
+        return "この決済手段で決められている締日と支払日を設定してください。クレジットカードのお届け用紙に記載されているはずですが、わからなければカード会社にお問い合わせください。実際に引き落とされた日を見て設定してもいいです"
     }
 }

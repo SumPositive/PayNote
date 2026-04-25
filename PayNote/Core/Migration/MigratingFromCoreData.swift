@@ -13,19 +13,54 @@ struct MigratingFromCoreData {
 
     private let migrationFlagKey = "MigratingFromCoreData.migrated.v1"
 
+    enum Phase {
+        case checkingExistingData
+        case searchingLegacyStore
+        case loadingLegacyData
+        case convertingData
+        case savingData
+        case finalizing
+
+        /// 進行状況テキスト（ja/en）
+        func message(locale: Locale) -> String {
+            let isJapanese = locale.language.languageCode?.identifier == "ja"
+            switch self {
+            case .checkingExistingData:
+                return isJapanese ? "移行確認中…" : "Checking existing data..."
+            case .searchingLegacyStore:
+                return isJapanese ? "旧アプリデータを検索中…" : "Searching legacy app data..."
+            case .loadingLegacyData:
+                return isJapanese ? "旧データを読み込み中…" : "Loading legacy data..."
+            case .convertingData:
+                return isJapanese ? "データを変換中…" : "Converting data..."
+            case .savingData:
+                return isJapanese ? "保存中…" : "Saving data..."
+            case .finalizing:
+                return isJapanese ? "最終処理中…" : "Finalizing..."
+            }
+        }
+    }
+
     @MainActor
-    func migrateIfNeeded(modelContainer: ModelContainer) {
+    func migrateIfNeeded(
+        modelContainer: ModelContainer,
+        onPhase: ((Phase) -> Void)? = nil
+    ) async {
         let defaults = UserDefaults.standard
         guard defaults.bool(forKey: migrationFlagKey) == false else { return }
 
         let context = modelContainer.mainContext
+        onPhase?(.checkingExistingData)
+        await Task.yield()
 
         // 既存データがあれば移行済みとみなす
-        if let count = try? context.fetchCount(FetchDescriptor<E1card>()), count > 0 {
+        if let count = try? context.fetchCount(FetchDescriptor<E1card>()), 0 < count {
             defaults.set(true, forKey: migrationFlagKey)
             return
         }
 
+        onPhase?(.searchingLegacyStore)
+        await Task.yield()
         let candidates = candidateStoreURLs()
         guard !candidates.isEmpty else {
             defaults.set(true, forKey: migrationFlagKey)
@@ -34,14 +69,24 @@ struct MigratingFromCoreData {
 
         for storeURL in candidates {
             do {
+                onPhase?(.loadingLegacyData)
+                await Task.yield()
                 let legacyStack = try LegacyCoreDataStack(storeURL: storeURL)
                 let dto = try legacyStack.fetchAll()
                 if dto.banks.isEmpty && dto.cards.isEmpty { continue }
 
+                onPhase?(.convertingData)
+                await Task.yield()
                 importData(dto, into: context)
-                if context.hasChanges { try context.save() }
+                if context.hasChanges {
+                    onPhase?(.savingData)
+                    await Task.yield()
+                    try context.save()
+                }
 
                 // 旧SQLiteをリネームして保全
+                onPhase?(.finalizing)
+                await Task.yield()
                 renameOldStore(storeURL)
 
                 defaults.set(true, forKey: migrationFlagKey)
@@ -50,6 +95,7 @@ struct MigratingFromCoreData {
                 debugPrint("CoreData migration failed for \(storeURL.lastPathComponent): \(error)")
             }
         }
+        onPhase?(.finalizing)
         defaults.set(true, forKey: migrationFlagKey)
     }
 

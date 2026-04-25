@@ -50,11 +50,26 @@ struct InvoiceListView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 HStack {
-                    Text("label.total")
-                    Spacer()
-                    Text(payment.sumAmount.currencyString())
-                        .font(.headline.monospacedDigit())
-                        .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                    ZStack {
+                        // 口座合計セルの中央に未払/済みを表示する
+                        Text(payment.isPaid ? "payment.status.paidShort" : "payment.status.unpaidShort")
+                            .font(.subheadline.weight(.semibold))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 5)
+                            .background(payment.isPaid
+                                ? COLOR_PAID.opacity(0.2)
+                                : COLOR_UNPAID.opacity(0.2))
+                            .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                            .clipShape(Capsule())
+
+                        HStack {
+                            Text("label.total")
+                            Spacer()
+                            Text(payment.sumAmount.currencyString())
+                                .font(.headline.monospacedDigit())
+                                .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                        }
+                    }
                 }
             }
 
@@ -86,20 +101,14 @@ struct InvoiceListView: View {
                     HStack {
                         Text(invoice.e1card?.zName ?? "—")
                         Spacer()
-                        Button {
-                            toggleInvoicePaid(invoice)
-                        } label: {
-                            // 右肩ラベルは「未払 / 済み」に統一する
-                            Text(invoice.isPaid ? "payment.status.paidShort" : "payment.status.unpaidShort")
-                                .font(.caption2.bold())
-                                .padding(.horizontal, 6).padding(.vertical, 2)
-                                .background(invoice.isPaid
-                                    ? COLOR_PAID.opacity(0.2)
-                                    : COLOR_UNPAID.opacity(0.2))
-                                .foregroundStyle(invoice.isPaid ? COLOR_PAID : COLOR_UNPAID)
-                                .clipShape(RoundedRectangle(cornerRadius: 4))
-                        }
-                        .buttonStyle(.plain)
+                        let level = invoice.e1card?.manageLevel ?? .precise
+                        // 右肩は状態表示ではなく、決済手段の管理レベルを表示する
+                        Text(LocalizedStringKey(level.labelKey))
+                            .font(.caption2.bold())
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(level.badgeColor.opacity(0.18))
+                            .foregroundStyle(level.badgeColor)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
                         .textCase(nil)
                     }
                 }
@@ -125,6 +134,20 @@ struct InvoiceListView: View {
     }
 }
 
+private extension ManagementLevel {
+    /// 管理レベルごとの識別色
+    var badgeColor: Color {
+        switch self {
+        case .precise:
+            return .blue
+        case .approximate:
+            return .green
+        case .largeOnly:
+            return .purple
+        }
+    }
+}
+
 // MARK: - Part Row
 
 private struct PartRow: View {
@@ -146,10 +169,6 @@ private struct PartRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: part.isChecked ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(part.isChecked ? Color(.systemGreen) : Color(.systemGray3))
-                .imageScale(.large)
-
             Text(dateText)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -169,7 +188,7 @@ private struct PartRow: View {
                 .lineLimit(1)
                 .layoutPriority(1)
         }
-        .opacity(part.isChecked ? 0.5 : 1)
+        // 状態表示はセクション右肩ラベル（未払/済み）へ統一する
         .contentShape(Rectangle())
     }
 }
