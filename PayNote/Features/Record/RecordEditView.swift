@@ -49,6 +49,9 @@ struct RecordEditView: View {
     @State private var savedBanner        = false
     @State private var hasInitialized     = false
     @State private var initialDraft: DraftState?
+    // 過去データ由来の候補をキャッシュして、毎描画の再計算を避ける
+    @State private var cachedUsePointCandidates: [String] = []
+    @State private var cachedLatestCard: E1card?
     @FocusState private var isUsePointFocused: Bool
 
     private var isNew: Bool {
@@ -56,25 +59,7 @@ struct RecordEditView: View {
         return false
     }
     private var isValid:    Bool { nAmount > 0 }
-    private var usePointCandidates: [String] {
-        // 過去入力を頻度順で候補化する（空文字は除外）
-        var counts: [String: Int] = [:]
-        for record in pastRecords {
-            let key = record.zName.trimmingCharacters(in: .whitespacesAndNewlines)
-            if key.isEmpty {
-                continue
-            }
-            counts[key, default: 0] += 1
-        }
-        return counts.keys.sorted { a, b in
-            let ca = counts[a, default: 0]
-            let cb = counts[b, default: 0]
-            if ca == cb {
-                return a.localizedStandardCompare(b) == .orderedAscending
-            }
-            return cb < ca
-        }
-    }
+    private var usePointCandidates: [String] { cachedUsePointCandidates }
     private var hasChanges: Bool {
         guard let initialDraft else { return false }
         return currentDraft() != initialDraft
@@ -283,6 +268,8 @@ struct RecordEditView: View {
         }
         .onAppear {
             if !hasInitialized {
+                // 初期表示時に候補キャッシュを構築する
+                refreshDerivedCaches()
                 loadFields()
                 initialDraft = currentDraft()
                 hasInitialized = true
@@ -290,6 +277,10 @@ struct RecordEditView: View {
                     DispatchQueue.main.async { showAmountPad = true }
                 }
             }
+        }
+        .onChange(of: pastRecords.map(\.id)) { _, _ in
+            // レコード集合が変わったときだけ再計算する
+            refreshDerivedCaches()
         }
         .sheet(isPresented: $showAmountPad) {
             NumericKeypadSheet(
@@ -412,7 +403,7 @@ struct RecordEditView: View {
     private func loadFields() {
         if case .addNew = mode {
             // 新規時は直近利用の決済手段を初期選択する
-            selectedCard = latestUsedCard()
+            selectedCard = cachedLatestCard
             // 新規作成は一括払いのみを許可する
             payType = .lumpSum
             return
@@ -456,8 +447,18 @@ struct RecordEditView: View {
                 onSaved?()
             }
         case .edit(let r):
-            for part in r.e6parts { context.delete(part) }
+            // 旧パーツを先に切り離して削除し、二重集計を防ぐ
+            for part in r.e6parts {
+                if let invoice = part.e2invoice {
+                    invoice.e6parts.removeAll { $0.id == part.id }
+                }
+                part.e2invoice = nil
+                part.e3record = nil
+                context.delete(part)
+            }
             r.e6parts.removeAll()
+            // 削除状態を先に確定してから再作成する
+            try? context.save()
             r.dateUse = dateUse; r.zName = usePoint; r.zNote = zNote
             r.nAmount = nAmount; r.nPayType = payType.rawValue; r.nRepeat = nRepeat
             r.e1card = selectedCard; r.e4shop = nil
@@ -470,7 +471,7 @@ struct RecordEditView: View {
     private func resetForm() {
         dateUse = Date(); zName = ""; zNote = ""; nAmount = 0
         payType = .lumpSum; nRepeat = 0
-        selectedCard = latestUsedCard(); selectedCategories = []
+        selectedCard = cachedLatestCard; selectedCategories = []
     }
 
     private func showBanner() {
@@ -493,14 +494,28 @@ struct RecordEditView: View {
                    categoryIDs: selectedCategories.map(\.id).sorted())
     }
 
-    // 直近の利用レコードから決済手段を拾う
-    private func latestUsedCard() -> E1card? {
+    // 画面表示で使う派生データをまとめて再計算する
+    private func refreshDerivedCaches() {
+        // 過去入力を頻度順で候補化する（空文字は除外）
+        var counts: [String: Int] = [:]
         for record in pastRecords {
-            if let card = record.e1card {
-                return card
+            let key = record.zName.trimmingCharacters(in: .whitespacesAndNewlines)
+            if key.isEmpty {
+                continue
             }
+            counts[key, default: 0] += 1
         }
-        return nil
+        cachedUsePointCandidates = counts.keys.sorted { a, b in
+            let ca = counts[a, default: 0]
+            let cb = counts[b, default: 0]
+            if ca == cb {
+                return a.localizedStandardCompare(b) == .orderedAscending
+            }
+            return cb < ca
+        }
+
+        // 直近の利用レコードから決済手段を拾って保持する
+        cachedLatestCard = pastRecords.first(where: { $0.e1card != nil })?.e1card
     }
 }
 

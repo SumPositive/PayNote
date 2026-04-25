@@ -2,23 +2,22 @@ import SwiftUI
 import SwiftData
 
 struct PaymentListView: View {
-    @Query(sort: \E7payment.date, order: .reverse) private var payments: [E7payment]
+    @Query(filter: #Predicate<E7payment> { !$0.isPaid },
+           sort: \E7payment.date, order: .reverse) private var unpaidPayments: [E7payment]
     @Environment(\.modelContext) private var context
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
     @State private var didInitialScroll = false
     @State private var undoAction: PaymentToggleUndoAction?
-
-    private var unpaidPayments: [E7payment] {
-        payments.filter { !$0.isPaid }
-    }
-
-    private var paidPayments: [E7payment] {
-        payments.filter { $0.isPaid }
-    }
+    @State private var paidPayments: [E7payment] = []
+    @State private var paidPage = 0
+    @State private var hasMorePaid = true
+    @State private var isLoadingPaid = false
+    @State private var hasAnyPayments = true
+    private let pageSize = 100
 
     var body: some View {
         Group {
-            if payments.isEmpty {
+            if !hasAnyPayments {
                 ContentUnavailableView("label.empty", systemImage: "calendar.badge.clock")
             } else {
                 ScrollViewReader { proxy in
@@ -27,7 +26,9 @@ struct PaymentListView: View {
                             PaymentCombinedCard(
                                 unpaidPayments: unpaidPayments,
                                 paidPayments: paidPayments,
-                                onToggle: togglePaid
+                                onToggle: togglePaid,
+                                hasMorePaid: hasMorePaid,
+                                onLoadMorePaid: loadMorePaidIfNeeded
                             )
                             if userLevel == .beginner {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -50,6 +51,10 @@ struct PaymentListView: View {
                         .padding(.vertical, 10)
                     }
                     .onAppear {
+                        refreshHasAnyPayments()
+                        if paidPayments.isEmpty {
+                            resetAndLoadPaid()
+                        }
                         scrollToUnpaidLastIfNeeded(proxy: proxy)
                     }
                 }
@@ -67,6 +72,11 @@ struct PaymentListView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: undoAction != nil)
+        .onChange(of: unpaidPayments.map(\.id)) { _, _ in
+            // 支払状態変更で未払集合が変わったら、済み側ページを再読込する
+            refreshHasAnyPayments()
+            resetAndLoadPaid()
+        }
     }
 
     private func scrollToUnpaidLastIfNeeded(proxy: ScrollViewProxy) {
@@ -78,7 +88,7 @@ struct PaymentListView: View {
             return
         }
         // 行数が少ない場合は初期スクロールを行わない
-        if payments.count <= 6 {
+        if unpaidPayments.count + paidPayments.count <= 6 {
             didInitialScroll = true
             return
         }
@@ -147,6 +157,41 @@ struct PaymentListView: View {
                 RecordService.recalculateCard(card)
             }
         }
+        // 済みセクションはページングしているため、変更後は再読込する
+        resetAndLoadPaid()
+    }
+
+    private func resetAndLoadPaid() {
+        paidPage = 0
+        hasMorePaid = true
+        paidPayments = []
+        loadMorePaidIfNeeded()
+    }
+
+    private func loadMorePaidIfNeeded() {
+        if isLoadingPaid || !hasMorePaid {
+            return
+        }
+        isLoadingPaid = true
+        defer { isLoadingPaid = false }
+
+        var descriptor = FetchDescriptor<E7payment>(
+            predicate: #Predicate<E7payment> { $0.isPaid },
+            sortBy: [SortDescriptor(\E7payment.date, order: .reverse)]
+        )
+        descriptor.fetchOffset = paidPage * pageSize
+        descriptor.fetchLimit = pageSize
+
+        let fetched = (try? context.fetch(descriptor)) ?? []
+        paidPayments.append(contentsOf: fetched)
+        paidPage += 1
+        hasMorePaid = pageSize <= fetched.count
+    }
+
+    private func refreshHasAnyPayments() {
+        // 未払が0件でも済みがあれば一覧を表示する
+        let count = (try? context.fetchCount(FetchDescriptor<E7payment>())) ?? 0
+        hasAnyPayments = 0 < count
     }
 }
 
@@ -257,6 +302,8 @@ private struct PaymentCombinedCard: View {
     let unpaidPayments: [E7payment]
     let paidPayments: [E7payment]
     let onToggle: (E7payment) -> Void
+    let hasMorePaid: Bool
+    let onLoadMorePaid: () -> Void
     @State private var boundaryMidY: CGFloat = 0
 
     var body: some View {
@@ -303,6 +350,17 @@ private struct PaymentCombinedCard: View {
                     if index + 1 < paidPayments.count {
                         Divider()
                             .padding(.leading, 12)
+                    }
+                }
+                if hasMorePaid {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                        Spacer()
+                    }
+                    .padding(.vertical, 8)
+                    .onAppear {
+                        onLoadMorePaid()
                     }
                 }
             } else {

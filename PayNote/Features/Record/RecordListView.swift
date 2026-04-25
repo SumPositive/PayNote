@@ -2,23 +2,22 @@ import SwiftUI
 import SwiftData
 
 struct RecordListView: View {
-    @Query(sort: \E3record.dateUse, order: .reverse) private var records: [E3record]
     @Query(sort: \E1card.nRow)                       private var cards: [E1card]
     @Environment(\.modelContext) private var context
 
     @State private var filterCard: E1card?
     @State private var filterNoCard = false
+    @State private var records: [E3record] = []
+    @State private var recordPage = 0
+    @State private var hasMoreRecords = true
+    @State private var isLoadingRecords = false
     @State private var editTarget: E3record?
     @State private var deleteTarget: E3record?
     @State private var showDeleteAlert = false
 
+    private let pageSize = 100
     private var filtered: [E3record] {
-        // 「未選択」フィルタ時は決済手段が未設定の明細だけを表示
-        if filterNoCard {
-            return records.filter { $0.e1card == nil }
-        }
-        guard let filterCard else { return records }
-        return records.filter { $0.e1card?.id == filterCard.id }
+        records
     }
     private var unselectedFilterLabel: String {
         // ロケールに応じて「未選択」ラベルを出し分ける
@@ -50,6 +49,18 @@ struct RecordListView: View {
                     .tint(.blue)
                 }
             }
+
+            if hasMoreRecords {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
+                }
+                .listRowSeparator(.hidden)
+                .onAppear {
+                    loadMoreRecordsIfNeeded()
+                }
+            }
         }
         .scalableNavigationTitle("record.list.title")
         .toolbar {
@@ -57,7 +68,10 @@ struct RecordListView: View {
                 cardFilterPicker
             }
         }
-        .sheet(item: $editTarget) { record in
+        .sheet(item: $editTarget, onDismiss: {
+            // 編集反映後は先頭ページから再読込する
+            resetAndLoadRecords()
+        }) { record in
             NavigationStack {
                 RecordEditView(mode: .edit(record))
             }
@@ -66,30 +80,43 @@ struct RecordListView: View {
             Button("button.delete", role: .destructive) {
                 if let r = deleteTarget {
                     RecordService.delete(r, context: context)
+                    // 削除反映後は先頭ページから再読込する
+                    resetAndLoadRecords()
                 }
             }
             Button("button.cancel", role: .cancel) {}
         } message: {
             Text("alert.deleteConfirm.message")
         }
+        .onAppear {
+            if records.isEmpty {
+                resetAndLoadRecords()
+            }
+        }
+        .onChange(of: filterCard?.id) { _, _ in
+            resetAndLoadRecords()
+        }
+        .onChange(of: filterNoCard) { _, _ in
+            resetAndLoadRecords()
+        }
     }
 
     @ViewBuilder
     private var cardFilterPicker: some View {
         Menu {
-            Button {
-                filterCard = nil
-                filterNoCard = false
-            } label: {
+                Button {
+                    filterCard = nil
+                    filterNoCard = false
+                } label: {
                 HStack {
                     Text("label.all")
                     if filterCard == nil && !filterNoCard { Image(systemName: "checkmark") }
                 }
             }
-            Button {
-                filterCard = nil
-                filterNoCard = true
-            } label: {
+                Button {
+                    filterCard = nil
+                    filterNoCard = true
+                } label: {
                 HStack {
                     Text(verbatim: unselectedFilterLabel)
                     if filterNoCard { Image(systemName: "checkmark") }
@@ -122,6 +149,45 @@ struct RecordListView: View {
                 }
             }
         }
+    }
+
+    private func resetAndLoadRecords() {
+        recordPage = 0
+        hasMoreRecords = true
+        records = []
+        loadMoreRecordsIfNeeded()
+    }
+
+    private func loadMoreRecordsIfNeeded() {
+        if isLoadingRecords || !hasMoreRecords {
+            return
+        }
+        isLoadingRecords = true
+        defer { isLoadingRecords = false }
+
+        var descriptor: FetchDescriptor<E3record>
+        if filterNoCard {
+            descriptor = FetchDescriptor<E3record>(
+                predicate: #Predicate<E3record> { $0.e1card == nil },
+                sortBy: [SortDescriptor(\E3record.dateUse, order: .reverse)]
+            )
+        } else if let filterCardID = filterCard?.id {
+            descriptor = FetchDescriptor<E3record>(
+                predicate: #Predicate<E3record> { $0.e1card?.id == filterCardID },
+                sortBy: [SortDescriptor(\E3record.dateUse, order: .reverse)]
+            )
+        } else {
+            descriptor = FetchDescriptor<E3record>(
+                sortBy: [SortDescriptor(\E3record.dateUse, order: .reverse)]
+            )
+        }
+        descriptor.fetchOffset = recordPage * pageSize
+        descriptor.fetchLimit = pageSize
+
+        let fetched = (try? context.fetch(descriptor)) ?? []
+        records.append(contentsOf: fetched)
+        recordPage += 1
+        hasMoreRecords = pageSize <= fetched.count
     }
 }
 

@@ -5,6 +5,7 @@ struct InvoiceListView: View {
     let payment: E7payment
 
     @Environment(\.modelContext) private var context
+    @State private var editRecord: E3record?
 
     private var bankNameText: String {
         let names = Array(
@@ -61,13 +62,15 @@ struct InvoiceListView: View {
             ForEach(invoices) { invoice in
                 Section {
                     ForEach(invoice.e6parts.sorted { $0.nPartNo < $1.nPartNo }) { part in
-                        NavigationLink {
+                        Button {
                             if let record = part.e3record {
-                                SplitPayListView(record: record)
+                                // 明細セルタップで明細編集シートを開く
+                                editRecord = record
                             }
                         } label: {
                             PartRow(part: part)
                         }
+                        .buttonStyle(.plain)
                     }
 
                     // 明細が複数行のときのみ小計を表示する
@@ -103,6 +106,11 @@ struct InvoiceListView: View {
             }
         }
         .scalableNavigationTitle("invoice.statement.title")
+        .sheet(item: $editRecord) { record in
+            NavigationStack {
+                RecordEditView(mode: .edit(record))
+            }
+        }
     }
 
     private func toggleInvoicePaid(_ invoice: E2invoice) {
