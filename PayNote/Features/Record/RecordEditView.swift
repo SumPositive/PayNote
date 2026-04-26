@@ -526,18 +526,8 @@ struct RecordEditView: View {
                 onSaved?()
             }
         case .edit(let r):
-            // 旧パーツを先に切り離して削除し、二重集計を防ぐ
-            for part in r.e6parts {
-                if let invoice = part.e2invoice {
-                    invoice.e6parts.removeAll { $0.id == part.id }
-                }
-                part.e2invoice = nil
-                part.e3record = nil
-                context.delete(part)
-            }
-            r.e6parts.removeAll()
-            // 削除状態を先に確定してから再作成する
-            try? context.save()
+            // 旧パーツを先に掃除して、未選択側の請求残骸を残さない
+            RecordService.removeParts(of: r, context: context)
             r.dateUse = dateUse; r.zName = usePoint; r.zNote = zNote
             r.nAmount = nAmount; r.nPayType = payType.rawValue; r.nRepeat = nRepeat
             r.e1card = selectedCard; r.e4shop = nil

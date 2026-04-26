@@ -8,14 +8,15 @@ enum RecordService {
     // MARK: - Save
 
     static func save(_ record: E3record, context: ModelContext) {
-        guard let card = record.e1card else { return }
-
+        let card = record.e1card
         let dates   = BillingService.partDates(record: record, card: card)
         let amounts = BillingService.partAmounts(record: record)
+        var touchedPayments: [String: E7payment] = [:]
 
         for (i, (billingDate, amount)) in zip(dates, amounts).enumerated() {
             let invoice = findOrCreateInvoice(card: card, date: billingDate, context: context)
             let payment = findOrCreatePayment(date: billingDate, context: context)
+            touchedPayments[payment.id] = payment
             if invoice.e7payment == nil {
                 invoice.e7payment = payment
             }
@@ -28,8 +29,12 @@ enum RecordService {
         updateShopStats(record.e4shop, amount: record.nAmount, date: record.dateUse)
         let cats = record.e5categories.isEmpty ? [record.e5category].compactMap { $0 } : record.e5categories
         for cat in cats { updateCategoryStats(cat, amount: record.nAmount, date: record.dateUse) }
-        recalculateCard(card)
-        recalculatePayments(for: card)
+        if let card {
+            recalculateCard(card)
+        }
+        for payment in touchedPayments.values {
+            recalculatePayment(payment)
+        }
     }
 
     // MARK: - Delete
@@ -42,19 +47,68 @@ enum RecordService {
         context.delete(record) // cascades to E6parts
 
         if let card {
-            for inv in card.e2invoices where invoiceIDs.contains(inv.id) && inv.e6parts.isEmpty {
-                inv.e7payment = nil
-                context.delete(inv)
-            }
             recalculateCard(card)
         }
+        cleanupEmptyInvoices(ids: invoiceIDs, context: context)
+        recalculatePayments(ids: paymentIDs, context: context)
+        cleanupEmptyPayments(ids: paymentIDs, context: context)
+    }
+
+    /// 編集前の旧パーツだけを除去し、請求・支払の孤児データを掃除する
+    static func removeParts(of record: E3record, context: ModelContext) {
+        let card = record.e1card
+        let invoiceIDs = record.e6parts.compactMap { $0.e2invoice?.id }
+        let paymentIDs = record.e6parts.compactMap { $0.e2invoice?.e7payment?.id }
+
+        for part in record.e6parts {
+            if let invoice = part.e2invoice {
+                invoice.e6parts.removeAll { $0.id == part.id }
+            }
+            part.e2invoice = nil
+            part.e3record = nil
+            context.delete(part)
+        }
+        record.e6parts.removeAll()
+
+        if let card {
+            recalculateCard(card)
+        }
+        cleanupEmptyInvoices(ids: invoiceIDs, context: context)
+        recalculatePayments(ids: paymentIDs, context: context)
+        cleanupEmptyPayments(ids: paymentIDs, context: context)
+    }
+
+    /// 既存データの整合性を保つため、明細が空の請求/支払を掃除する
+    static func cleanupOrphanBilling(context: ModelContext) {
+        let desc = FetchDescriptor<E2invoice>()
+        guard let invoices = try? context.fetch(desc) else { return }
+
+        var touchedPayments = Set<String>()
+        var touchedCards: [String: E1card] = [:]
+
+        for invoice in invoices where invoice.e6parts.isEmpty {
+            if let paymentID = invoice.e7payment?.id {
+                touchedPayments.insert(paymentID)
+            }
+            if let card = invoice.e1card {
+                touchedCards[card.id] = card
+            }
+            invoice.e7payment = nil
+            context.delete(invoice)
+        }
+
+        for card in touchedCards.values {
+            recalculateCard(card)
+        }
+        let paymentIDs = Array(touchedPayments)
+        recalculatePayments(ids: paymentIDs, context: context)
         cleanupEmptyPayments(ids: paymentIDs, context: context)
     }
 
     // MARK: - Repeat (nRepeat > 0: mark-paid でコピーを翌月以降に作成)
 
     static func makeRepeatRecord(from source: E3record, context: ModelContext) {
-        guard source.nRepeat > 0, let card = source.e1card else { return }
+        guard 0 < source.nRepeat else { return }
         guard let nextDate = Calendar.current.date(
             byAdding: .month, value: Int(source.nRepeat), to: source.dateUse
         ) else { return }
@@ -68,7 +122,7 @@ enum RecordService {
             nRepeat:  source.nRepeat,
             nAnnual:  source.nAnnual
         )
-        next.e1card        = card
+        next.e1card        = source.e1card
         next.e4shop        = source.e4shop
         next.e5category    = source.e5category
         next.e5categories  = source.e5categories
@@ -92,22 +146,35 @@ enum RecordService {
     static func recalculatePayments(for card: E1card) {
         var seen = Set<String>()
         for inv in card.e2invoices {
-            guard let p = inv.e7payment, !seen.contains(p.id) else { continue }
-            seen.insert(p.id)
-            p.sumAmount  = p.e2invoices.reduce(.zero) { $0 + $1.sumAmount }
-            p.sumNoCheck = p.e2invoices.reduce(0)     { $0 + $1.sumNoCheck }
+            guard let payment = inv.e7payment else { continue }
+            if seen.contains(payment.id) { continue }
+            seen.insert(payment.id)
+            recalculatePayment(payment)
         }
     }
 
     // MARK: - Private
 
-    private static func findOrCreateInvoice(card: E1card, date: Date, context: ModelContext) -> E2invoice {
+    private static func findOrCreateInvoice(card: E1card?, date: Date, context: ModelContext) -> E2invoice {
         let day = Calendar.current.startOfDay(for: date)
-        if let ex = card.e2invoices.first(where: { Calendar.current.isDate($0.date, inSameDayAs: day) }) {
+        if let card {
+            if let ex = card.e2invoices.first(where: { Calendar.current.isDate($0.date, inSameDayAs: day) }) {
+                return ex
+            }
+            let inv = E2invoice(date: day)
+            inv.e1card = card
+            context.insert(inv)
+            return inv
+        }
+
+        let desc = FetchDescriptor<E2invoice>(
+            predicate: #Predicate { $0.date == day && $0.e1card == nil }
+        )
+        if let ex = try? context.fetch(desc).first {
             return ex
         }
+
         let inv = E2invoice(date: day)
-        inv.e1card = card
         context.insert(inv)
         return inv
     }
@@ -127,6 +194,31 @@ enum RecordService {
         for p in all where ids.contains(p.id) && p.e2invoices.isEmpty {
             context.delete(p)
         }
+    }
+
+    private static func cleanupEmptyInvoices(ids: [String], context: ModelContext) {
+        let desc = FetchDescriptor<E2invoice>()
+        guard let all = try? context.fetch(desc) else { return }
+        for invoice in all where ids.contains(invoice.id) && invoice.e6parts.isEmpty {
+            invoice.e7payment = nil
+            context.delete(invoice)
+        }
+    }
+
+    private static func recalculatePayments(ids: [String], context: ModelContext) {
+        if ids.isEmpty {
+            return
+        }
+        let desc = FetchDescriptor<E7payment>()
+        guard let all = try? context.fetch(desc) else { return }
+        for payment in all where ids.contains(payment.id) {
+            recalculatePayment(payment)
+        }
+    }
+
+    private static func recalculatePayment(_ payment: E7payment) {
+        payment.sumAmount = payment.e2invoices.reduce(.zero) { $0 + $1.sumAmount }
+        payment.sumNoCheck = payment.e2invoices.reduce(0) { $0 + $1.sumNoCheck }
     }
 
     private static func updateShopStats(_ shop: E4shop?, amount: Decimal, date: Date) {

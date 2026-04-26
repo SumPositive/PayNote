@@ -8,6 +8,13 @@ struct InvoiceListView: View {
     @State private var editRecord: E3record?
 
     private var bankNameText: String {
+        // 決済手段未選択の請求は、口座名ではなく決済手段未選択と表示する
+        if payment.e2invoices.contains(where: { $0.e1card == nil }) {
+            let cardLabel = NSLocalizedString("record.field.card", comment: "")
+            let noSelection = NSLocalizedString("label.noSelection", comment: "")
+            return "\(cardLabel) \(noSelection)"
+        }
+
         let names = Array(
             Set(
                 payment.e2invoices
@@ -123,6 +130,10 @@ struct InvoiceListView: View {
     }
 
     private func toggleInvoicePaid(_ invoice: E2invoice) {
+        // 決済手段未選択は未払のまま保持する
+        if invoice.e1card == nil && !invoice.isPaid {
+            return
+        }
         invoice.isPaid.toggle()
         if let card = invoice.e1card {
             RecordService.recalculateCard(card)

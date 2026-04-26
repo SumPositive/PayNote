@@ -65,6 +65,10 @@ struct PaymentListView: View {
                         .padding(.vertical, 10)
                     }
                     .onAppear {
+                        // 旧請求の残骸（明細ゼロ）を先に掃除する
+                        RecordService.cleanupOrphanBilling(context: context)
+                        // 旧仕様で請求データが未作成の「決済手段未選択」明細を補完する
+                        ensureUnselectedRecordsScheduled()
                         refreshHasAnyPayments()
                         if paidPayments.isEmpty {
                             resetAndLoadPaid()
@@ -114,6 +118,10 @@ struct PaymentListView: View {
     private func togglePaid(_ payment: E7payment) {
         let previousIsPaid = payment.isPaid
         let nextIsPaid = !previousIsPaid
+        // 決済手段未選択を含む支払は、未払→済みへの更新を禁止する
+        if !previousIsPaid && payment.includesUnselectedCard {
+            return
+        }
         applyPaidState(payment, isPaid: nextIsPaid)
         // トグル後に取り消しアクションを出す
         showUndoAction(payment: payment, previousIsPaid: previousIsPaid)
@@ -203,6 +211,20 @@ struct PaymentListView: View {
         let count = (try? context.fetchCount(FetchDescriptor<E7payment>())) ?? 0
         hasAnyPayments = 0 < count
     }
+
+    private func ensureUnselectedRecordsScheduled() {
+        // 既存データ向け: 決済手段未選択かつ請求パーツ未作成の明細だけを対象にする
+        let descriptor = FetchDescriptor<E3record>(
+            predicate: #Predicate<E3record> { $0.e1card == nil && $0.e6parts.isEmpty }
+        )
+        let targets = (try? context.fetch(descriptor)) ?? []
+        if targets.isEmpty {
+            return
+        }
+        for record in targets {
+            RecordService.save(record, context: context)
+        }
+    }
 }
 
 // MARK: - Row
@@ -210,7 +232,17 @@ struct PaymentListView: View {
 private struct PaymentRow: View {
     let payment: E7payment
     let onToggle: () -> Void
+    private var canToggleToPaid: Bool {
+        // 未選択決済を含む場合は「済み」へ遷移させない
+        payment.isPaid || !payment.includesUnselectedCard
+    }
     private var bankNameText: String {
+        // 決済手段未選択の請求が含まれる場合は、口座ではなく決済手段未選択と表示する
+        if payment.includesUnselectedCard {
+            let cardLabel = NSLocalizedString("record.field.card", comment: "")
+            let noSelection = NSLocalizedString("label.noSelection", comment: "")
+            return "\(cardLabel) \(noSelection)"
+        }
         // 請求書に紐づく口座名の先頭を表示する（未設定時は共通ラベル）
         if let name = payment.e2invoices
             .compactMap({ $0.e1card?.e8bank?.zName })
@@ -227,6 +259,8 @@ private struct PaymentRow: View {
                 // セルと説明フッターで同じ見た目を再利用する
                 PaymentStatusPill(isPaid: payment.isPaid)
             }
+            .disabled(!canToggleToPaid)
+            .opacity(canToggleToPaid ? 1 : 0.4)
             // 切替操作の意味を読み上げでも伝える
             .accessibilityLabel(payment.isPaid ? Text("payment.markUnpaid") : Text("payment.markPaid"))
             .buttonStyle(.plain)
@@ -269,6 +303,13 @@ private struct PaymentRow: View {
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
+    }
+}
+
+private extension E7payment {
+    var includesUnselectedCard: Bool {
+        // 1件でも決済手段未選択の請求があれば制御対象にする
+        e2invoices.contains { $0.e1card == nil }
     }
 }
 

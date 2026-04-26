@@ -2,30 +2,72 @@ import Foundation
 
 /// クレジットカードの支払日計算
 enum BillingService {
+    // 決済手段未選択時の仮スケジュール（27日締め・翌月27日払い）
+    static let fallbackClosingDay: Int16 = 27
+    static let fallbackPayDay: Int16 = 27
+    static let fallbackPayMonth: Int16 = 1
 
     /// 利用日とカード設定から n 番目の支払日を返す（partOffset=0 が 1 回目）
     static func billingDate(useDate: Date, card: E1card, partOffset: Int = 0) -> Date {
         if card.isDebit {
             return Calendar.current.startOfDay(for: useDate)
         }
+        return billingDate(
+            useDate: useDate,
+            closingDay: card.nClosingDay,
+            payDay: card.nPayDay,
+            payMonth: card.nPayMonth,
+            partOffset: partOffset
+        )
+    }
+
+    /// 決済手段未選択を含めた支払日を返す（未選択時は仮スケジュール）
+    static func billingDate(useDate: Date, card: E1card?, partOffset: Int = 0) -> Date {
+        if let card {
+            return billingDate(useDate: useDate, card: card, partOffset: partOffset)
+        }
+        return billingDate(
+            useDate: useDate,
+            closingDay: fallbackClosingDay,
+            payDay: fallbackPayDay,
+            payMonth: fallbackPayMonth,
+            partOffset: partOffset
+        )
+    }
+
+    /// 日付計算の本体
+    private static func billingDate(
+        useDate: Date,
+        closingDay: Int16,
+        payDay: Int16,
+        payMonth: Int16,
+        partOffset: Int
+    ) -> Date {
         let cal = Calendar.current
         let dc  = cal.dateComponents([.year, .month, .day], from: useDate)
         let useDay   = dc.day   ?? 1
         let useMonth = dc.month ?? 1
         let useYear  = dc.year  ?? 2024
 
-        let closingDay: Int = card.nClosingDay == 29
+        let closingDayValue: Int = closingDay == 29
             ? daysInMonth(year: useYear, month: useMonth)
-            : Int(card.nClosingDay)
+            : Int(closingDay)
 
-        let overClose   = useDay > closingDay ? 1 : 0
-        let totalOffset = Int(card.nPayMonth) + overClose + partOffset
+        let overClose = closingDayValue < useDay ? 1 : 0
+        let totalOffset = Int(payMonth) + overClose + partOffset
 
-        return makeDate(year: useYear, month: useMonth + totalOffset, payDay: Int(card.nPayDay))
+        return makeDate(year: useYear, month: useMonth + totalOffset, payDay: Int(payDay))
     }
 
     /// E3record の各 E6part に対応する支払日リストを返す
     static func partDates(record: E3record, card: E1card) -> [Date] {
+        (0..<partCount(for: record.payType)).map {
+            billingDate(useDate: record.dateUse, card: card, partOffset: $0)
+        }
+    }
+
+    /// E3record の各 E6part に対応する支払日リストを返す（未選択対応）
+    static func partDates(record: E3record, card: E1card?) -> [Date] {
         (0..<partCount(for: record.payType)).map {
             billingDate(useDate: record.dateUse, card: card, partOffset: $0)
         }
