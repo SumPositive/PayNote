@@ -1483,7 +1483,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "明細編集"
+            "value" : "決済編集"
           }
         }
       }

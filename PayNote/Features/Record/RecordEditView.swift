@@ -87,8 +87,8 @@ struct RecordEditView: View {
         return Array(filtered.prefix(10))
     }
     private var similarCandidates: [SimilarCandidate] {
-        // 過去1年の履歴を対象に、条件が変わるたび緩くスコアリングする
-        let sinceDate = Calendar.current.date(byAdding: .year, value: -1, to: Date()) ?? .distantPast
+        // 過去18ヶ月の履歴を対象に、条件が変わるたび緩くスコアリングする
+        let sinceDate = Calendar.current.date(byAdding: .month, value: -18, to: Date()) ?? .distantPast
         var scored: [SimilarCandidate] = []
 
         for record in pastRecords {
@@ -374,7 +374,8 @@ struct RecordEditView: View {
                     }
                 }
             }
-            .presentationDetents([.medium, .large])
+            // カレンダーが欠けない最小寄りの固定高さで表示する
+            .presentationDetents([.height(540)])
         }
         .sheet(isPresented: $showCardPicker) {
             PickerSheet(
@@ -597,9 +598,9 @@ struct RecordEditView: View {
     /// 金額未入力時のガイド文
     private var similarGuideText: String {
         if Locale.current.language.languageCode?.identifier == "ja" {
-            return "金額を入力すると、過去1年から類似決済を提案します"
+            return "金額を入力すると、類似決済を提案します"
         }
-        return "Enter an amount to see similar payments from the last year."
+        return "Enter an amount to see similar payments."
     }
 
     /// 候補が見つからない場合の文言
