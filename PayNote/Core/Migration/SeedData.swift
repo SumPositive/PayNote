@@ -8,9 +8,14 @@ enum SeedData {
         var closingDay: Int16
         var payDay: Int16
         var payMonth: Int16
+        var manageLevel: ManagementLevel = .precise
     }
 
     struct BankPreset {
+        var name: String
+    }
+
+    struct CategoryPreset {
         var name: String
     }
 
@@ -19,6 +24,7 @@ enum SeedData {
         guard count == 0 else { return }
         let bankPresets = localizedBankPresets()
         let cardPresets = localizedCardPresets()
+        let categoryPresets = localizedCategoryPresets()
 
         // 引き落とし口座プリセット
         for (row, b) in bankPresets.enumerated() {
@@ -36,9 +42,19 @@ enum SeedData {
                 nRow: Int32(row),
                 nClosingDay: p.closingDay,
                 nPayDay: p.payDay,
-                nPayMonth: p.payMonth
+                nPayMonth: p.payMonth,
+                nManageLevel: p.manageLevel.rawValue
             )
             context.insert(card)
+        }
+
+        // タグプリセット
+        for p in categoryPresets {
+            let category = E5category(
+                zName: p.name,
+                sortName: p.name
+            )
+            context.insert(category)
         }
         try? context.save()
     }
@@ -51,6 +67,11 @@ enum SeedData {
     /// 現在の表示言語に合わせた口座プリセット一覧を返す
     static func bankPresetsForCurrentLocale() -> [BankPreset] {
         localizedBankPresets()
+    }
+
+    /// 現在の表示言語に合わせたタグプリセット一覧を返す
+    static func categoryPresetsForCurrentLocale() -> [CategoryPreset] {
+        localizedCategoryPresets()
     }
 
     // MARK: - Private
@@ -73,35 +94,45 @@ enum SeedData {
         return westernBankPresets()
     }
 
+    /// 言語ごとにタグプリセットを切り替える
+    private static func localizedCategoryPresets() -> [CategoryPreset] {
+        let lang = Bundle.main.preferredLocalizations.first ?? "en"
+        if lang == "ja" {
+            return japaneseCategoryPresets()
+        }
+        return westernCategoryPresets()
+    }
+
     /// 日本向けの代表的な決済方法
     private static func japaneseCardPresets() -> [CardPreset] {
         [
-            CardPreset(name: "楽天カード", closingDay: 29, payDay: 27, payMonth: 1),
-            CardPreset(name: "PayPayカード", closingDay: 29, payDay: 27, payMonth: 1),
-            CardPreset(name: "dカード", closingDay: 15, payDay: 10, payMonth: 1),
-            CardPreset(name: "三井住友カード", closingDay: 15, payDay: 10, payMonth: 1),
-            CardPreset(name: "イオンカード", closingDay: 10, payDay: 2, payMonth: 1),
-            CardPreset(name: "Suica（クレジットでチャージ）", closingDay: 29, payDay: 27, payMonth: 1),
-            CardPreset(name: "nanaco", closingDay: 29, payDay: 27, payMonth: 1),
-            CardPreset(name: "WAON", closingDay: 29, payDay: 27, payMonth: 1),
-            CardPreset(name: "PayPay（クレジットでチャージ）", closingDay: 29, payDay: 27, payMonth: 1),
-            CardPreset(name: "楽天Pay（クレジットでチャージ）", closingDay: 29, payDay: 27, payMonth: 1),
+            CardPreset(name: "Suica（VIEWカード）", closingDay: 5, payDay: 4, payMonth: 1, manageLevel: .precise),
+            CardPreset(name: "nanaco（ｄカード）", closingDay: 15, payDay: 10, payMonth: 1, manageLevel: .precise),
+            CardPreset(name: "AEON Pay（イオンカード）", closingDay: 10, payDay: 2, payMonth: 1, manageLevel: .precise),
+            CardPreset(name: "PayPay（PayPayカード）", closingDay: 29, payDay: 27, payMonth: 1, manageLevel: .precise),
+            CardPreset(name: "楽天Pay（楽天カード）", closingDay: 29, payDay: 27, payMonth: 1, manageLevel: .precise),
+            CardPreset(name: "楽天カード", closingDay: 29, payDay: 27, payMonth: 1, manageLevel: .approximate),
+            CardPreset(name: "PayPayカード", closingDay: 29, payDay: 27, payMonth: 1, manageLevel: .approximate),
+            CardPreset(name: "ｄカード", closingDay: 15, payDay: 10, payMonth: 1, manageLevel: .approximate),
+            CardPreset(name: "イオンカード", closingDay: 10, payDay: 2, payMonth: 1, manageLevel: .approximate),
+            CardPreset(name: "三井住友カード", closingDay: 15, payDay: 10, payMonth: 1, manageLevel: .largeOnly),
+            CardPreset(name: "AMEXカード", closingDay: 20, payDay: 10, payMonth: 1, manageLevel: .largeOnly),
         ]
     }
 
     /// 英語環境では欧米の代表的な決済方法を初期表示する
     private static func westernCardPresets() -> [CardPreset] {
         [
-            CardPreset(name: "Visa", closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "Mastercard", closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "American Express", closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "Apple Pay (Card Charge)", closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "Google Pay (Card Charge)", closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "PayPal (Card Charge)", closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "Venmo (Card Charge)", closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "Cash App (Card Charge)", closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "Revolut (Card Charge)", closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "Klarna", closingDay: 27, payDay: 27, payMonth: 1),
+            CardPreset(name: "Apple Pay (Visa)", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .precise),
+            CardPreset(name: "Google Pay (Master)", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .precise),
+            CardPreset(name: "PayPal (Amax)", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .precise),
+            CardPreset(name: "Venmo (Visa)", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .precise),
+            CardPreset(name: "Cash App (Visa)", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .precise),
+            CardPreset(name: "Revolut (Visa)", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .precise),
+            CardPreset(name: "Visa", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .approximate),
+            CardPreset(name: "Mastercard", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .approximate),
+            CardPreset(name: "American Express", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .largeOnly),
+            CardPreset(name: "Klarna", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .largeOnly),
         ]
     }
 
@@ -134,6 +165,38 @@ enum SeedData {
             BankPreset(name: "Santander"),
             BankPreset(name: "BNP Paribas"),
             BankPreset(name: "Deutsche Bank"),
+        ]
+    }
+
+    /// 日本向けタグプリセット
+    private static func japaneseCategoryPresets() -> [CategoryPreset] {
+        [
+            CategoryPreset(name: "チャージ"),
+            CategoryPreset(name: "食費"),
+            CategoryPreset(name: "交際"),
+            CategoryPreset(name: "会費"),
+            CategoryPreset(name: "交通"),
+            CategoryPreset(name: "有料道路(ETC)"),
+            CategoryPreset(name: "タクシー"),
+            CategoryPreset(name: "通信"),
+            CategoryPreset(name: "水道"),
+            CategoryPreset(name: "電気"),
+        ]
+    }
+
+    /// 英語環境向けタグプリセット
+    private static func westernCategoryPresets() -> [CategoryPreset] {
+        [
+            CategoryPreset(name: "Top-up"),
+            CategoryPreset(name: "Food"),
+            CategoryPreset(name: "Social"),
+            CategoryPreset(name: "Subscription"),
+            CategoryPreset(name: "Transit"),
+            CategoryPreset(name: "Toll (ETC)"),
+            CategoryPreset(name: "Taxi"),
+            CategoryPreset(name: "Phone/Internet"),
+            CategoryPreset(name: "Water"),
+            CategoryPreset(name: "Electricity"),
         ]
     }
 }

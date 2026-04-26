@@ -6,7 +6,7 @@ struct RecordListView: View {
     @Environment(\.modelContext) private var context
 
     @State private var filterCard: E1card?
-    @State private var filterNoCard = false
+    @State private var filterIncomplete = false
     @State private var records: [E3record] = []
     @State private var recordPage = 0
     @State private var hasMoreRecords = true
@@ -18,10 +18,6 @@ struct RecordListView: View {
     private let pageSize = 100
     private var filtered: [E3record] {
         records
-    }
-    private var unselectedFilterLabel: String {
-        // ロケールに応じて「未選択」ラベルを出し分ける
-        Locale.current.identifier.hasPrefix("ja") ? "未選択" : "Unselected"
     }
 
     var body: some View {
@@ -96,7 +92,7 @@ struct RecordListView: View {
         .onChange(of: filterCard?.id) { _, _ in
             resetAndLoadRecords()
         }
-        .onChange(of: filterNoCard) { _, _ in
+        .onChange(of: filterIncomplete) { _, _ in
             resetAndLoadRecords()
         }
     }
@@ -106,39 +102,39 @@ struct RecordListView: View {
         Menu {
                 Button {
                     filterCard = nil
-                    filterNoCard = false
+                    filterIncomplete = false
                 } label: {
                 HStack {
                     Text("label.all")
-                    if filterCard == nil && !filterNoCard { Image(systemName: "checkmark") }
+                    if filterCard == nil && !filterIncomplete { Image(systemName: "checkmark") }
                 }
             }
                 Button {
                     filterCard = nil
-                    filterNoCard = true
+                    filterIncomplete = true
                 } label: {
                 HStack {
-                    Text(verbatim: unselectedFilterLabel)
-                    if filterNoCard { Image(systemName: "checkmark") }
+                    Text("record.filter.incomplete")
+                    if filterIncomplete { Image(systemName: "checkmark") }
                 }
             }
             Divider()
             ForEach(cards) { c in
                 Button {
                     filterCard = c
-                    filterNoCard = false
+                    filterIncomplete = false
                 } label: {
                     HStack {
                         Text(c.zName)
-                        if !filterNoCard && filterCard?.id == c.id { Image(systemName: "checkmark") }
+                        if !filterIncomplete && filterCard?.id == c.id { Image(systemName: "checkmark") }
                     }
                 }
             }
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "creditcard")
-                if filterNoCard {
-                    Text(verbatim: unselectedFilterLabel)
+                if filterIncomplete {
+                    Text("record.filter.incomplete")
                         .font(.subheadline)
                 } else if let filterCard {
                     Text(filterCard.zName)
@@ -166,11 +162,32 @@ struct RecordListView: View {
         defer { isLoadingRecords = false }
 
         var descriptor: FetchDescriptor<E3record>
-        if filterNoCard {
+        if filterIncomplete {
+            // 情報不足フィルタは「決済手段→決済ラベル→タグ」の優先順が必要なため、
+            // ここだけ全件取得後に優先度で並べ替えてからページングする
             descriptor = FetchDescriptor<E3record>(
-                predicate: #Predicate<E3record> { $0.e1card == nil },
                 sortBy: [SortDescriptor(\E3record.dateUse, order: .reverse)]
             )
+            let allRecords = (try? context.fetch(descriptor)) ?? []
+            let ranked = allRecords.compactMap { record -> (priority: Int, record: E3record)? in
+                guard let priority = incompletePriority(for: record) else { return nil }
+                return (priority, record)
+            }
+            .sorted { lhs, rhs in
+                if lhs.priority == rhs.priority {
+                    return rhs.record.dateUse < lhs.record.dateUse
+                }
+                return lhs.priority < rhs.priority
+            }
+
+            let start = recordPage * pageSize
+            let end = min(start + pageSize, ranked.count)
+            if start < end {
+                records.append(contentsOf: ranked[start..<end].map(\.record))
+            }
+            recordPage += 1
+            hasMoreRecords = end < ranked.count
+            return
         } else if let filterCardID = filterCard?.id {
             descriptor = FetchDescriptor<E3record>(
                 predicate: #Predicate<E3record> { $0.e1card?.id == filterCardID },
@@ -188,6 +205,22 @@ struct RecordListView: View {
         records.append(contentsOf: fetched)
         recordPage += 1
         hasMoreRecords = pageSize <= fetched.count
+    }
+
+    /// 情報不足の優先順位（小さいほど優先）
+    /// 1) 決済手段未設定 2) 決済ラベル未設定 3) タグ未設定
+    private func incompletePriority(for record: E3record) -> Int? {
+        if record.e1card == nil {
+            return 0
+        }
+        let label = record.zName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if label.isEmpty {
+            return 1
+        }
+        if record.e5categories.isEmpty && record.e5category == nil {
+            return 2
+        }
+        return nil
     }
 }
 

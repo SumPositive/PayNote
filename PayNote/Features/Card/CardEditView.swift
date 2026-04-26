@@ -45,34 +45,31 @@ struct CardEditView: View {
 
     var body: some View {
         Form {
-            // 説明文
-            Section {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("card.edit.description")
-                        .font(.callout)
-                        .foregroundStyle(.primary)
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 10)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(.secondarySystemFill))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-
+            // 先頭はプリセット操作のみ
+            if isNew {
+                Section {
                     // プリセットを呼び出すボタン
-                    if isNew {
-                        Button("card.preset.quote") {
-                            showPresetDialog = true
-                        }
-                        .buttonStyle(.borderedProminent)
+                    Button("card.preset.quote") {
+                        showPresetDialog = true
                     }
+                    .buttonStyle(.borderedProminent)
                 }
-                .listRowSeparator(.hidden)
             }
 
             // 基本情報
             Section {
-                TextField("card.field.name", text: $zName)
-                    .autocorrectionDisabled()
+                // 決済名と初心者ヘルプを同一セルに置いて区切り線を出さない
+                VStack(alignment: .leading, spacing: 6) {
+                    TextField("card.field.name", text: $zName)
+                        .autocorrectionDisabled()
                         .focused($focusName)
+                    if userLevel == .beginner {
+                        Text("card.help.name")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
 
                 LabeledContent("card.field.bank") {
                     Picker("", selection: $bankSelection) {
@@ -336,6 +333,8 @@ struct CardEditView: View {
         closingDaySelection = isEnglishLocale ? nil : preset.closingDay
         payDay = preset.payDay
         payMonth = isEnglishLocale ? 1 : preset.payMonth
+        // プリセットの管理レベルをそのまま反映する
+        manageLevel = preset.manageLevel
     }
 
     // MARK: - Draft Diff

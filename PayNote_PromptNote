@@ -388,3 +388,56 @@ enの場合、日付は
 
 メニュー：引き落とし状況セル内の下方の初心者ヘルプ「適時、この状況を見てください。口座からの引き落としが確認できれば、(下矢印アイコン画像)をタップして済みへ移動させてください。いつでも未払に戻すこともできます」を表示したい
 
+全ての初心者ヘルプを簡素で読み易くし、表現、文体などを統一したい
+
+メニュー：設定セル内の下方の初心者ヘルプ「ユーザレベルを達人にすると、この説明文が消えます。」を表示したい
+
+決済履歴にあるフィルタ機能の「未選択」を「情報不足の決済」とし、選択すると　決済手段、決済ラベル、タグ　の順で未設定の履歴だけを抽出したい
+
+決済手段のトップになる説明文を削除し、決済名セル内の下方の初心者ヘルプ「後日、口座から引き落とされる決済手段の名称を登録します。SuicaやPayPayなどの電子マネーは、チャージ元となるのクレジットカードが決済対象になります。新しい決済にはチャージを登録しますが、チャージ残高の利用は登録しません。」に変更したい
+
+
+日本向けの代表的な決済方法を以下の通り変更して
+    CardPreset(name: "Suica（VIEWカード）", closingDay: 5, payDay: 4, payMonth: 1), 管理レベル:きっちり
+    CardPreset(name: "nanaco（ｄカード）", closingDay: 15, payDay: 10, payMonth: 1), 管理レベル:きっちり
+    CardPreset(name: "AEON Pay（イオンカード）", closingDay: 10, payDay: 2, payMonth: 1), 管理レベル:きっちり
+    CardPreset(name: "PayPay（PayPayカード）", closingDay: 29, payDay: 27, payMonth: 1), 管理レベル:きっちり
+    CardPreset(name: "楽天Pay（楽天カード）", closingDay: 29, payDay: 27, payMonth: 1), 管理レベル:きっちり
+    CardPreset(name: "楽天カード", closingDay: 29, payDay: 27, payMonth: 1), 管理レベル:おおよそ
+    CardPreset(name: "PayPayカード", closingDay: 29, payDay: 27, payMonth: 1), 管理レベル:おおよそ
+    CardPreset(name: "ｄカード", closingDay: 15, payDay: 10, payMonth: 1), 管理レベル:おおよそ
+    CardPreset(name: "イオンカード", closingDay: 10, payDay: 2, payMonth: 1), 管理レベル:おおよそ
+    CardPreset(name: "三井住友カード", closingDay: 15, payDay: 10, payMonth: 1), 管理レベル:高額のみ
+    CardPreset(name: "AMEXカード", closingDay: 20, payDay: 10, payMonth: 1), 管理レベル:高額のみ
+
+英語環境では欧米の代表的な決済方法を以下の通り変更して
+    CardPreset(name: "Apple Pay (Visa)", closingDay: 27, payDay: 27, payMonth: 1), 管理レベル:きっちり
+    CardPreset(name: "Google Pay (Master)", closingDay: 27, payDay: 27, payMonth: 1),管理レベル:きっちり
+    CardPreset(name: "PayPal (Amax)", closingDay: 27, payDay: 27, payMonth: 1),管理レベル:きっちり
+    CardPreset(name: "Venmo (Visa)", closingDay: 27, payDay: 27, payMonth: 1),管理レベル:きっちり
+    CardPreset(name: "Cash App (Visa)", closingDay: 27, payDay: 27, payMonth: 1),管理レベル:きっちり
+    CardPreset(name: "Revolut (Visa)", closingDay: 27, payDay: 27, payMonth: 1),管理レベル:きっちり
+    CardPreset(name: "Visa", closingDay: 27, payDay: 27, payMonth: 1), 管理レベル:おおよそ
+    CardPreset(name: "Mastercard", closingDay: 27, payDay: 27, payMonth: 1), 管理レベル:おおよそ
+    CardPreset(name: "American Express", closingDay: 27, payDay: 27, payMonth: 1), 管理レベル:高額のみ
+    CardPreset(name: "Klarna", closingDay: 27, payDay: 27, payMonth: 1), 管理レベル:高額のみ
+
+
+
+決済ラベルの候補プリセット
+　
+
+タグのプリセット
+　チャージ
+　食費
+　交際
+　会費
+　交通
+　有料道路(ETC)
+　タクシー
+　通信
+　水道
+　電気
+　
+
+　

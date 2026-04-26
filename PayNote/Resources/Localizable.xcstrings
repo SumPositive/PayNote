@@ -719,6 +719,23 @@
         }
       }
     },
+    "card.help.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Register payment methods that are debited from your account later. For PayPay, credit-linked use and wallet top-up are included. Spending topped-up PayPay balance is excluded."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "後日、口座から引き落とされる決済手段の名称を登録します。PayPayならばクレジット連携の利用やPayPay残高へのチャージが決済対象になります。チャージしたPayPay残高の利用は対象外です。"
+          }
+        }
+      }
+    },
     "card.help.schedule" : {
       "extractionState" : "manual",
       "localizations" : {
