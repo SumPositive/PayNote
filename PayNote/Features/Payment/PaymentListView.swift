@@ -65,10 +65,6 @@ struct PaymentListView: View {
                         .padding(.vertical, 10)
                     }
                     .onAppear {
-                        // 旧請求の残骸（明細ゼロ）を先に掃除する
-                        RecordService.cleanupOrphanBilling(context: context)
-                        // 旧仕様で請求データが未作成の「決済手段未選択」明細を補完する
-                        ensureUnselectedRecordsScheduled()
                         refreshHasAnyPayments()
                         if paidPayments.isEmpty {
                             resetAndLoadPaid()
@@ -210,20 +206,6 @@ struct PaymentListView: View {
         // 未払が0件でも済みがあれば一覧を表示する
         let count = (try? context.fetchCount(FetchDescriptor<E7payment>())) ?? 0
         hasAnyPayments = 0 < count
-    }
-
-    private func ensureUnselectedRecordsScheduled() {
-        // 既存データ向け: 決済手段未選択かつ請求パーツ未作成の明細だけを対象にする
-        let descriptor = FetchDescriptor<E3record>(
-            predicate: #Predicate<E3record> { $0.e1card == nil && $0.e6parts.isEmpty }
-        )
-        let targets = (try? context.fetch(descriptor)) ?? []
-        if targets.isEmpty {
-            return
-        }
-        for record in targets {
-            RecordService.save(record, context: context)
-        }
     }
 }
 

@@ -27,6 +27,7 @@ struct RecordEditView: View {
     @Environment(\.modelContext)  private var context
     @Environment(\.dismiss)       private var dismiss
     @Query(sort: \E1card.nRow)    private var cards: [E1card]
+    @Query(sort: \E8bank.nRow)    private var banks: [E8bank]
     @Query(sort: \E3record.dateUse, order: .reverse) private var pastRecords: [E3record]
     @Query                        private var categories: [E5category]
 
@@ -40,16 +41,19 @@ struct RecordEditView: View {
     @State private var payType:    PayType  = .lumpSum
     @State private var nRepeat:    Int16    = 0
     @State private var selectedCard:        E1card?
+    @State private var selectedBankForCard: E8bank?
     @State private var selectedCategories:  [E5category] = []
 
     @State private var showAmountPad      = false
     @State private var showDatePicker     = false
     @State private var showCardPicker     = false
+    @State private var showBankPicker     = false
     @State private var showCategoryPicker = false
     @State private var showRepeatPicker   = false
     @State private var savedBanner        = false
     @State private var hasInitialized     = false
     @State private var initialDraft: DraftState?
+    @State private var keepBankPickerRowVisible = false
     // 過去データ由来の候補をキャッシュして、毎描画の再計算を避ける
     @State private var cachedUsePointCandidates: [String] = []
     @State private var cachedLatestCard: E1card?
@@ -68,6 +72,16 @@ struct RecordEditView: View {
     private var hasChanges: Bool {
         guard let initialDraft else { return false }
         return currentDraft() != initialDraft
+    }
+    private var shouldShowBankPickerRow: Bool {
+        // 編集時は常に表示し、新規時はいったん表示したら保存/終了まで維持する
+        if selectedCard == nil {
+            return false
+        }
+        if !isNew {
+            return true
+        }
+        return selectedBankForCard == nil || keepBankPickerRowVisible
     }
     // 済みレコードはコア項目（金額・利用日・決済手段）を固定する
     private var isCoreFieldsLocked: Bool {
@@ -129,185 +143,10 @@ struct RecordEditView: View {
     var body: some View {
         ScrollViewReader { proxy in
             Form {
-                if userLevel == .beginner {
-                    Section {
-                        BeginnerRecordHelpBlock(
-                            titleKey: "record.beginner.title",
-                            messageKey: "record.beginner.guide"
-                        )
-                    }
-                }
-                // ── 必須 ──────────────────────────
-                Section {
-                    // 金額
-                    Button { showAmountPad = true } label: {
-                        HStack {
-                            Text("record.field.amount")
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Text(nAmount == 0 ? "—" : nAmount.currencyString())
-                                .font(.title2.bold().monospacedDigit())
-                                .foregroundStyle(nAmount == 0 ? Color(.tertiaryLabel) : COLOR_AMOUNT_POSITIVE)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .id(formTopAnchorID)
-                    .buttonStyle(.plain)
-                    .disabled(isCoreFieldsLocked)
-
-                    // 利用日はセル全体のタップで選択画面を開く
-                    Button { showDatePicker = true } label: {
-                        HStack {
-                            Text("record.field.date")
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Text(AppDateFormat.singleLineText(dateUse))
-                                .foregroundStyle(.primary)
-                            Image(systemName: "chevron.right")
-                                .font(.caption).foregroundStyle(.tertiary)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(isCoreFieldsLocked)
-
-                    // 決済手段（必須パネル・保存は未選択でも可）
-                    Button { showCardPicker = true } label: {
-                        HStack {
-                            Text("record.field.card")
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            if let card = selectedCard {
-                                Text(card.zName).foregroundStyle(.primary)
-                            } else {
-                                Text("label.noSelection").foregroundStyle(.secondary)
-                            }
-                            Image(systemName: "chevron.right")
-                                .font(.caption).foregroundStyle(.tertiary)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(isCoreFieldsLocked)
-                }
-
-                // ── オプション ────────────────────
-                Section {
-                // 利用点（自由入力 + 頻度候補）
-                VStack(alignment: .leading, spacing: 8) {
-                    TextField("record.field.usePoint", text: $zName)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                            .focused($isUsePointFocused)
-                            .onChange(of: zName) { _, newValue in
-                                // 利用点は最大100文字までに制限する
-                                if 100 < newValue.count {
-                                    zName = String(newValue.prefix(100))
-                                }
-                            }
-
-                        if isUsePointFocused && !shownUsePointCandidates.isEmpty {
-                            VStack(spacing: 0) {
-                                ForEach(shownUsePointCandidates, id: \.self) { candidate in
-                                    Button {
-                                        // 候補タップで確定する
-                                        zName = candidate
-                                        isUsePointFocused = false
-                                    } label: {
-                                        HStack(spacing: 0) {
-                                            Text(candidate)
-                                                .lineLimit(1)
-                                                .truncationMode(.tail)
-                                                .foregroundStyle(.primary)
-                                            Spacer()
-                                        }
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .contentShape(Rectangle())
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 8)
-                                    }
-                                    .buttonStyle(.plain)
-                                    if candidate != shownUsePointCandidates.last {
-                                        Divider()
-                                    }
-                                }
-                            }
-                        .background(Color(.secondarySystemBackground))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                    }
-                }
-
-                // 分類タグ（複数選択）
-                VStack(alignment: .leading, spacing: 6) {
-                    Button { showCategoryPicker = true } label: {
-                        HStack(alignment: .top, spacing: 6) {
-                            // 見出しは固定幅を確保して欠けないようにする
-                            Text("record.field.category")
-                                .foregroundStyle(.secondary)
-                                .frame(width: 44, alignment: .leading)
-                            categoryLabel
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Image(systemName: "chevron.right")
-                                .font(.caption).foregroundStyle(.tertiary)
-                                .padding(.top, 2)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-
-                }
-
-                    // 繰り返し
-                    if payType == .lumpSum {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Button { showRepeatPicker = true } label: {
-                                HStack {
-                                    Text("record.field.repeat")
-                                        // 他の見出しと同じ薄さにそろえる
-                                        .foregroundStyle(Color(.secondaryLabel))
-                                    Spacer()
-                                    Text(repeatLabelKey)
-                                        .foregroundStyle(.primary)
-                                    Image(systemName: "chevron.right")
-                                        .font(.caption).foregroundStyle(.tertiary)
-                                }
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-
-                        }
-                    }
-
-                    // メモ
-                    TextField("record.field.note", text: $zNote, axis: .vertical)
-                        .lineLimit(3...)
-                        .autocorrectionDisabled()
-                }
-
-                // ── 類似決済（新規入力時のみ） ─────────────────────
-                if isNew {
-                    Section(similarSectionHeaderText) {
-                        if nAmount <= 0 {
-                            Text(similarGuideText)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        } else if similarCandidates.isEmpty {
-                            Text(similarEmptyText)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        } else {
-                            ForEach(similarCandidates, id: \.record.id) { candidate in
-                                Button {
-                                    applySimilarRecord(candidate.record)
-                                } label: {
-                                    SimilarRecordRow(record: candidate.record)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                }
+                beginnerSection
+                requiredSection
+                optionalSection
+                similarSection
             }
             .onChange(of: scrollToTopRequest) { _, _ in
                 withAnimation(.easeInOut(duration: 0.22)) {
@@ -356,6 +195,16 @@ struct RecordEditView: View {
                 }
             }
         }
+        .onChange(of: selectedCard?.id) { _, _ in
+            // 決済手段を切り替えたら、その手段に紐づく口座へ追従する
+            selectedBankForCard = selectedCard?.e8bank
+            // 口座未設定で表示開始した行は、この編集セッション中は保持する
+            keepBankPickerRowVisible = selectedCard != nil && selectedBankForCard == nil
+        }
+        .onChange(of: selectedBankForCard?.id) { _, _ in
+            // 口座選択の結果を決済手段へ反映する
+            selectedCard?.e8bank = selectedBankForCard
+        }
         .onChange(of: pastRecords.map(\.id)) { _, _ in
             // レコード集合が変わったときだけ再計算する
             refreshDerivedCaches()
@@ -400,6 +249,16 @@ struct RecordEditView: View {
                 label: { $0.zName },
                 allowNone: true,
                 addContent: { AnyView(NavigationStack { CardEditView() }) }
+            )
+        }
+        .sheet(isPresented: $showBankPicker) {
+            PickerSheet(
+                title: "card.field.bank",
+                items: banks,
+                selected: $selectedBankForCard,
+                label: { $0.zName },
+                allowNone: true,
+                addContent: { AnyView(NavigationStack { BankEditView(bank: nil) }) }
             )
         }
         .sheet(isPresented: $showCategoryPicker) {
@@ -451,6 +310,216 @@ struct RecordEditView: View {
         .animation(.spring(duration: 0.3), value: savedBanner)
     }
 
+    // MARK: - Form Sections
+
+    @ViewBuilder private var beginnerSection: some View {
+        if userLevel == .beginner {
+            Section {
+                BeginnerRecordHelpBlock(
+                    titleKey: "record.beginner.title",
+                    messageKey: "record.beginner.guide"
+                )
+            }
+        }
+    }
+
+    @ViewBuilder private var requiredSection: some View {
+        Section {
+            // 金額
+            Button { showAmountPad = true } label: {
+                HStack {
+                    Text("record.field.amount")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(nAmount == 0 ? "—" : nAmount.currencyString())
+                        .font(.title2.bold().monospacedDigit())
+                        .foregroundStyle(nAmount == 0 ? Color(.tertiaryLabel) : COLOR_AMOUNT_POSITIVE)
+                }
+                .contentShape(Rectangle())
+            }
+            .id(formTopAnchorID)
+            .buttonStyle(.plain)
+            .disabled(isCoreFieldsLocked)
+
+            // 利用日はセル全体のタップで選択画面を開く
+            Button { showDatePicker = true } label: {
+                HStack {
+                    Text("record.field.date")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(AppDateFormat.singleLineText(dateUse))
+                        .foregroundStyle(.primary)
+                    Image(systemName: "chevron.right")
+                        .font(.caption).foregroundStyle(.tertiary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(isCoreFieldsLocked)
+
+            // 決済手段（必須パネル・保存は未選択でも可）
+            Button { showCardPicker = true } label: {
+                HStack {
+                    Text("record.field.card")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    if let card = selectedCard {
+                        Text(card.zName).foregroundStyle(.primary)
+                    } else {
+                        Text("label.noSelection").foregroundStyle(.secondary)
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.caption).foregroundStyle(.tertiary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(isCoreFieldsLocked)
+
+            if shouldShowBankPickerRow {
+                // 口座未設定なら、この画面上で口座を選択できるようにする
+                Button { showBankPicker = true } label: {
+                    HStack {
+                        Text("card.field.bank")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        if let bank = selectedBankForCard {
+                            Text(bank.zName)
+                                .foregroundStyle(.primary)
+                        } else {
+                            Text("label.noSelection")
+                                .foregroundStyle(.secondary)
+                        }
+                        Image(systemName: "chevron.right")
+                            .font(.caption).foregroundStyle(.tertiary)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(isCoreFieldsLocked)
+            }
+        }
+    }
+
+    @ViewBuilder private var optionalSection: some View {
+        Section {
+            // 利用点（自由入力 + 頻度候補）
+            VStack(alignment: .leading, spacing: 8) {
+                TextField("record.field.usePoint", text: $zName)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .focused($isUsePointFocused)
+                    .onChange(of: zName) { _, newValue in
+                        // 利用点は最大100文字までに制限する
+                        if 100 < newValue.count {
+                            zName = String(newValue.prefix(100))
+                        }
+                    }
+
+                if isUsePointFocused && !shownUsePointCandidates.isEmpty {
+                    VStack(spacing: 0) {
+                        ForEach(shownUsePointCandidates, id: \.self) { candidate in
+                            Button {
+                                // 候補タップで確定する
+                                zName = candidate
+                                isUsePointFocused = false
+                            } label: {
+                                HStack(spacing: 0) {
+                                    Text(candidate)
+                                        .lineLimit(1)
+                                        .truncationMode(.tail)
+                                        .foregroundStyle(.primary)
+                                    Spacer()
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 8)
+                            }
+                            .buttonStyle(.plain)
+                            if candidate != shownUsePointCandidates.last {
+                                Divider()
+                            }
+                        }
+                    }
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+            }
+
+            // 分類タグ（複数選択）
+            VStack(alignment: .leading, spacing: 6) {
+                Button { showCategoryPicker = true } label: {
+                    HStack(alignment: .top, spacing: 6) {
+                        // 見出しは固定幅を確保して欠けないようにする
+                        Text("record.field.category")
+                            .foregroundStyle(.secondary)
+                            .frame(width: 44, alignment: .leading)
+                        categoryLabel
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Image(systemName: "chevron.right")
+                            .font(.caption).foregroundStyle(.tertiary)
+                            .padding(.top, 2)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+
+            // 繰り返し
+            if payType == .lumpSum {
+                VStack(alignment: .leading, spacing: 6) {
+                    Button { showRepeatPicker = true } label: {
+                        HStack {
+                            Text("record.field.repeat")
+                                // 他の見出しと同じ薄さにそろえる
+                                .foregroundStyle(Color(.secondaryLabel))
+                            Spacer()
+                            Text(repeatLabelKey)
+                                .foregroundStyle(.primary)
+                            Image(systemName: "chevron.right")
+                                .font(.caption).foregroundStyle(.tertiary)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            // メモ
+            TextField("record.field.note", text: $zNote, axis: .vertical)
+                .lineLimit(3...)
+                .autocorrectionDisabled()
+        }
+    }
+
+    @ViewBuilder private var similarSection: some View {
+        // ── 類似決済（新規入力時のみ） ─────────────────────
+        if isNew {
+            Section(similarSectionHeaderText) {
+                if nAmount <= 0 {
+                    Text(similarGuideText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if similarCandidates.isEmpty {
+                    Text(similarEmptyText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(similarCandidates, id: \.record.id) { candidate in
+                        Button {
+                            applySimilarRecord(candidate.record)
+                        } label: {
+                            SimilarRecordRow(record: candidate.record)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - Category Label
 
     @ViewBuilder private var categoryLabel: some View {
@@ -483,6 +552,8 @@ struct RecordEditView: View {
         if case .addNew = mode {
             // 新規時の決済手段は未選択を初期値にする
             selectedCard = nil
+            selectedBankForCard = nil
+            keepBankPickerRowVisible = false
             // 新規作成は一括払いのみを許可する
             payType = .lumpSum
             return
@@ -495,6 +566,8 @@ struct RecordEditView: View {
         payType            = r.payType
         nRepeat            = r.nRepeat
         selectedCard       = r.e1card
+        selectedBankForCard = r.e1card?.e8bank
+        keepBankPickerRowVisible = selectedCard != nil && selectedBankForCard == nil
         // 新しい多対多を優先、なければ旧フィールドから移行
         if !r.e5categories.isEmpty {
             selectedCategories = r.e5categories
@@ -508,6 +581,8 @@ struct RecordEditView: View {
         let usePoint = zName.trimmingCharacters(in: .whitespacesAndNewlines)
         switch mode {
         case .addNew:
+            // 決済手段が選択されている場合は、同時に口座設定も反映する
+            selectedCard?.e8bank = selectedBankForCard
             let r = E3record(dateUse: dateUse, zName: usePoint, zNote: zNote,
                              nAmount: nAmount, nPayType: PayType.lumpSum.rawValue, nRepeat: nRepeat)
             r.e1card = selectedCard; r.e4shop = nil
@@ -526,8 +601,8 @@ struct RecordEditView: View {
                 onSaved?()
             }
         case .edit(let r):
-            // 旧パーツを先に掃除して、未選択側の請求残骸を残さない
-            RecordService.removeParts(of: r, context: context)
+            // 決済手段が選択されている場合は、同時に口座設定も反映する
+            selectedCard?.e8bank = selectedBankForCard
             r.dateUse = dateUse; r.zName = usePoint; r.zNote = zNote
             r.nAmount = nAmount; r.nPayType = payType.rawValue; r.nRepeat = nRepeat
             r.e1card = selectedCard; r.e4shop = nil
@@ -541,7 +616,7 @@ struct RecordEditView: View {
         dateUse = Date(); zName = ""; zNote = ""; nAmount = 0
         payType = .lumpSum; nRepeat = 0
         // 連続入力時も決済手段は未選択へ戻す
-        selectedCard = nil; selectedCategories = []
+        selectedCard = nil; selectedBankForCard = nil; keepBankPickerRowVisible = false; selectedCategories = []
     }
 
     private func showBanner() {
@@ -554,13 +629,14 @@ struct RecordEditView: View {
     private struct DraftState: Equatable {
         let dateUse: Date; let zName: String; let zNote: String; let nAmount: Decimal
         let payType: PayType; let nRepeat: Int16
-        let cardID: String?; let categoryIDs: [String]
+        let cardID: String?; let bankID: String?; let categoryIDs: [String]
     }
 
     private func currentDraft() -> DraftState {
         DraftState(dateUse: dateUse, zName: zName, zNote: zNote, nAmount: nAmount,
                    payType: payType, nRepeat: nRepeat,
                    cardID: selectedCard?.id,
+                   bankID: selectedBankForCard?.id,
                    categoryIDs: selectedCategories.map(\.id).sorted())
     }
 
@@ -964,8 +1040,8 @@ private struct ChipFlowLayout: Layout {
         subviews: Subviews,
         cache: inout ()
     ) -> CGSize {
-        // 横幅提案が未指定の場合でも、画面幅ベースで折り返しを有効化する
-        let proposedWidth = proposal.width ?? (UIScreen.main.bounds.width - 140)
+        // 横幅提案が未指定の場合は固定幅で折り返しを有効化する
+        let proposedWidth = proposal.width ?? 240
         let maxWidth = max(0, proposedWidth)
         var x: CGFloat = 0
         var y: CGFloat = 0
