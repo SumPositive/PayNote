@@ -129,6 +129,14 @@ struct RecordEditView: View {
     var body: some View {
         ScrollViewReader { proxy in
             Form {
+                if userLevel == .beginner {
+                    Section {
+                        BeginnerRecordHelpBlock(
+                            titleKey: "record.beginner.title",
+                            messageKey: "record.beginner.guide"
+                        )
+                    }
+                }
                 // ── 必須 ──────────────────────────
                 Section {
                     // 金額
@@ -227,14 +235,6 @@ struct RecordEditView: View {
                         .background(Color(.secondarySystemBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
-
-                    // 初心者モードでは決済ラベルの使い方を補足する
-                    if userLevel == .beginner {
-                        Text(labelHelpText)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
                 }
 
                 // 分類タグ（複数選択）
@@ -256,13 +256,6 @@ struct RecordEditView: View {
                     }
                     .buttonStyle(.plain)
 
-                    // 初心者モードではタグ機能の使い方を補足する
-                    if userLevel == .beginner {
-                        Text(tagHelpText)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
                 }
 
                     // 繰り返し
@@ -283,13 +276,6 @@ struct RecordEditView: View {
                             }
                             .buttonStyle(.plain)
 
-                            // 初心者モードでは繰り返し機能の用途を補足する
-                            if userLevel == .beginner {
-                                Text(repeatHelpText)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
                         }
                     }
 
@@ -631,21 +617,6 @@ struct RecordEditView: View {
         "record.similar.empty"
     }
 
-    /// 繰り返し項目の初心者向け補足
-    private var repeatHelpText: LocalizedStringKey {
-        "record.help.repeat"
-    }
-
-    /// 決済ラベル項目の初心者向け補足
-    private var labelHelpText: LocalizedStringKey {
-        "record.help.label"
-    }
-
-    /// タグ項目の初心者向け補足
-    private var tagHelpText: LocalizedStringKey {
-        "record.help.tag"
-    }
-
     /// 入力条件に対する類似スコアを計算する
     private func similarityScore(for record: E3record) -> Int {
         var score = 0
@@ -762,6 +733,23 @@ struct RecordEditView: View {
         isUsePointFocused = false
         // 候補反映後はフォーム先頭へ戻す
         scrollToTopRequest += 1
+    }
+}
+
+private struct BeginnerRecordHelpBlock: View {
+    let titleKey: LocalizedStringKey
+    let messageKey: LocalizedStringKey
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(titleKey)
+                .font(.subheadline.weight(.semibold))
+            Text(messageKey)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 4)
     }
 }
 

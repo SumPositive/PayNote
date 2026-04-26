@@ -16,22 +16,18 @@ struct TopMenuView: View {
 
     var body: some View {
         List(selection: $selectedDestination) {
+            if userLevel == .beginner {
+                Section {
+                    BeginnerHelpBlock(
+                        titleKey: "top.beginner.title",
+                        messageKey: "top.beginner.guide"
+                    )
+                }
+            }
             // 明細
             Section {
-                row(
-                    .addRecord,
-                    icon: "plus.circle.fill",
-                    color: .blue,
-                    key: "top.addRecord",
-                    beginnerHelp: "top.help.addRecord"
-                )
-                row(
-                    .recordList,
-                    icon: "list.bullet",
-                    color: .indigo,
-                    key: "top.recordList",
-                    beginnerHelp: "top.help.recordList"
-                )
+                row(.addRecord, icon: "plus.circle.fill", color: .blue, key: "top.addRecord")
+                row(.recordList, icon: "list.bullet", color: .indigo, key: "top.recordList")
             }
 
             // 集計
@@ -58,41 +54,19 @@ struct TopMenuView: View {
                             }
 
                             // 初心者モードではセル内に操作説明を表示する
-                            if userLevel == .beginner {
-                                paymentGuideText
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
                         }
                     }
                 }
                 .tag(AppDestination.paymentList)
             }
 
-            // マスタ
-            Section {
-                row(
-                    .cardList,
-                    icon: "creditcard",
-                    color: .green,
-                    key: "top.cardList",
-                    beginnerHelp: "top.help.cardList"
-                )
-                row(
-                    .bankList,
-                    icon: "building.columns",
-                    color: .teal,
-                    key: "top.bankList",
-                    beginnerHelp: "top.help.bankList"
-                )
-                row(
-                    .categoryList,
-                    icon: "tag",
-                    color: .pink,
-                    key: "top.categoryList",
-                    beginnerHelp: "top.help.categoryList"
-                )
+            // 詳細マスタは達人モードで表示する
+            if userLevel == .expert {
+                Section {
+                    row(.cardList, icon: "creditcard", color: .green, key: "top.cardList")
+                    row(.bankList, icon: "building.columns", color: .teal, key: "top.bankList")
+                    row(.categoryList, icon: "tag", color: .pink, key: "top.categoryList")
+                }
             }
 
             // アプリ
@@ -101,8 +75,7 @@ struct TopMenuView: View {
                     .settings,
                     icon: "gearshape",
                     color: .gray,
-                    key: "top.settings",
-                    beginnerHelp: "top.help.settings"
+                    key: "top.settings"
                 )
             }
         }
@@ -123,40 +96,33 @@ struct TopMenuView: View {
     private func row(
         _ dest: AppDestination,
         icon: String, color: Color,
-        key: LocalizedStringKey,
-        beginnerHelp: LocalizedStringKey? = nil
+        key: LocalizedStringKey
     ) -> some View {
         NavigationLink(value: dest) {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: icon)
                     .foregroundStyle(color)
                     .frame(width: 20)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(key)
-                    if userLevel == .beginner, let beginnerHelp {
-                        Text(beginnerHelp)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
+                Text(key)
             }
         }
         .tag(dest)
     }
+}
 
-    /// 初心者向けガイド文（セル内表示）
-    private var paymentGuideText: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text("top.help.paymentList.line1")
-            Text("top.help.paymentList.line2")
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Image(systemName: "arrow.down.circle.fill")
-                    .foregroundStyle(COLOR_UNPAID)
-                Text("top.help.paymentList.line3")
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            Text("top.help.paymentList.line4")
+private struct BeginnerHelpBlock: View {
+    let titleKey: LocalizedStringKey
+    let messageKey: LocalizedStringKey
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(titleKey)
+                .font(.subheadline.weight(.semibold))
+            Text(messageKey)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .padding(.vertical, 4)
     }
 }

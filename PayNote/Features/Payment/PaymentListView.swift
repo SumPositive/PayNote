@@ -24,6 +24,34 @@ struct PaymentListView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(spacing: 16) {
+                            if userLevel == .beginner {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("payment.beginner.title")
+                                        .font(.subheadline.weight(.semibold))
+                                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                        Text("payment.beginner.line1")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                        Image(systemName: "arrow.down.circle.fill")
+                                            .foregroundStyle(COLOR_UNPAID)
+                                            .font(.caption.weight(.bold))
+                                        Text("payment.beginner.line2")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                        Text("payment.beginner.line3")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                        Image(systemName: "arrow.up.circle.fill")
+                                            .foregroundStyle(COLOR_PAID)
+                                            .font(.caption.weight(.bold))
+                                        Text("payment.beginner.line4")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                            }
                             PaymentCombinedCard(
                                 unpaidPayments: unpaidPayments,
                                 paidPayments: paidPayments,
@@ -32,22 +60,6 @@ struct PaymentListView: View {
                                 onLoadMorePaid: loadMorePaidIfNeeded,
                                 paidFirstRowAnchorID: paidFirstRowAnchorID
                             )
-                            if userLevel == .beginner {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    // 初心者向けに未払から済みへの移動を案内する
-                                    PaymentToggleGuideFooter(
-                                        isPaidArrow: false,
-                                        trailingTextKey: "payment.footer.unpaid.trailing"
-                                    )
-                                    // 初心者向けに済みから未払への移動を案内する
-                                    PaymentToggleGuideFooter(
-                                        isPaidArrow: true,
-                                        trailingTextKey: "payment.footer.paid.trailing"
-                                    )
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 4)
-                            }
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
@@ -205,7 +217,7 @@ private struct PaymentRow: View {
             .first(where: { !$0.isEmpty }) {
             return name
         }
-        return NSLocalizedString("label.noSelection", comment: "")
+        return NSLocalizedString("payment.bank.noSelection", comment: "")
     }
 
     var body: some View {
@@ -272,27 +284,6 @@ private struct PaymentStatusPill: View {
             .symbolRenderingMode(.hierarchical)
         .foregroundStyle(isPaid ? COLOR_PAID : COLOR_UNPAID)
             .frame(minWidth: 34, minHeight: 34)
-    }
-}
-
-private struct PaymentToggleGuideFooter: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    let isPaidArrow: Bool
-    let trailingTextKey: LocalizedStringKey
-
-    var body: some View {
-        HStack(spacing: 2) {
-            // ボタンと同じ矢印アイコンを小さく表示する
-            Image(systemName: isPaidArrow ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
-                .font(.footnote.weight(.bold))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(isPaidArrow ? COLOR_PAID : COLOR_UNPAID)
-            Text(trailingTextKey)
-        }
-        .font(.footnote)
-        // ダーク時のみ文字色を明るくして可読性を上げる
-        .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.9) : .secondary)
     }
 }
 

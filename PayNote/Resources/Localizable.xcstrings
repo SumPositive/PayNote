@@ -1331,6 +1331,108 @@
         }
       }
     },
+    "payment.beginner.line1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When the debit is confirmed,"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引き落としを確認したら"
+          }
+        }
+      }
+    },
+    "payment.beginner.line2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "to mark it as paid."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "で引き落とし済みにします。"
+          }
+        }
+      }
+    },
+    "payment.beginner.line3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If needed,"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "必要なら"
+          }
+        }
+      }
+    },
+    "payment.beginner.line4" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "to move it back to unpaid."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "で未払に戻せます。"
+          }
+        }
+      }
+    },
+    "payment.beginner.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How To Update"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新方法"
+          }
+        }
+      }
+    },
+    "payment.bank.noSelection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account Not Selected"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "口座 未選択"
+          }
+        }
+      }
+    },
     "payment.markPaid" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1739,6 +1841,40 @@
         }
       }
     },
+    "record.beginner.guide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start with the amount. The payment method, label, and tags can be edited later."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まずは金額を入れて保存してください。決済手段、ラベル、タグはあとで直せます。"
+          }
+        }
+      }
+    },
+    "record.beginner.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start With Amount"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まずは金額"
+          }
+        }
+      }
+    },
     "record.help.label" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1803,6 +1939,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "決済履歴"
+          }
+        }
+      }
+    },
+    "record.list.beginner.guide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open recent payments here to review and edit them. You can also filter incomplete entries."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存後の修正はここで行います。迷ったら新しいものから開いて直してください。情報不足の決済だけを見ることもできます。"
+          }
+        }
+      }
+    },
+    "record.list.beginner.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Later Here"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "あとで直す画面"
           }
         }
       }
@@ -2402,6 +2572,23 @@
         }
       }
     },
+    "settings.help.userLevel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beginner shows more guidance. Expert hides most of it."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "初心者は説明を多めに表示します。達人にすると説明を減らし、詳細メニューを表示します。使い慣れて流れが分かってきたら、達人に切り替えてください。"
+          }
+        }
+      }
+    },
     "settings.panel.support" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2840,6 +3027,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "まずここから入力します。金額だけ先に入れて、残りはあとで履歴から編集できます。"
+          }
+        }
+      }
+    },
+    "top.beginner.guide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start with New Payment. Enter the amount first, then edit the rest later from History."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まずは「新しい決済」から始めてください。金額だけでも保存できます。足りない情報はあとで「決済履歴」から直せます。"
+          }
+        }
+      }
+    },
+    "top.beginner.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting Started"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "はじめに"
           }
         }
       }

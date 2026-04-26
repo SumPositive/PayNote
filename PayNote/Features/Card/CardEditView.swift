@@ -85,23 +85,14 @@ struct CardEditView: View {
                 }
 
                 // 管理レベルと補足を同一行にまとめ、間の区切り線を出さない
-                VStack(alignment: .leading, spacing: 6) {
-                    LabeledContent("card.field.manageLevel") {
-                        Picker("", selection: $manageLevel) {
-                            ForEach(ManagementLevel.allCases, id: \.self) { level in
-                                Text(LocalizedStringKey(level.labelKey)).tag(level)
-                            }
+                LabeledContent("card.field.manageLevel") {
+                    Picker("", selection: $manageLevel) {
+                        ForEach(ManagementLevel.allCases, id: \.self) { level in
+                            Text(LocalizedStringKey(level.labelKey)).tag(level)
                         }
-                        .pickerStyle(.menu)
-                        .labelsHidden()
                     }
-
-                    if userLevel == .beginner {
-                        Text("card.help.manageLevel")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
                 }
             }
 
@@ -162,14 +153,6 @@ struct CardEditView: View {
                         Text("card.field.closingDay.enHelp")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                    }
-
-                    // 初心者モードのみ補足説明を表示する
-                    if userLevel == .beginner {
-                        Text("card.help.schedule")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }

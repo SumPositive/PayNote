@@ -19,9 +19,18 @@ struct SettingsView: View {
     var body: some View {
         List {
             Section("settings.panel.display") {
-                Picker("settings.userLevel", selection: $userLevel) {
-                    ForEach(UserLevel.allCases) { level in
-                        Text(LocalizedStringKey(level.localizedKey)).tag(level)
+                VStack(alignment: .leading, spacing: 6) {
+                    Picker("settings.userLevel", selection: $userLevel) {
+                        ForEach(UserLevel.allCases) { level in
+                            Text(LocalizedStringKey(level.localizedKey)).tag(level)
+                        }
+                    }
+
+                    if userLevel == .beginner {
+                        Text("settings.help.userLevel")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
 

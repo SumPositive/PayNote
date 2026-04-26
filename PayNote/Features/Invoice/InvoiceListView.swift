@@ -17,7 +17,7 @@ struct InvoiceListView: View {
         ).sorted()
 
         if names.isEmpty {
-            return NSLocalizedString("label.noSelection", comment: "")
+            return NSLocalizedString("payment.bank.noSelection", comment: "")
         }
         if names.count == 1 {
             return names[0]

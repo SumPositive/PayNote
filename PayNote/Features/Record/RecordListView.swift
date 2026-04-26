@@ -4,6 +4,7 @@ import SwiftData
 struct RecordListView: View {
     @Query(sort: \E1card.nRow)                       private var cards: [E1card]
     @Environment(\.modelContext) private var context
+    @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
 
     @State private var filterCard: E1card?
     @State private var filterIncomplete = false
@@ -22,6 +23,19 @@ struct RecordListView: View {
 
     var body: some View {
         List {
+            if userLevel == .beginner {
+                Section {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("record.list.beginner.title")
+                            .font(.subheadline.weight(.semibold))
+                        Text("record.list.beginner.guide")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
             ForEach(filtered) { record in
                 Button {
                     editTarget = record
@@ -232,7 +246,11 @@ struct RecordSummaryRow: View {
 
     // 分割のどれか1つでも未払があれば未払表示にする
     private var isUnpaid: Bool {
-        record.e6parts.contains(where: { ($0.e2invoice?.isPaid ?? false) == false })
+        // 決済手段未選択などで請求パーツが無い場合は未払として扱う
+        if record.e6parts.isEmpty {
+            return true
+        }
+        return record.e6parts.contains(where: { ($0.e2invoice?.isPaid ?? false) == false })
     }
     private var statusKey: LocalizedStringKey {
         isUnpaid ? "payment.status.unpaidShort" : "payment.status.paidShort"
