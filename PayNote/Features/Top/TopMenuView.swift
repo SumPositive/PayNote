@@ -18,8 +18,20 @@ struct TopMenuView: View {
         List(selection: $selectedDestination) {
             // 明細
             Section {
-                row(.addRecord,    icon: "plus.circle.fill",  color: .blue,   key: "top.addRecord")
-                row(.recordList,   icon: "list.bullet",        color: .indigo, key: "top.recordList")
+                row(
+                    .addRecord,
+                    icon: "plus.circle.fill",
+                    color: .blue,
+                    key: "top.addRecord",
+                    beginnerHelp: "top.help.addRecord"
+                )
+                row(
+                    .recordList,
+                    icon: "list.bullet",
+                    color: .indigo,
+                    key: "top.recordList",
+                    beginnerHelp: "top.help.recordList"
+                )
             }
 
             // 集計
@@ -36,7 +48,7 @@ struct TopMenuView: View {
                                 Spacer(minLength: 8)
                                 // 「未払計 + 金額」は1行で表示する
                                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                    Text(unpaidTotalLabel)
+                                    Text("top.paymentList.unpaidTotal")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                     Text(totalUnpaid.currencyString())
@@ -60,14 +72,38 @@ struct TopMenuView: View {
 
             // マスタ
             Section {
-                row(.cardList,     icon: "creditcard",         color: .green,  key: "top.cardList")
-                row(.bankList,     icon: "building.columns",   color: .teal,   key: "top.bankList")
-                row(.categoryList, icon: "tag",                color: .pink,   key: "top.categoryList")
+                row(
+                    .cardList,
+                    icon: "creditcard",
+                    color: .green,
+                    key: "top.cardList",
+                    beginnerHelp: "top.help.cardList"
+                )
+                row(
+                    .bankList,
+                    icon: "building.columns",
+                    color: .teal,
+                    key: "top.bankList",
+                    beginnerHelp: "top.help.bankList"
+                )
+                row(
+                    .categoryList,
+                    icon: "tag",
+                    color: .pink,
+                    key: "top.categoryList",
+                    beginnerHelp: "top.help.categoryList"
+                )
             }
 
             // アプリ
             Section {
-                row(.settings, icon: "gearshape", color: .gray, key: "top.settings")
+                row(
+                    .settings,
+                    icon: "gearshape",
+                    color: .gray,
+                    key: "top.settings",
+                    beginnerHelp: "top.help.settings"
+                )
             }
         }
         // 先頭セクション前の余白を詰めて、ヘッダ直下をコンパクトにする
@@ -87,53 +123,40 @@ struct TopMenuView: View {
     private func row(
         _ dest: AppDestination,
         icon: String, color: Color,
-        key: LocalizedStringKey
+        key: LocalizedStringKey,
+        beginnerHelp: LocalizedStringKey? = nil
     ) -> some View {
         NavigationLink(value: dest) {
-            Label {
-                Text(key)
-            } icon: {
+            HStack(alignment: .top, spacing: 12) {
                 Image(systemName: icon)
                     .foregroundStyle(color)
+                    .frame(width: 20)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(key)
+                    if userLevel == .beginner, let beginnerHelp {
+                        Text(beginnerHelp)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
             }
         }
         .tag(dest)
     }
 
-    /// 「未払計」ラベル（ja/en）
-    private var unpaidTotalLabel: String {
-        if Locale.current.language.languageCode?.identifier == "ja" {
-            return "未払計"
-        }
-        return "Unpaid Total"
-    }
-
     /// 初心者向けガイド文（セル内表示）
-    @ViewBuilder
     private var paymentGuideText: some View {
-        if Locale.current.language.languageCode?.identifier == "ja" {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("適時、引き落とし状況を見てください。")
-                Text("口座からの引き落としが確認できれば、")
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Image(systemName: "arrow.down.circle.fill")
-                        .foregroundStyle(COLOR_UNPAID)
-                    Text("をタップしてください。")
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Text("済みへ移動します。いつでも未払に戻すことも可能です。")
+        VStack(alignment: .leading, spacing: 2) {
+            Text("top.help.paymentList.line1")
+            Text("top.help.paymentList.line2")
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Image(systemName: "arrow.down.circle.fill")
+                    .foregroundStyle(COLOR_UNPAID)
+                Text("top.help.paymentList.line3")
             }
-        } else {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Check Schedule as needed.")
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text("When debit is confirmed, tap")
-                    Image(systemName: "arrow.down.circle.fill")
-                        .foregroundStyle(COLOR_UNPAID)
-                    Text("to move it to Paid.")
-                }
-                Text("You can always move it back to Unpaid.")
-            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Text("top.help.paymentList.line4")
         }
     }
 }

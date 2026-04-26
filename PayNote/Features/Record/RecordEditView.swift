@@ -31,6 +31,7 @@ struct RecordEditView: View {
     @Query                        private var categories: [E5category]
 
     @AppStorage(AppStorageKey.afterSaveAction)   private var afterSaveAction: AfterSaveAction = .goBack
+    @AppStorage(AppStorageKey.userLevel)         private var userLevel: UserLevel = .beginner
 
     @State private var dateUse:    Date     = Date()
     @State private var zName:      String   = ""
@@ -184,11 +185,11 @@ struct RecordEditView: View {
 
                 // ── オプション ────────────────────
                 Section {
-                    // 利用点（自由入力 + 頻度候補）
-                    VStack(alignment: .leading, spacing: 8) {
-                        TextField("record.field.usePoint", text: $zName)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
+                // 利用点（自由入力 + 頻度候補）
+                VStack(alignment: .leading, spacing: 8) {
+                    TextField("record.field.usePoint", text: $zName)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
                             .focused($isUsePointFocused)
                             .onChange(of: zName) { _, newValue in
                                 // 利用点は最大100文字までに制限する
@@ -223,12 +224,21 @@ struct RecordEditView: View {
                                     }
                                 }
                             }
-                            .background(Color(.secondarySystemBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                        }
+                        .background(Color(.secondarySystemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
 
-                    // 分類タグ（複数選択）
+                    // 初心者モードでは決済ラベルの使い方を補足する
+                    if userLevel == .beginner {
+                        Text(labelHelpText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                // 分類タグ（複数選択）
+                VStack(alignment: .leading, spacing: 6) {
                     Button { showCategoryPicker = true } label: {
                         HStack(alignment: .top, spacing: 6) {
                             // 見出しは固定幅を確保して欠けないようにする
@@ -246,22 +256,41 @@ struct RecordEditView: View {
                     }
                     .buttonStyle(.plain)
 
+                    // 初心者モードではタグ機能の使い方を補足する
+                    if userLevel == .beginner {
+                        Text(tagHelpText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
                     // 繰り返し
                     if payType == .lumpSum {
-                        Button { showRepeatPicker = true } label: {
-                            HStack {
-                                Text("record.field.repeat")
-                                    // 他の見出しと同じ薄さにそろえる
-                                    .foregroundStyle(Color(.secondaryLabel))
-                                Spacer()
-                                Text(repeatLabelKey)
-                                    .foregroundStyle(.primary)
-                                Image(systemName: "chevron.right")
-                                    .font(.caption).foregroundStyle(.tertiary)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Button { showRepeatPicker = true } label: {
+                                HStack {
+                                    Text("record.field.repeat")
+                                        // 他の見出しと同じ薄さにそろえる
+                                        .foregroundStyle(Color(.secondaryLabel))
+                                    Spacer()
+                                    Text(repeatLabelKey)
+                                        .foregroundStyle(.primary)
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption).foregroundStyle(.tertiary)
+                                }
+                                .contentShape(Rectangle())
                             }
-                            .contentShape(Rectangle())
+                            .buttonStyle(.plain)
+
+                            // 初心者モードでは繰り返し機能の用途を補足する
+                            if userLevel == .beginner {
+                                Text(repeatHelpText)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
-                        .buttonStyle(.plain)
                     }
 
                     // メモ
@@ -589,26 +618,32 @@ struct RecordEditView: View {
 
     /// 類似候補セクション見出し
     private var similarSectionHeaderText: LocalizedStringKey {
-        if Locale.current.language.languageCode?.identifier == "ja" {
-            return "類似決済から選択"
-        }
-        return "Choose from Similar Payments"
+        "record.similar.section.title"
     }
 
     /// 金額未入力時のガイド文
-    private var similarGuideText: String {
-        if Locale.current.language.languageCode?.identifier == "ja" {
-            return "金額を入力すると、類似決済を提案します"
-        }
-        return "Enter an amount to see similar payments."
+    private var similarGuideText: LocalizedStringKey {
+        "record.similar.guide"
     }
 
     /// 候補が見つからない場合の文言
-    private var similarEmptyText: String {
-        if Locale.current.language.languageCode?.identifier == "ja" {
-            return "条件に近い候補が見つかりません"
-        }
-        return "No similar payments found."
+    private var similarEmptyText: LocalizedStringKey {
+        "record.similar.empty"
+    }
+
+    /// 繰り返し項目の初心者向け補足
+    private var repeatHelpText: LocalizedStringKey {
+        "record.help.repeat"
+    }
+
+    /// 決済ラベル項目の初心者向け補足
+    private var labelHelpText: LocalizedStringKey {
+        "record.help.label"
+    }
+
+    /// タグ項目の初心者向け補足
+    private var tagHelpText: LocalizedStringKey {
+        "record.help.tag"
     }
 
     /// 入力条件に対する類似スコアを計算する

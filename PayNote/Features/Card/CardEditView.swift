@@ -72,13 +72,13 @@ struct CardEditView: View {
             Section {
                 TextField("card.field.name", text: $zName)
                     .autocorrectionDisabled()
-                    .focused($focusName)
+                        .focused($focusName)
 
                 LabeledContent("card.field.bank") {
                     Picker("", selection: $bankSelection) {
                         Text("label.noSelection").tag(BankSelection.none)
                         // 口座追加導線を目立たせる
-                        Text(newBankOptionText).tag(BankSelection.addNew)
+                        Text("card.bank.addNew").tag(BankSelection.addNew)
                         ForEach(banks) { b in
                             Text(b.zName).tag(BankSelection.existing(b.id))
                         }
@@ -100,7 +100,7 @@ struct CardEditView: View {
                     }
 
                     if userLevel == .beginner {
-                        Text(manageLevelHelpText)
+                        Text("card.help.manageLevel")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -123,7 +123,7 @@ struct CardEditView: View {
                             .labelsHidden()
                         }
 
-                        Text("支払（引き落とし）")
+                        Text("card.field.paymentDebit")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.secondary)
 
@@ -169,7 +169,7 @@ struct CardEditView: View {
 
                     // 初心者モードのみ補足説明を表示する
                     if userLevel == .beginner {
-                        Text(payDayHelpText)
+                        Text("card.help.schedule")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -363,27 +363,4 @@ struct CardEditView: View {
         )
     }
 
-    /// 口座追加メニューの強調ラベル
-    private var newBankOptionText: String {
-        if isEnglishLocale {
-            return "＋ Add New Account"
-        }
-        return "＋ 新しい口座を追加"
-    }
-
-    /// 管理レベルの初心者向け補足
-    private var manageLevelHelpText: String {
-        if isEnglishLocale {
-            return "This only expresses how strictly you self-manage. It does not affect any calculations. Choose the level that fits your style, from strict checking to rough tracking. You can change it anytime."
-        }
-        return "自己管理の程度を明示するものです。処理に関係も影響もありません。きっちり1円も漏らさずチェックする、おおよそ分かればいい、大金だけ把握できれば十分、くらいの感覚で選択してください。いつでも変更できます"
-    }
-
-    /// 締日・支払日の初心者向け補足
-    private var payDayHelpText: String {
-        if isEnglishLocale {
-            return "Set the closing day and payment day defined for this payment method. They are usually listed in your card documents. If unknown, contact your card issuer or set them after checking an actual debit date."
-        }
-        return "この決済手段で決められている締日と支払日を設定してください。クレジットカードのお届け用紙に記載されているはずですが、わからなければカード会社にお問い合わせください。実際に引き落とされた日を見て設定してもいいです"
-    }
 }
