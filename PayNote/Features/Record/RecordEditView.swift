@@ -52,7 +52,11 @@ struct RecordEditView: View {
     // 過去データ由来の候補をキャッシュして、毎描画の再計算を避ける
     @State private var cachedUsePointCandidates: [String] = []
     @State private var cachedLatestCard: E1card?
+    @State private var cachedCategoryByID: [String: E5category] = [:]
+    @State private var scrollToTopRequest = 0
     @FocusState private var isUsePointFocused: Bool
+    private let similarRecordLimit = 10
+    private let formTopAnchorID = "record-form-top"
 
     private var isNew: Bool {
         if case .addNew = mode { return true }
@@ -82,6 +86,33 @@ struct RecordEditView: View {
         }
         return Array(filtered.prefix(10))
     }
+    private var similarCandidates: [SimilarCandidate] {
+        // 過去1年の履歴を対象に、条件が変わるたび緩くスコアリングする
+        let sinceDate = Calendar.current.date(byAdding: .year, value: -1, to: Date()) ?? .distantPast
+        var scored: [SimilarCandidate] = []
+
+        for record in pastRecords {
+            if record.dateUse < sinceDate {
+                continue
+            }
+            // 編集時は自分自身を候補から除外する
+            if case .edit(let editingRecord) = mode, editingRecord.id == record.id {
+                continue
+            }
+            let score = similarityScore(for: record)
+            if 0 < score {
+                scored.append(SimilarCandidate(record: record, score: score))
+            }
+        }
+
+        scored.sort { lhs, rhs in
+            if lhs.score == rhs.score {
+                return rhs.record.dateUse < lhs.record.dateUse
+            }
+            return rhs.score < lhs.score
+        }
+        return Array(scored.prefix(similarRecordLimit))
+    }
 
     private let repeatOptions: [(label: String, value: Int16)] = [
         ("repeat.none", 0), ("repeat.nextMonth", 1),
@@ -95,133 +126,33 @@ struct RecordEditView: View {
     }
 
     var body: some View {
-        Form {
-            // ── 必須 ──────────────────────────
-            Section {
-                // 金額
-                Button { showAmountPad = true } label: {
-                    HStack {
-                        Text("record.field.amount")
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text(nAmount == 0 ? "—" : nAmount.currencyString())
-                            .font(.title2.bold().monospacedDigit())
-                            .foregroundStyle(nAmount == 0 ? Color(.tertiaryLabel) : COLOR_AMOUNT_POSITIVE)
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .disabled(isCoreFieldsLocked)
-
-                // 利用日はセル全体のタップで選択画面を開く
-                Button { showDatePicker = true } label: {
-                    HStack {
-                        Text("record.field.date")
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text(AppDateFormat.singleLineText(dateUse))
-                            .foregroundStyle(.primary)
-                        Image(systemName: "chevron.right")
-                            .font(.caption).foregroundStyle(.tertiary)
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .disabled(isCoreFieldsLocked)
-
-                // 決済手段（必須パネル・保存は未選択でも可）
-                Button { showCardPicker = true } label: {
-                    HStack {
-                        Text("record.field.card")
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        if let card = selectedCard {
-                            Text(card.zName).foregroundStyle(.primary)
-                        } else {
-                            Text("label.noSelection").foregroundStyle(.secondary)
-                        }
-                        Image(systemName: "chevron.right")
-                            .font(.caption).foregroundStyle(.tertiary)
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .disabled(isCoreFieldsLocked)
-            }
-
-            // ── オプション ────────────────────
-            Section {
-                // 利用点（自由入力 + 頻度候補）
-                VStack(alignment: .leading, spacing: 8) {
-                    TextField("record.field.usePoint", text: $zName)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .focused($isUsePointFocused)
-                        .onChange(of: zName) { _, newValue in
-                            // 利用点は最大100文字までに制限する
-                            if 100 < newValue.count {
-                                zName = String(newValue.prefix(100))
-                            }
-                        }
-
-                    if isUsePointFocused && !shownUsePointCandidates.isEmpty {
-                        VStack(spacing: 0) {
-                            ForEach(shownUsePointCandidates, id: \.self) { candidate in
-                                Button {
-                                    // 候補タップで確定する
-                                    zName = candidate
-                                    isUsePointFocused = false
-                                } label: {
-                                    HStack(spacing: 0) {
-                                        Text(candidate)
-                                            .lineLimit(1)
-                                            .truncationMode(.tail)
-                                            .foregroundStyle(.primary)
-                                        Spacer()
-                                    }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .contentShape(Rectangle())
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 8)
-                                }
-                                .buttonStyle(.plain)
-                                if candidate != shownUsePointCandidates.last {
-                                    Divider()
-                                }
-                            }
-                        }
-                        .background(Color(.secondarySystemBackground))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                    }
-                }
-
-                // 分類タグ（複数選択）
-                Button { showCategoryPicker = true } label: {
-                    HStack(alignment: .top, spacing: 6) {
-                        // 見出しは固定幅を確保して欠けないようにする
-                        Text("record.field.category")
-                            .foregroundStyle(.secondary)
-                            .frame(width: 44, alignment: .leading)
-                        categoryLabel
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Image(systemName: "chevron.right")
-                            .font(.caption).foregroundStyle(.tertiary)
-                            .padding(.top, 2)
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-
-                // 繰り返し
-                if payType == .lumpSum {
-                    Button { showRepeatPicker = true } label: {
+        ScrollViewReader { proxy in
+            Form {
+                // ── 必須 ──────────────────────────
+                Section {
+                    // 金額
+                    Button { showAmountPad = true } label: {
                         HStack {
-                            Text("record.field.repeat")
-                                // 他の見出しと同じ薄さにそろえる
-                                .foregroundStyle(Color(.secondaryLabel))
+                            Text("record.field.amount")
+                                .foregroundStyle(.secondary)
                             Spacer()
-                            Text(repeatLabelKey)
+                            Text(nAmount == 0 ? "—" : nAmount.currencyString())
+                                .font(.title2.bold().monospacedDigit())
+                                .foregroundStyle(nAmount == 0 ? Color(.tertiaryLabel) : COLOR_AMOUNT_POSITIVE)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .id(formTopAnchorID)
+                    .buttonStyle(.plain)
+                    .disabled(isCoreFieldsLocked)
+
+                    // 利用日はセル全体のタップで選択画面を開く
+                    Button { showDatePicker = true } label: {
+                        HStack {
+                            Text("record.field.date")
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text(AppDateFormat.singleLineText(dateUse))
                                 .foregroundStyle(.primary)
                             Image(systemName: "chevron.right")
                                 .font(.caption).foregroundStyle(.tertiary)
@@ -229,12 +160,144 @@ struct RecordEditView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .disabled(isCoreFieldsLocked)
+
+                    // 決済手段（必須パネル・保存は未選択でも可）
+                    Button { showCardPicker = true } label: {
+                        HStack {
+                            Text("record.field.card")
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            if let card = selectedCard {
+                                Text(card.zName).foregroundStyle(.primary)
+                            } else {
+                                Text("label.noSelection").foregroundStyle(.secondary)
+                            }
+                            Image(systemName: "chevron.right")
+                                .font(.caption).foregroundStyle(.tertiary)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isCoreFieldsLocked)
                 }
 
-                // メモ
-                TextField("record.field.note", text: $zNote, axis: .vertical)
-                    .lineLimit(3...)
-                    .autocorrectionDisabled()
+                // ── オプション ────────────────────
+                Section {
+                    // 利用点（自由入力 + 頻度候補）
+                    VStack(alignment: .leading, spacing: 8) {
+                        TextField("record.field.usePoint", text: $zName)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .focused($isUsePointFocused)
+                            .onChange(of: zName) { _, newValue in
+                                // 利用点は最大100文字までに制限する
+                                if 100 < newValue.count {
+                                    zName = String(newValue.prefix(100))
+                                }
+                            }
+
+                        if isUsePointFocused && !shownUsePointCandidates.isEmpty {
+                            VStack(spacing: 0) {
+                                ForEach(shownUsePointCandidates, id: \.self) { candidate in
+                                    Button {
+                                        // 候補タップで確定する
+                                        zName = candidate
+                                        isUsePointFocused = false
+                                    } label: {
+                                        HStack(spacing: 0) {
+                                            Text(candidate)
+                                                .lineLimit(1)
+                                                .truncationMode(.tail)
+                                                .foregroundStyle(.primary)
+                                            Spacer()
+                                        }
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .contentShape(Rectangle())
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 8)
+                                    }
+                                    .buttonStyle(.plain)
+                                    if candidate != shownUsePointCandidates.last {
+                                        Divider()
+                                    }
+                                }
+                            }
+                            .background(Color(.secondarySystemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                        }
+                    }
+
+                    // 分類タグ（複数選択）
+                    Button { showCategoryPicker = true } label: {
+                        HStack(alignment: .top, spacing: 6) {
+                            // 見出しは固定幅を確保して欠けないようにする
+                            Text("record.field.category")
+                                .foregroundStyle(.secondary)
+                                .frame(width: 44, alignment: .leading)
+                            categoryLabel
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Image(systemName: "chevron.right")
+                                .font(.caption).foregroundStyle(.tertiary)
+                                .padding(.top, 2)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+
+                    // 繰り返し
+                    if payType == .lumpSum {
+                        Button { showRepeatPicker = true } label: {
+                            HStack {
+                                Text("record.field.repeat")
+                                    // 他の見出しと同じ薄さにそろえる
+                                    .foregroundStyle(Color(.secondaryLabel))
+                                Spacer()
+                                Text(repeatLabelKey)
+                                    .foregroundStyle(.primary)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption).foregroundStyle(.tertiary)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    // メモ
+                    TextField("record.field.note", text: $zNote, axis: .vertical)
+                        .lineLimit(3...)
+                        .autocorrectionDisabled()
+                }
+
+                // ── 類似決済（新規入力時のみ） ─────────────────────
+                if isNew {
+                    Section(similarSectionHeaderText) {
+                        if nAmount <= 0 {
+                            Text(similarGuideText)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else if similarCandidates.isEmpty {
+                            Text(similarEmptyText)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(similarCandidates, id: \.record.id) { candidate in
+                                Button {
+                                    applySimilarRecord(candidate.record)
+                                } label: {
+                                    SimilarRecordRow(record: candidate.record)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
+            }
+            .onChange(of: scrollToTopRequest) { _, _ in
+                withAnimation(.easeInOut(duration: 0.22)) {
+                    proxy.scrollTo(formTopAnchorID, anchor: .top)
+                }
             }
         }
         .navigationTitle(isNew ? "record.edit.title.add" : "record.edit.title.edit")
@@ -290,8 +353,8 @@ struct RecordEditView: View {
                 maxValue: APP_MAX_AMOUNT
             ) { value in
                 nAmount = value.roundedAmount()
-                // 金額確定後は決済ラベル入力へ移動する
-                DispatchQueue.main.async { isUsePointFocused = true }
+                // 金額確定後はフォーカスを外して類似決済を見やすくする
+                DispatchQueue.main.async { isUsePointFocused = false }
             }
         }
         .sheet(isPresented: $showDatePicker) {
@@ -402,8 +465,8 @@ struct RecordEditView: View {
 
     private func loadFields() {
         if case .addNew = mode {
-            // 新規時は直近利用の決済手段を初期選択する
-            selectedCard = cachedLatestCard
+            // 新規時の決済手段は未選択を初期値にする
+            selectedCard = nil
             // 新規作成は一括払いのみを許可する
             payType = .lumpSum
             return
@@ -471,7 +534,8 @@ struct RecordEditView: View {
     private func resetForm() {
         dateUse = Date(); zName = ""; zNote = ""; nAmount = 0
         payType = .lumpSum; nRepeat = 0
-        selectedCard = cachedLatestCard; selectedCategories = []
+        // 連続入力時も決済手段は未選択へ戻す
+        selectedCard = nil; selectedCategories = []
     }
 
     private func showBanner() {
@@ -516,7 +580,205 @@ struct RecordEditView: View {
 
         // 直近の利用レコードから決済手段を拾って保持する
         cachedLatestCard = pastRecords.first(where: { $0.e1card != nil })?.e1card
+        // 候補適用時にIDから即座に引けるようにカテゴリ辞書を保持する
+        cachedCategoryByID = Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0) })
     }
+
+    // MARK: - Similar Records
+
+    /// 類似候補セクション見出し
+    private var similarSectionHeaderText: LocalizedStringKey {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return "類似決済から選択"
+        }
+        return "Choose from Similar Payments"
+    }
+
+    /// 金額未入力時のガイド文
+    private var similarGuideText: String {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return "金額を入力すると、過去1年から類似決済を提案します"
+        }
+        return "Enter an amount to see similar payments from the last year."
+    }
+
+    /// 候補が見つからない場合の文言
+    private var similarEmptyText: String {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return "条件に近い候補が見つかりません"
+        }
+        return "No similar payments found."
+    }
+
+    /// 入力条件に対する類似スコアを計算する
+    private func similarityScore(for record: E3record) -> Int {
+        var score = 0
+
+        // 金額: 完全一致を最優先、差分が大きいほど減点する
+        if 0 < nAmount {
+            if record.nAmount == nAmount {
+                score += 80
+            } else {
+                let ratio = amountDiffRatio(input: nAmount, candidate: record.nAmount)
+                if ratio <= 0.05 {
+                    score += 55
+                } else if ratio <= 0.15 {
+                    score += 40
+                } else if ratio <= 0.30 {
+                    score += 26
+                } else if ratio <= 0.50 {
+                    score += 14
+                } else if ratio <= 1.00 {
+                    score += 4
+                }
+            }
+        }
+
+        // 決済手段: 一致を強く優遇する
+        if let selectedCardID = selectedCard?.id {
+            if record.e1card?.id == selectedCardID {
+                score += 34
+            } else {
+                score += 2
+            }
+        } else if record.e1card != nil {
+            score += 16
+        }
+
+        // 決済ラベル: 前方一致・部分一致を優遇する
+        let inputLabel = zName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let recordLabel = record.zName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !inputLabel.isEmpty && !recordLabel.isEmpty {
+            if recordLabel == inputLabel {
+                score += 30
+            } else if recordLabel.localizedCaseInsensitiveContains(inputLabel) {
+                score += 18
+            }
+        } else if !recordLabel.isEmpty {
+            score += 16
+        }
+
+        // 候補品質: 決済手段/決済ラベルが埋まっている候補を優先する
+        if record.e1card != nil {
+            score += 10
+        }
+        if !recordLabel.isEmpty {
+            score += 10
+        }
+
+        // 曜日一致を軽く優遇する
+        if Calendar.current.component(.weekday, from: record.dateUse) ==
+            Calendar.current.component(.weekday, from: dateUse) {
+            score += 12
+        }
+
+        // 分類タグ重複を軽く優遇する
+        let selectedCategoryIDs = Set(selectedCategories.map(\.id))
+        if !selectedCategoryIDs.isEmpty {
+            let overlapCount = record.e5categories.filter { selectedCategoryIDs.contains($0.id) }.count
+            if 0 < overlapCount {
+                score += min(overlapCount * 6, 18)
+            }
+        }
+
+        // 新しい記録を少し優遇する（0〜12点）
+        let dayDistance = abs(Calendar.current.dateComponents([.day], from: record.dateUse, to: Date()).day ?? 0)
+        if dayDistance <= 30 {
+            score += 12
+        } else if dayDistance <= 90 {
+            score += 8
+        } else if dayDistance <= 180 {
+            score += 4
+        }
+
+        return score
+    }
+
+    /// 金額差分の比率（0〜∞）を返す
+    private func amountDiffRatio(input: Decimal, candidate: Decimal) -> Double {
+        let inputValue = max(1.0, NSDecimalNumber(decimal: input).doubleValue)
+        let candidateValue = NSDecimalNumber(decimal: candidate).doubleValue
+        let diff = abs(inputValue - candidateValue)
+        return diff / inputValue
+    }
+
+    /// 類似候補を現在のフォームへ反映する
+    private func applySimilarRecord(_ record: E3record) {
+        // 金額・ラベル・メモ・決済手段・タグ・繰り返しをコピーする
+        nAmount = record.nAmount
+        zName = record.zName
+        zNote = record.zNote
+        selectedCard = record.e1card
+        nRepeat = record.nRepeat
+
+        // 参照切れを避けるため、現在コンテキストのカテゴリへ張り替える
+        let mappedCategories = record.e5categories.compactMap { cachedCategoryByID[$0.id] }
+        if mappedCategories.isEmpty {
+            if let single = record.e5category, let mapped = cachedCategoryByID[single.id] {
+                selectedCategories = [mapped]
+            } else {
+                selectedCategories = []
+            }
+        } else {
+            selectedCategories = mappedCategories
+        }
+
+        isUsePointFocused = false
+        // 候補反映後はフォーム先頭へ戻す
+        scrollToTopRequest += 1
+    }
+}
+
+// MARK: - Similar Record Row
+
+private struct SimilarRecordRow: View {
+    let record: E3record
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 8) {
+                Text(AppDateFormat.singleLineText(record.dateUse))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+
+                Text(record.zName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "—" : record.zName)
+                    .font(.subheadline)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+
+                Spacer()
+
+                Text(record.nAmount.currencyString())
+                    .font(.subheadline.monospacedDigit().weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+
+            HStack(spacing: 8) {
+                Text(record.e1card?.zName ?? NSLocalizedString("label.noSelection", comment: ""))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                if !record.e5categories.isEmpty {
+                    Text(record.e5categories.map(\.zName).joined(separator: " / "))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            }
+        }
+        .padding(.vertical, 2)
+        .contentShape(Rectangle())
+    }
+}
+
+private struct SimilarCandidate {
+    let record: E3record
+    let score: Int
 }
 
 // MARK: - Generic Single-Select Picker Sheet
