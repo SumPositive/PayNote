@@ -106,15 +106,11 @@ enum SeedData {
     /// 日本向けの代表的な決済方法
     private static func japaneseCardPresets() -> [CardPreset] {
         [
-            CardPreset(name: "Suica（VIEWカード）", closingDay: 5, payDay: 4, payMonth: 1, manageLevel: .precise),
-            CardPreset(name: "nanaco（ｄカード）", closingDay: 15, payDay: 10, payMonth: 1, manageLevel: .precise),
-            CardPreset(name: "AEON Pay（イオンカード）", closingDay: 10, payDay: 2, payMonth: 1, manageLevel: .precise),
-            CardPreset(name: "PayPay（PayPayカード）", closingDay: 29, payDay: 27, payMonth: 1, manageLevel: .precise),
-            CardPreset(name: "楽天Pay（楽天カード）", closingDay: 29, payDay: 27, payMonth: 1, manageLevel: .precise),
-            CardPreset(name: "楽天カード", closingDay: 29, payDay: 27, payMonth: 1, manageLevel: .approximate),
-            CardPreset(name: "PayPayカード", closingDay: 29, payDay: 27, payMonth: 1, manageLevel: .approximate),
+            CardPreset(name: "VIEWカード Suica", closingDay: 5, payDay: 4, payMonth: 1, manageLevel: .precise),
+            CardPreset(name: "PayPayカード PayPay", closingDay: 29, payDay: 27, payMonth: 1, manageLevel: .approximate),
+            CardPreset(name: "楽天カード Rpay", closingDay: 29, payDay: 27, payMonth: 1, manageLevel: .approximate),
+            CardPreset(name: "イオンカード AEONPay", closingDay: 10, payDay: 2, payMonth: 1, manageLevel: .precise),
             CardPreset(name: "ｄカード", closingDay: 15, payDay: 10, payMonth: 1, manageLevel: .approximate),
-            CardPreset(name: "イオンカード", closingDay: 10, payDay: 2, payMonth: 1, manageLevel: .approximate),
             CardPreset(name: "三井住友カード", closingDay: 15, payDay: 10, payMonth: 1, manageLevel: .largeOnly),
             CardPreset(name: "AMEXカード", closingDay: 20, payDay: 10, payMonth: 1, manageLevel: .largeOnly),
         ]
@@ -123,12 +119,6 @@ enum SeedData {
     /// 英語環境では欧米の代表的な決済方法を初期表示する
     private static func westernCardPresets() -> [CardPreset] {
         [
-            CardPreset(name: "Apple Pay (Visa)", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .precise),
-            CardPreset(name: "Google Pay (Master)", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .precise),
-            CardPreset(name: "PayPal (Amax)", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .precise),
-            CardPreset(name: "Venmo (Visa)", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .precise),
-            CardPreset(name: "Cash App (Visa)", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .precise),
-            CardPreset(name: "Revolut (Visa)", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .precise),
             CardPreset(name: "Visa", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .approximate),
             CardPreset(name: "Mastercard", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .approximate),
             CardPreset(name: "American Express", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .largeOnly),
@@ -139,16 +129,16 @@ enum SeedData {
     /// 日本の主要口座プリセット（引き落とし設定向け）
     private static func japaneseBankPresets() -> [BankPreset] {
         [
+            BankPreset(name: "住信SBIネット銀行"),
+            BankPreset(name: "楽天銀行"),
+            BankPreset(name: "PayPay銀行"),
+            BankPreset(name: "ソニー銀行"),
             BankPreset(name: "三菱UFJ銀行"),
             BankPreset(name: "三井住友銀行"),
             BankPreset(name: "みずほ銀行"),
             BankPreset(name: "ゆうちょ銀行"),
             BankPreset(name: "りそな銀行"),
             BankPreset(name: "埼玉りそな銀行"),
-            BankPreset(name: "楽天銀行"),
-            BankPreset(name: "住信SBIネット銀行"),
-            BankPreset(name: "PayPay銀行"),
-            BankPreset(name: "ソニー銀行"),
         ]
     }
 
@@ -173,14 +163,14 @@ enum SeedData {
         [
             CategoryPreset(name: "チャージ"),
             CategoryPreset(name: "食費"),
-            CategoryPreset(name: "交際"),
+            CategoryPreset(name: "交際費"),
             CategoryPreset(name: "会費"),
-            CategoryPreset(name: "交通"),
+            CategoryPreset(name: "交通費"),
             CategoryPreset(name: "有料道路(ETC)"),
             CategoryPreset(name: "タクシー"),
-            CategoryPreset(name: "通信"),
-            CategoryPreset(name: "水道"),
-            CategoryPreset(name: "電気"),
+            CategoryPreset(name: "通信費"),
+            CategoryPreset(name: "水道代"),
+            CategoryPreset(name: "電気代"),
         ]
     }
 
