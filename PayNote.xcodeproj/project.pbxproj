@@ -29,6 +29,7 @@
 		8E02093F98A02096C69C9426 /* BillingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838545C9F18F5C517D3C170E /* BillingService.swift */; };
 		8F1D97C3807BF181B8479E3F /* BankEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6BD6FE99BF6A7C356696B78 /* BankEditView.swift */; };
 		922C371C4A3318E289CAE2CC /* E7payment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 612855EBB9B4EB1E945C4A9B /* E7payment.swift */; };
+		96CCBCA225154F1A89A67910 /* JSONImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96CCBCA125154F1A89A67910 /* JSONImport.swift */; };
 		97904E45ADF1EC29C7E38838 /* E5category.swift in Sources */ = {isa = PBXBuildFile; fileRef = 483AE700971FC77C80FC3F80 /* E5category.swift */; };
 		9F7EEA2ED3C1E874D846C206 /* E4shop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFD7FE48DBF9525FAED5826E /* E4shop.swift */; };
 		A0404AAC7B624DF4CFF89D0F /* CardEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DEDEA1DAEEECF14059168DE /* CardEditView.swift */; };
@@ -93,6 +94,7 @@
 		8A3204006A7EA7EE85CEA06C /* PayNoteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayNoteTests.swift; sourceTree = "<group>"; };
 		8C888720898CBE1F720F736D /* PaymentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentListView.swift; sourceTree = "<group>"; };
 		90A96AFAF7BCB93A9445E45C /* Decimal+Rounding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Decimal+Rounding.swift"; sourceTree = "<group>"; };
+		96CCBCA125154F1A89A67910 /* JSONImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONImport.swift; sourceTree = "<group>"; };
 		97AA8DA9E2505CC1D28F9BB1 /* E1card.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E1card.swift; sourceTree = "<group>"; };
 		9AFC963C5C24B15862ECE64B /* PayNoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PayNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F95EF3EE0B184C7D267B8C7 /* View+ScalableTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+ScalableTitle.swift"; sourceTree = "<group>"; };
@@ -158,6 +160,7 @@
 			children = (
 				DC4455D455525FC6393BF598 /* AppSettings.swift */,
 				3B42874CB1DB5D8CE3B44F16 /* Export */,
+				96CCBC9F25154EE889A67910 /* Import */,
 				90304E68B2AC5EBF8D2888C5 /* Extensions */,
 				742137AD969F929BB3DDE928 /* Migration */,
 				723ED77D8D25A0CB8198B63B /* Models */,
@@ -180,6 +183,14 @@
 				8A3204006A7EA7EE85CEA06C /* PayNoteTests.swift */,
 			);
 			path = PayNoteTests;
+			sourceTree = "<group>";
+		};
+		96CCBC9F25154EE889A67910 /* Import */ = {
+			isa = PBXGroup;
+			children = (
+				96CCBCA125154F1A89A67910 /* JSONImport.swift */,
+			);
+			path = Import;
 			sourceTree = "<group>";
 		};
 		59B013F3C2F9BA8CC57E74FE /* Category */ = {
@@ -520,6 +531,7 @@
 				97904E45ADF1EC29C7E38838 /* E5category.swift in Sources */,
 				A8E87A041745100730C43504 /* E6part.swift in Sources */,
 				922C371C4A3318E289CAE2CC /* E7payment.swift in Sources */,
+				96CCBCA225154F1A89A67910 /* JSONImport.swift in Sources */,
 				4DDA8A04C30B6B86A07A2D68 /* E8bank.swift in Sources */,
 				C736EED40B1697AC698B6F81 /* InvoiceListView.swift in Sources */,
 				CE6F6CD0071085C235BAF6F4 /* JSONExport.swift in Sources */,
@@ -724,14 +736,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 0;
 				INFOPLIST_FILE = PayNote/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.3.0;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.PayNote;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -746,14 +758,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 0;
 				INFOPLIST_FILE = PayNote/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.3.0;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.PayNote;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";

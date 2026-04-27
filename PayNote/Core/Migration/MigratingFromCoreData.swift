@@ -353,23 +353,17 @@ private struct LegacyCoreDataStack {
     }
 
     func fetchAll() throws -> LegacyDataDTO {
-        var result = LegacyDataDTO()
-        var error: Error?
-        context.performAndWait {
-            do {
-                result.banks      = try self.fetch("E8bank")
-                    .map { LegacyBankDTO(mo: $0) }
-                result.shops      = try self.fetch("E4shop")
-                    .map { LegacyShopDTO(mo: $0) }
-                result.categories = try self.fetch("E5category")
-                    .map { LegacyCategoryDTO(mo: $0) }
-                result.cards      = try self.fetchCards()
-            } catch let e {
-                error = e
-            }
+        return try context.performAndWait {
+            var result = LegacyDataDTO()
+            result.banks = try self.fetch("E8bank")
+                .map { LegacyBankDTO(mo: $0) }
+            result.shops = try self.fetch("E4shop")
+                .map { LegacyShopDTO(mo: $0) }
+            result.categories = try self.fetch("E5category")
+                .map { LegacyCategoryDTO(mo: $0) }
+            result.cards = try self.fetchCards()
+            return result
         }
-        if let error { throw error }
-        return result
     }
 
     private func fetch(_ entity: String) throws -> [NSManagedObject] {

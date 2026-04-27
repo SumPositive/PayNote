@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @AppStorage(AppStorageKey.userLevel)         private var userLevel: UserLevel = .beginner
@@ -10,11 +11,13 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var context
 
     @State private var showShareSheet  = false
+    @State private var showImportPicker = false
     @State private var exportedURL: URL?
     @State private var showAboutSheet  = false
     @State private var alertItem: SettingsAlertItem?
-    @State private var isExporting = false
-    @State private var exportProgressMessage = ""
+    @State private var isWorking = false
+    @State private var progressMessage = ""
+    @State private var progressHint = ""
 
     var body: some View {
         List {
@@ -57,8 +60,14 @@ struct SettingsView: View {
                 } label: {
                     Label("settings.jsonExport.all", systemImage: "square.and.arrow.up")
                 }
-                // 書き出し中の二重実行を防止する
-                .disabled(isExporting)
+                .disabled(isWorking)
+
+                Button {
+                    showImportPicker = true
+                } label: {
+                    Label(importButtonText, systemImage: "square.and.arrow.down")
+                }
+                .disabled(isWorking)
             }
 
             Section("settings.panel.support") {
@@ -96,12 +105,25 @@ struct SettingsView: View {
                     .ignoresSafeArea()
             }
         }
+        .fileImporter(
+            isPresented: $showImportPicker,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                guard let url = urls.first else { return }
+                importJSON(from: url)
+            case .failure(let error):
+                alertItem = .raw(title: errorTitleText, message: error.localizedDescription)
+            }
+        }
         .alert(item: $alertItem) { item in
             let title: Text = {
                 if let titleKey = item.titleKey {
                     return Text(LocalizedStringKey(titleKey))
                 }
-                return Text("alert.saveFailed")
+                return Text(item.rawTitle ?? errorTitleText)
             }()
 
             let message: Text = {
@@ -118,18 +140,18 @@ struct SettingsView: View {
             )
         }
         .overlay {
-            if isExporting {
+            if isWorking {
                 ZStack {
-                    // エクスポート処理中は背面操作を受け付けない
+                    // 入出力処理中は背面操作を受け付けない
                     Color.black.opacity(0.24)
                         .ignoresSafeArea()
                     VStack(spacing: 10) {
                         ProgressView()
                             .controlSize(.large)
-                        Text(exportProgressMessage)
+                        Text(progressMessage)
                             .font(.subheadline.weight(.semibold))
                             .multilineTextAlignment(.center)
-                        Text(exportHintText)
+                        Text(progressHint)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -148,6 +170,7 @@ struct SettingsView: View {
         let id: String
         let titleKey: String?
         let messageKey: String?
+        let rawTitle: String?
         let rawMessage: String?
 
         /// ローカライズキーを使うアラート
@@ -156,16 +179,18 @@ struct SettingsView: View {
                 id: id,
                 titleKey: titleKey,
                 messageKey: messageKey,
+                rawTitle: nil,
                 rawMessage: nil
             )
         }
 
-        /// 例外文字列など、生メッセージを使うアラート
-        static func rawError(_ message: String) -> SettingsAlertItem {
+        /// 任意文字列を使うアラート
+        static func raw(title: String, message: String) -> SettingsAlertItem {
             SettingsAlertItem(
-                id: "error:\(message)",
+                id: "\(title):\(message)",
                 titleKey: nil,
                 messageKey: nil,
+                rawTitle: title,
                 rawMessage: message
             )
         }
@@ -173,28 +198,56 @@ struct SettingsView: View {
 
     private func exportJSON() {
         Task { @MainActor in
-            isExporting = true
-            exportProgressMessage = exportPreparingText
+            isWorking = true
+            progressMessage = exportPreparingText
+            progressHint = exportHintText
             // オーバーレイ描画を先に反映する
             await Task.yield()
-            defer { isExporting = false }
+            defer { isWorking = false }
 
             do {
                 let data = try await JSONExport.exportData(context: context) { phase in
                     // 工程の説明文を逐次切り替える
-                    exportProgressMessage = phase.message(locale: Locale.current)
+                    progressMessage = phase.message(locale: Locale.current)
                 }
                 let fmt  = DateFormatter()
                 fmt.dateFormat = "yyyyMMdd_HHmmss"
                 let name = "PayNote_\(fmt.string(from: Date())).json"
                 let url  = FileManager.default.temporaryDirectory.appendingPathComponent(name)
-                exportProgressMessage = exportWritingText
+                progressMessage = exportWritingText
                 await Task.yield()
                 try data.write(to: url)
                 exportedURL    = url
                 showShareSheet = true
             } catch {
-                alertItem = .rawError(error.localizedDescription)
+                alertItem = .raw(title: errorTitleText, message: error.localizedDescription)
+            }
+        }
+    }
+
+    private func importJSON(from url: URL) {
+        Task { @MainActor in
+            isWorking = true
+            progressHint = importHintText
+            progressMessage = importPreparingText
+            await Task.yield()
+            defer { isWorking = false }
+
+            let startedAccessing = url.startAccessingSecurityScopedResource()
+            defer {
+                if startedAccessing {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+
+            do {
+                let result = try await JSONImport.importData(from: url, context: context) { phase in
+                    // 工程の説明文を逐次切り替える
+                    progressMessage = phase.message(locale: Locale.current)
+                }
+                alertItem = .raw(title: importDoneTitleText, message: importDoneMessage(result))
+            } catch {
+                alertItem = .raw(title: errorTitleText, message: error.localizedDescription)
             }
         }
     }
@@ -221,6 +274,70 @@ struct SettingsView: View {
             return "データ量により数秒かかることがあります"
         }
         return "This may take a few seconds depending on data volume."
+    }
+
+    /// インポートボタン文言
+    private var importButtonText: String {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return "データをインポートする"
+        }
+        return "Import Data"
+    }
+
+    /// インポート開始時の説明文
+    private var importPreparingText: String {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return "インポート準備中…"
+        }
+        return "Preparing import..."
+    }
+
+    /// インポート中の補足説明
+    private var importHintText: String {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return "不足している配列キーは無視し、含まれるデータだけを取り込みます"
+        }
+        return "Missing sections are ignored. Only included data will be imported."
+    }
+
+    /// 共通エラータイトル
+    private var errorTitleText: String {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return "エラー"
+        }
+        return "Error"
+    }
+
+    /// インポート完了タイトル
+    private var importDoneTitleText: String {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return "インポート完了"
+        }
+        return "Import Complete"
+    }
+
+    /// インポート完了メッセージ
+    private func importDoneMessage(_ result: JSONImport.Result) -> String {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return """
+            口座 \(result.bankCount) 件
+            決済手段 \(result.cardCount) 件
+            利用店 \(result.shopCount) 件
+            タグ \(result.categoryCount) 件
+            決済履歴 \(result.recordCount) 件
+            請求状態反映 \(result.invoiceStateCount) 件
+            支払状態反映 \(result.paymentStateCount) 件
+            """
+        }
+        return """
+        Accounts: \(result.bankCount)
+        Payment Methods: \(result.cardCount)
+        Shops: \(result.shopCount)
+        Tags: \(result.categoryCount)
+        Records: \(result.recordCount)
+        Invoice States: \(result.invoiceStateCount)
+        Payment States: \(result.paymentStateCount)
+        """
     }
 }
 
