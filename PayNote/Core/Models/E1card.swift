@@ -26,12 +26,15 @@ final class E1card {
     var sumNoCheck: Int16
 
     var e8bank: E8bank?
-    @Relationship(deleteRule: .cascade) var e2invoices: [E2invoice]
+    @Relationship(deleteRule: .cascade) var e2paids: [E2invoice]
+    @Relationship(deleteRule: .cascade) var e2unpaids: [E2invoice]
     @Relationship(deleteRule: .cascade) var e3records: [E3record]
 
     /// 旧データ互換: nClosingDay=0 は即日デビット（新規作成不可）
     var isDebit: Bool { nClosingDay == 0 }
     var manageLevel: ManagementLevel { ManagementLevel(rawValue: nManageLevel) ?? .precise }
+    // 互換参照用に請求全体を返す
+    var e2invoices: [E2invoice] { e2paids + e2unpaids }
 
     init(
         id: String = UUID().uuidString,
@@ -63,7 +66,8 @@ final class E1card {
         self.sumPaid = sumPaid
         self.sumUnpaid = sumUnpaid
         self.sumNoCheck = sumNoCheck
-        self.e2invoices = []
+        self.e2paids = []
+        self.e2unpaids = []
         self.e3records = []
     }
 }

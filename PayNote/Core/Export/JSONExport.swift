@@ -11,6 +11,8 @@ enum JSONExport {
         var shops: [ShopData]
         var categories: [CategoryData]
         var records: [RecordData]
+        var invoices: [InvoiceData]
+        var payments: [PaymentData]
     }
 
     struct BankData: Codable {
@@ -37,6 +39,23 @@ enum JSONExport {
         var name, note, amount: String
         var payType, repeatMonths: Int
         var cardID, shopID, categoryID: String?
+    }
+
+    struct InvoiceData: Codable {
+        var id: String
+        var date: Date
+        var isPaid: Bool
+        var cardID: String?
+        var paymentID: String?
+    }
+
+    struct PaymentData: Codable {
+        var id: String
+        var date: Date
+        var bankID: String?
+        var sumAmount: String
+        var sumNoCheck: Int
+        var isPaid: Bool
     }
 
     enum Phase {
@@ -87,14 +106,36 @@ enum JSONExport {
         onPhase?(.readingRecords)
         await Task.yield()
         let records    = (try? context.fetch(FetchDescriptor<E3record>(sortBy: [SortDescriptor(\E3record.dateUse)]))) ?? []
+        let invoices   = (try? context.fetch(FetchDescriptor<E2invoice>(sortBy: [SortDescriptor(\E2invoice.date)]))) ?? []
+        let payments   = (try? context.fetch(FetchDescriptor<E7payment>(sortBy: [SortDescriptor(\E7payment.date)]))) ?? []
 
         let bankData     = banks.map      { BankData(id: $0.id, name: $0.zName, note: $0.zNote, row: Int($0.nRow)) }
         let cardData     = cards.map      { c in CardData(id: c.id, name: c.zName, note: c.zNote, row: Int(c.nRow), closingDay: Int(c.nClosingDay), payDay: Int(c.nPayDay), payMonth: Int(c.nPayMonth), bonus1: Int(c.nBonus1), bonus2: Int(c.nBonus2), bankID: c.e8bank?.id) }
         let shopData     = shops.map      { ShopData(id: $0.id, name: $0.zName, note: $0.zNote) }
         let categoryData = categories.map { CategoryData(id: $0.id, name: $0.zName, note: $0.zNote) }
         let recordData   = records.map    { r in RecordData(id: r.id, dateUse: r.dateUse, name: r.zName, note: r.zNote, amount: "\(r.nAmount)", payType: Int(r.nPayType), repeatMonths: Int(r.nRepeat), cardID: r.e1card?.id, shopID: r.e4shop?.id, categoryID: r.e5category?.id) }
+        let invoiceData  = invoices.map   { i in InvoiceData(id: i.id, date: i.date, isPaid: i.isPaid, cardID: i.e1card?.id, paymentID: i.e7payment?.id) }
+        let paymentData  = payments.map   {
+            PaymentData(
+                id: $0.id,
+                date: $0.date,
+                bankID: $0.e8bank?.id,
+                sumAmount: "\($0.sumAmount)",
+                sumNoCheck: Int($0.sumNoCheck),
+                isPaid: $0.isPaid
+            )
+        }
 
-        let data = ExportData(exportDate: Date(), banks: bankData, cards: cardData, shops: shopData, categories: categoryData, records: recordData)
+        let data = ExportData(
+            exportDate: Date(),
+            banks: bankData,
+            cards: cardData,
+            shops: shopData,
+            categories: categoryData,
+            records: recordData,
+            invoices: invoiceData,
+            payments: paymentData
+        )
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting     = [.prettyPrinted, .sortedKeys]

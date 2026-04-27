@@ -5,10 +5,9 @@ import CoreData
 /// CoreData(旧クレメモ AzCredit.sqlite) → SwiftData マイグレーション
 ///
 /// 主な変換:
-/// - E0root 廃止 → E7payment.isPaid: Bool
+/// - E2invoice / E7payment の paid / unpaid 所属を維持
 /// - E2invoice.nYearMMDD(Int32) → date: Date
-/// - E7payment.nYearMMDD(Int32) → date: Date
-/// - E1card の e2paids/e2unpaids 二系統 → E2invoice.isPaid + 単一リレーション
+/// - E7payment は「日付 + 口座」単位で再構築
 struct MigratingFromCoreData {
 
     private let migrationFlagKey = "MigratingFromCoreData.migrated.v1"
@@ -193,18 +192,8 @@ struct MigratingFromCoreData {
             shopToCategoryMap[s.objectID] = converted
         }
 
-        // E7payment
-        var paymentMap: [NSManagedObjectID: E7payment] = [:]
-        for p in dto.payments {
-            let payment = E7payment(
-                date: dateFromYearMMDD(p.nYearMMDD),
-                sumAmount: p.sumAmount,
-                sumNoCheck: p.sumNoCheck,
-                isPaid: p.isPaid
-            )
-            context.insert(payment)
-            paymentMap[p.objectID] = payment
-        }
+        // E7payment は旧 payment をそのまま移さず、invoice から日付+口座で再構成する
+        var paymentByKey: [String: E7payment] = [:]
 
         // E1card + E2invoice + E3record + E6part
         for c in dto.cards {
@@ -259,12 +248,21 @@ struct MigratingFromCoreData {
 
             // E2invoice (paid + unpaid)
             for inv in c.invoicesPaid + c.invoicesUnpaid {
-                let invoice = E2invoice(
-                    date: dateFromYearMMDD(inv.nYearMMDD),
-                    isPaid: inv.isPaid
+                let invoiceDate = dateFromYearMMDD(inv.nYearMMDD)
+                let invoice = E2invoice(date: invoiceDate)
+                if inv.isPaid {
+                    invoice.e1paid = card
+                } else {
+                    invoice.e1unpaid = card
+                }
+                let payment = findOrCreateMigratedPayment(
+                    date: invoiceDate,
+                    bank: card.e8bank,
+                    isPaid: inv.isPaid,
+                    paymentByKey: &paymentByKey,
+                    context: context
                 )
-                invoice.e1card = card
-                invoice.e7payment = inv.paymentObjectID.flatMap { paymentMap[$0] }
+                invoice.e7payment = payment
                 context.insert(invoice)
 
                 // E6part
@@ -279,6 +277,10 @@ struct MigratingFromCoreData {
                     p.e3record = part.recordObjectID.flatMap { recordMap[$0] }
                     context.insert(p)
                 }
+
+                // 口座別支払の集計値をその場で構築する
+                payment.sumAmount += invoice.sumAmount
+                payment.sumNoCheck += invoice.sumNoCheck
             }
         }
     }
@@ -293,6 +295,35 @@ struct MigratingFromCoreData {
         var comps = DateComponents()
         comps.year = y; comps.month = m; comps.day = d
         return Calendar.current.date(from: comps) ?? Date()
+    }
+
+    @MainActor
+    private func findOrCreateMigratedPayment(
+        date: Date,
+        bank: E8bank?,
+        isPaid: Bool,
+        paymentByKey: inout [String: E7payment],
+        context: ModelContext
+    ) -> E7payment {
+        let day = Calendar.current.startOfDay(for: date)
+        let bankKey = bank?.id ?? "__no_bank__"
+        let stateKey = isPaid ? "paid" : "unpaid"
+        let key = "\(bankKey)#\(Int(day.timeIntervalSince1970))#\(stateKey)"
+        if let existing = paymentByKey[key] {
+            return existing
+        }
+
+        let payment = E7payment(date: day)
+        if let bank {
+            if isPaid {
+                payment.e8paid = bank
+            } else {
+                payment.e8unpaid = bank
+            }
+        }
+        context.insert(payment)
+        paymentByKey[key] = payment
+        return payment
     }
 }
 

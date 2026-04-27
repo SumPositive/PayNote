@@ -89,7 +89,7 @@ struct RecordListView: View {
         .alert("alert.deleteConfirm.title", isPresented: $showDeleteAlert) {
             Button("button.delete", role: .destructive) {
                 if let r = deleteTarget {
-                    RecordService.delete(r, context: context)
+                    try? RecordService.delete(r, context: context)
                     // 削除反映後は先頭ページから再読込する
                     resetAndLoadRecords()
                 }

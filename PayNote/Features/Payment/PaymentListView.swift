@@ -2,19 +2,38 @@ import SwiftUI
 import SwiftData
 
 struct PaymentListView: View {
-    @Query(filter: #Predicate<E7payment> { !$0.isPaid },
-           sort: \E7payment.date, order: .reverse) private var unpaidPayments: [E7payment]
+    @Query(sort: \E7payment.date, order: .reverse) private var allPayments: [E7payment]
     @Environment(\.modelContext) private var context
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
     @State private var didInitialScroll = false
     @State private var undoAction: PaymentToggleUndoAction?
-    @State private var paidPayments: [E7payment] = []
-    @State private var paidPage = 0
-    @State private var hasMorePaid = true
-    @State private var isLoadingPaid = false
-    @State private var hasAnyPayments = true
+    @State private var paidVisibleCount = 0
     private let pageSize = 100
     private let paidFirstRowAnchorID = "payment-paid-first-row-anchor"
+
+    private var allGroups: [PaymentDisplayGroup] {
+        allPayments.flatMap(\.displayGroups)
+    }
+
+    private var unpaidGroups: [PaymentDisplayGroup] {
+        allGroups.filter { !$0.isPaid }
+    }
+
+    private var allPaidGroups: [PaymentDisplayGroup] {
+        allGroups.filter(\.isPaid)
+    }
+
+    private var paidGroups: [PaymentDisplayGroup] {
+        Array(allPaidGroups.prefix(paidVisibleCount))
+    }
+
+    private var hasMorePaid: Bool {
+        paidVisibleCount < allPaidGroups.count
+    }
+
+    private var hasAnyPayments: Bool {
+        !allGroups.isEmpty
+    }
 
     var body: some View {
         Group {
@@ -53,8 +72,8 @@ struct PaymentListView: View {
                                 }
                             }
                             PaymentCombinedCard(
-                                unpaidPayments: unpaidPayments,
-                                paidPayments: paidPayments,
+                                unpaidPayments: unpaidGroups,
+                                paidPayments: paidGroups,
                                 onToggle: togglePaid,
                                 hasMorePaid: hasMorePaid,
                                 onLoadMorePaid: loadMorePaidIfNeeded,
@@ -65,8 +84,7 @@ struct PaymentListView: View {
                         .padding(.vertical, 10)
                     }
                     .onAppear {
-                        refreshHasAnyPayments()
-                        if paidPayments.isEmpty {
+                        if paidVisibleCount == 0 {
                             resetAndLoadPaid()
                         }
                         scrollToPaidTopIfNeeded(proxy: proxy)
@@ -86,9 +104,8 @@ struct PaymentListView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: undoAction != nil)
-        .onChange(of: unpaidPayments.map(\.id)) { _, _ in
-            // 支払状態変更で未払集合が変わったら、済み側ページを再読込する
-            refreshHasAnyPayments()
+        .onChange(of: allGroups.map(\.id)) { _, _ in
+            // 表示グループが変わったら、済み側の表示件数だけ整える
             resetAndLoadPaid()
         }
     }
@@ -98,7 +115,7 @@ struct PaymentListView: View {
             return
         }
         // 未払が少ない場合は、初期スクロールしなくても済み先頭が見える
-        if unpaidPayments.count <= 4 {
+        if unpaidGroups.count <= 4 {
             didInitialScroll = true
             return
         }
@@ -111,32 +128,32 @@ struct PaymentListView: View {
         }
     }
 
-    private func togglePaid(_ payment: E7payment) {
-        let previousIsPaid = payment.isPaid
+    private func togglePaid(_ group: PaymentDisplayGroup) {
+        let previousIsPaid = group.isPaid
         let nextIsPaid = !previousIsPaid
         // 決済手段未選択を含む支払は、未払→済みへの更新を禁止する
-        if !previousIsPaid && payment.includesUnselectedCard {
+        if !previousIsPaid && group.includesUnselectedCard {
             return
         }
-        applyPaidState(payment, isPaid: nextIsPaid)
+        applyPaidState(group, isPaid: nextIsPaid)
         // トグル後に取り消しアクションを出す
-        showUndoAction(payment: payment, previousIsPaid: previousIsPaid)
+        showUndoAction(group: group, previousIsPaid: previousIsPaid)
     }
 
     private func undoToggle() {
         guard let action = undoAction else {
             return
         }
-        applyPaidState(action.payment, isPaid: action.previousIsPaid)
+        applyPaidState(action.group, isPaid: action.previousIsPaid)
         undoAction = nil
     }
 
-    private func showUndoAction(payment: E7payment, previousIsPaid: Bool) {
+    private func showUndoAction(group: PaymentDisplayGroup, previousIsPaid: Bool) {
         let token = UUID()
         undoAction = PaymentToggleUndoAction(
-            payment: payment,
+            group: group,
             previousIsPaid: previousIsPaid,
-            movedToPaid: payment.isPaid,
+            movedToPaid: group.isPaid,
             token: token
         )
         Task { @MainActor in
@@ -148,90 +165,37 @@ struct PaymentListView: View {
         }
     }
 
-    private func applyPaidState(_ payment: E7payment, isPaid: Bool) {
-        payment.isPaid = isPaid
-        // すべての子 invoice に伝播
-        for inv in payment.e2invoices {
-            inv.isPaid = isPaid
-            if isPaid, let card = inv.e1card {
-                // repeat が必要なレコードを生成
-                for part in inv.e6parts {
-                    if let record = part.e3record, record.nRepeat > 0 {
-                        let existsNext = record.e1card?.e3records.contains(where: {
-                            Calendar.current.isDate($0.dateUse,
-                                equalTo: Calendar.current.date(byAdding: .month,
-                                    value: Int(record.nRepeat), to: record.dateUse) ?? Date(),
-                                toGranularity: .month)
-                        }) ?? false
-                        if !existsNext {
-                            RecordService.makeRepeatRecord(from: record, context: context)
-                        }
-                    }
-                }
-                RecordService.recalculateCard(card)
-            }
-        }
-        // 済みセクションはページングしているため、変更後は再読込する
+    private func applyPaidState(_ group: PaymentDisplayGroup, isPaid: Bool) {
+        // 未払/済みの変更はサービス層でまとめて保存する
+        try? RecordService.setInvoicesPaid(
+            group.invoices,
+            isPaid: isPaid,
+            context: context
+        )
+        // 済みセクションは表示件数だけ持っているため、変更後に件数を整える
         resetAndLoadPaid()
     }
 
     private func resetAndLoadPaid() {
-        paidPage = 0
-        hasMorePaid = true
-        paidPayments = []
-        loadMorePaidIfNeeded()
+        paidVisibleCount = min(pageSize, allPaidGroups.count)
     }
 
     private func loadMorePaidIfNeeded() {
-        if isLoadingPaid || !hasMorePaid {
+        if !hasMorePaid {
             return
         }
-        isLoadingPaid = true
-        defer { isLoadingPaid = false }
-
-        var descriptor = FetchDescriptor<E7payment>(
-            predicate: #Predicate<E7payment> { $0.isPaid },
-            sortBy: [SortDescriptor(\E7payment.date, order: .reverse)]
-        )
-        descriptor.fetchOffset = paidPage * pageSize
-        descriptor.fetchLimit = pageSize
-
-        let fetched = (try? context.fetch(descriptor)) ?? []
-        paidPayments.append(contentsOf: fetched)
-        paidPage += 1
-        hasMorePaid = pageSize <= fetched.count
-    }
-
-    private func refreshHasAnyPayments() {
-        // 未払が0件でも済みがあれば一覧を表示する
-        let count = (try? context.fetchCount(FetchDescriptor<E7payment>())) ?? 0
-        hasAnyPayments = 0 < count
+        paidVisibleCount = min(paidVisibleCount + pageSize, allPaidGroups.count)
     }
 }
 
 // MARK: - Row
 
 private struct PaymentRow: View {
-    let payment: E7payment
+    let group: PaymentDisplayGroup
     let onToggle: () -> Void
     private var canToggleToPaid: Bool {
         // 未選択決済を含む場合は「済み」へ遷移させない
-        payment.isPaid || !payment.includesUnselectedCard
-    }
-    private var bankNameText: String {
-        // 決済手段未選択の請求が含まれる場合は、口座ではなく決済手段未選択と表示する
-        if payment.includesUnselectedCard {
-            let cardLabel = NSLocalizedString("record.field.card", comment: "")
-            let noSelection = NSLocalizedString("label.noSelection", comment: "")
-            return "\(cardLabel) \(noSelection)"
-        }
-        // 請求書に紐づく口座名の先頭を表示する（未設定時は共通ラベル）
-        if let name = payment.e2invoices
-            .compactMap({ $0.e1card?.e8bank?.zName })
-            .first(where: { !$0.isEmpty }) {
-            return name
-        }
-        return NSLocalizedString("payment.bank.noSelection", comment: "")
+        group.isPaid || !group.includesUnselectedCard
     }
 
     var body: some View {
@@ -239,22 +203,22 @@ private struct PaymentRow: View {
             // PAID/UNPAID バッジ
             Button(action: onToggle) {
                 // セルと説明フッターで同じ見た目を再利用する
-                PaymentStatusPill(isPaid: payment.isPaid)
+                PaymentStatusPill(isPaid: group.isPaid)
             }
             .disabled(!canToggleToPaid)
             .opacity(canToggleToPaid ? 1 : 0.4)
             // 切替操作の意味を読み上げでも伝える
-            .accessibilityLabel(payment.isPaid ? Text("payment.markUnpaid") : Text("payment.markPaid"))
+            .accessibilityLabel(group.isPaid ? Text("payment.markUnpaid") : Text("payment.markPaid"))
             .buttonStyle(.plain)
 
             HStack(spacing: 8) {
                 // 日付は2段表示にして中央揃えにする
                 VStack(spacing: 0) {
-                    Text(AppDateFormat.yearWeekdayText(payment.date))
+                    Text(AppDateFormat.yearWeekdayText(group.payment.date))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
-                    Text(AppDateFormat.monthDayText(payment.date))
+                    Text(AppDateFormat.monthDayText(group.payment.date))
                         .font(.subheadline)
                         .lineLimit(1)
                 }
@@ -263,7 +227,7 @@ private struct PaymentRow: View {
                 // 日付は優先表示して欠けにくくする
                 .fixedSize(horizontal: true, vertical: false)
                 .layoutPriority(2)
-                Text(bankNameText)
+                Text(group.bankNameText)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -275,9 +239,9 @@ private struct PaymentRow: View {
 
             Spacer()
 
-            Text(payment.sumAmount.currencyString())
+            Text(group.sumAmount.currencyString())
                 .font(.body.monospacedDigit())
-                .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                .foregroundStyle(group.isPaid ? COLOR_PAID : COLOR_UNPAID)
                 .lineLimit(1)
                 // 金額は最優先で欠けないようにする
                 .fixedSize(horizontal: true, vertical: false)
@@ -285,13 +249,6 @@ private struct PaymentRow: View {
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
-    }
-}
-
-private extension E7payment {
-    var includesUnselectedCard: Bool {
-        // 1件でも決済手段未選択の請求があれば制御対象にする
-        e2invoices.contains { $0.e1card == nil }
     }
 }
 
@@ -311,9 +268,9 @@ private struct PaymentStatusPill: View {
 }
 
 private struct PaymentCombinedCard: View {
-    let unpaidPayments: [E7payment]
-    let paidPayments: [E7payment]
-    let onToggle: (E7payment) -> Void
+    let unpaidPayments: [PaymentDisplayGroup]
+    let paidPayments: [PaymentDisplayGroup]
+    let onToggle: (PaymentDisplayGroup) -> Void
     let hasMorePaid: Bool
     let onLoadMorePaid: () -> Void
     let paidFirstRowAnchorID: String
@@ -324,9 +281,9 @@ private struct PaymentCombinedCard: View {
             if !unpaidPayments.isEmpty {
                 ForEach(Array(unpaidPayments.enumerated()), id: \.element.id) { index, payment in
                     NavigationLink {
-                        InvoiceListView(payment: payment)
+                        InvoiceListView(group: payment)
                     } label: {
-                        PaymentRow(payment: payment) {
+                        PaymentRow(group: payment) {
                             onToggle(payment)
                         }
                         .padding(.horizontal, 12)
@@ -350,9 +307,9 @@ private struct PaymentCombinedCard: View {
             if !paidPayments.isEmpty {
                 ForEach(Array(paidPayments.enumerated()), id: \.element.id) { index, payment in
                     NavigationLink {
-                        InvoiceListView(payment: payment)
+                        InvoiceListView(group: payment)
                     } label: {
-                        PaymentRow(payment: payment) {
+                        PaymentRow(group: payment) {
                             onToggle(payment)
                         }
                         .padding(.horizontal, 12)
@@ -517,7 +474,7 @@ private struct PaymentBoundaryMidYPreferenceKey: PreferenceKey {
 }
 
 private struct PaymentToggleUndoAction {
-    let payment: E7payment
+    let group: PaymentDisplayGroup
     let previousIsPaid: Bool
     let movedToPaid: Bool
     let token: UUID

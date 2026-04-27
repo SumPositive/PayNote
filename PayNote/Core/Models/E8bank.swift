@@ -10,6 +10,11 @@ final class E8bank {
     var nRow: Int32
 
     @Relationship(deleteRule: .nullify) var e1cards: [E1card]
+    @Relationship(deleteRule: .nullify) var e7paids: [E7payment]
+    @Relationship(deleteRule: .nullify) var e7unpaids: [E7payment]
+
+    // 互換参照用に支払全体を返す
+    var e7payments: [E7payment] { e7paids + e7unpaids }
 
     init(
         id: String = UUID().uuidString,
@@ -22,5 +27,7 @@ final class E8bank {
         self.zNote = zNote
         self.nRow = nRow
         self.e1cards = []
+        self.e7paids = []
+        self.e7unpaids = []
     }
 }

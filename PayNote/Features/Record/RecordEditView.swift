@@ -316,8 +316,9 @@ struct RecordEditView: View {
         if userLevel == .beginner {
             Section {
                 BeginnerRecordHelpBlock(
-                    titleKey: "record.beginner.title",
-                    messageKey: "record.beginner.guide"
+                    // 新規と編集で見出しを切り替える
+                    titleKey: isNew ? "record.beginner.title" : "record.beginner.title.edit",
+                    messageKey: isNew ? "record.beginner.guide" : "record.beginner.guide.edit"
                 )
             }
         }
@@ -588,7 +589,7 @@ struct RecordEditView: View {
             r.e1card = selectedCard; r.e4shop = nil
             r.e5categories = selectedCategories; r.e5category = nil
             context.insert(r)
-            RecordService.save(r, context: context)
+            try? RecordService.save(r, context: context)
             switch afterSaveAction {
             case .goBack:
                 dismiss()
@@ -607,7 +608,7 @@ struct RecordEditView: View {
             r.nAmount = nAmount; r.nPayType = payType.rawValue; r.nRepeat = nRepeat
             r.e1card = selectedCard; r.e4shop = nil
             r.e5categories = selectedCategories; r.e5category = nil
-            RecordService.save(r, context: context)
+            try? RecordService.save(r, context: context)
             dismiss()
         }
     }

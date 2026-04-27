@@ -2,44 +2,23 @@ import SwiftUI
 import SwiftData
 
 struct InvoiceListView: View {
-    let payment: E7payment
+    let group: PaymentDisplayGroup
 
     @Environment(\.modelContext) private var context
     @State private var editRecord: E3record?
 
     private var bankNameText: String {
-        // 決済手段未選択の請求は、口座名ではなく決済手段未選択と表示する
-        if payment.e2invoices.contains(where: { $0.e1card == nil }) {
-            let cardLabel = NSLocalizedString("record.field.card", comment: "")
-            let noSelection = NSLocalizedString("label.noSelection", comment: "")
-            return "\(cardLabel) \(noSelection)"
-        }
-
-        let names = Array(
-            Set(
-                payment.e2invoices
-                    .compactMap { $0.e1card?.e8bank?.zName }
-                    .filter { !$0.isEmpty }
-            )
-        ).sorted()
-
-        if names.isEmpty {
-            return NSLocalizedString("payment.bank.noSelection", comment: "")
-        }
-        if names.count == 1 {
-            return names[0]
-        }
-        return NSLocalizedString("invoice.bank.multiple", comment: "")
+        group.bankNameText
     }
 
     private var statementTitleText: String {
-        let dateText = AppDateFormat.singleLineText(payment.date)
+        let dateText = AppDateFormat.singleLineText(group.payment.date)
         let suffix = NSLocalizedString("invoice.statement.debitSuffix", comment: "")
         return "\(dateText)\(suffix)"
     }
 
     private var invoices: [E2invoice] {
-        payment.e2invoices.sorted {
+        group.invoices.sorted {
             ($0.e1card?.zName ?? "") < ($1.e1card?.zName ?? "")
         }
     }
@@ -59,22 +38,22 @@ struct InvoiceListView: View {
                 HStack {
                     ZStack {
                         // 口座合計セルの中央に未払/済みを表示する
-                        Text(payment.isPaid ? "payment.status.paidShort" : "payment.status.unpaidShort")
+                        Text(group.isPaid ? "payment.status.paidShort" : "payment.status.unpaidShort")
                             .font(.subheadline.weight(.semibold))
                             .padding(.horizontal, 12)
                             .padding(.vertical, 5)
-                            .background(payment.isPaid
+                            .background(group.isPaid
                                 ? COLOR_PAID.opacity(0.2)
                                 : COLOR_UNPAID.opacity(0.2))
-                            .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                            .foregroundStyle(group.isPaid ? COLOR_PAID : COLOR_UNPAID)
                             .clipShape(Capsule())
 
                         HStack {
                             Text("label.total")
                             Spacer()
-                            Text(payment.sumAmount.currencyString())
+                            Text(group.sumAmount.currencyString())
                                 .font(.headline.monospacedDigit())
-                                .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                                .foregroundStyle(group.isPaid ? COLOR_PAID : COLOR_UNPAID)
                         }
                     }
                 }
@@ -134,14 +113,11 @@ struct InvoiceListView: View {
         if invoice.e1card == nil && !invoice.isPaid {
             return
         }
-        invoice.isPaid.toggle()
-        if let card = invoice.e1card {
-            RecordService.recalculateCard(card)
-        }
-        // 全invoice PAIDになればpaymentもPAID
-        let allPaid = payment.e2invoices.allSatisfy { $0.isPaid }
-        payment.isPaid = allPaid
-        payment.sumNoCheck = payment.e2invoices.reduce(0) { $0 + $1.sumNoCheck }
+        try? RecordService.setInvoicePaid(
+            invoice,
+            isPaid: !invoice.isPaid,
+            context: context
+        )
     }
 }
 

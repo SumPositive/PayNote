@@ -5,9 +5,12 @@ struct TopMenuView: View {
     @Binding var selectedDestination: AppDestination?
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
 
-    @Query(filter: #Predicate<E7payment> { !$0.isPaid },
-           sort: \E7payment.date, order: .reverse)
-    private var unpaidPayments: [E7payment]
+    @Query(sort: \E7payment.date, order: .reverse)
+    private var allPayments: [E7payment]
+
+    private var unpaidPayments: [E7payment] {
+        allPayments.filter { !$0.isPaid }
+    }
 
     private var totalUnpaid: Decimal {
         // メニューの未払計は支払状態の元データ（E7payment）から直接算出する

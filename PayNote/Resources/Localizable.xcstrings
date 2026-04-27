@@ -1830,13 +1830,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Incomplete Payments"
+            "value" : "Has Unselected"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "情報不足の決済"
+            "value" : "未選択あり"
           }
         }
       }
@@ -1858,6 +1858,23 @@
         }
       }
     },
+    "record.beginner.guide.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next, choose the payment method and debit account. If you have time, add a payment label or tags."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次に決済手段と引き落とし口座に未選択があれば、選択して保存します。余裕があれば決済ラベルやタグも活用してください。"
+          }
+        }
+      }
+    },
     "record.beginner.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1871,6 +1888,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "まずは金額"
+          }
+        }
+      }
+    },
+    "record.beginner.title.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次に"
           }
         }
       }
@@ -1949,13 +1983,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open recent payments here to review and edit them. You can also filter incomplete entries."
+            "value" : "Use this screen for edits after saving. Tap All to switch to Has Unselected."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "保存後の修正はここで行います。迷ったら新しいものから開いて直してください。情報不足の決済だけを見ることもできます。"
+            "value" : "保存後の修正はここで行います。【すべて】をタップして【未選択あり】に切り替えることができます。"
           }
         }
       }
@@ -1966,13 +2000,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit Later Here"
+            "value" : "Fix Later"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "あとで直す画面"
+            "value" : "あとで直す"
           }
         }
       }
