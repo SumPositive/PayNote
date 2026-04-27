@@ -6,7 +6,7 @@ struct PaymentListView: View {
     @Environment(\.modelContext) private var context
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
     @State private var didInitialScroll = false
-    @State private var undoAction: PaymentToggleUndoAction?
+    @State private var toastState: PaymentToastState?
     @State private var paidVisibleCount = 0
     private let pageSize = 100
     private let paidFirstRowAnchorID = "payment-paid-first-row-anchor"
@@ -90,16 +90,14 @@ struct PaymentListView: View {
         }
         .scalableNavigationTitle("payment.list.title")
         .overlay(alignment: .bottom) {
-            if let action = undoAction {
-                PaymentUndoToast(action: action) {
-                    undoToggle()
-                }
+            if let toastState {
+                PaymentToastView(toastState: toastState)
                 .padding(.horizontal, 16)
                 .padding(.bottom, 10)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: undoAction != nil)
+        .animation(.easeInOut(duration: 0.2), value: toastState != nil)
         .onChange(of: allPayments.map(\.id)) { _, _ in
             // 表示集合が変わったら、済み側の表示件数だけ整える
             resetAndLoadPaid()
@@ -127,42 +125,26 @@ struct PaymentListView: View {
     private func togglePaid(_ payment: E7payment) {
         let previousIsPaid = payment.isPaid
         let nextIsPaid = !previousIsPaid
-        let targetInvoices = payment.e2invoices
         // 決済手段未選択を含む支払は、未払→済みへの更新を禁止する
         if !previousIsPaid && payment.includesUnselectedCard {
             return
         }
         applyPaidState(payment, isPaid: nextIsPaid)
-        // トグル後に取り消しアクションを出す
-        showUndoAction(invoices: targetInvoices, movedToPaid: nextIsPaid, previousIsPaid: previousIsPaid)
+        // トグル後は通知だけ表示する
+        showToast(movedToPaid: nextIsPaid)
     }
 
-    private func undoToggle() {
-        guard let action = undoAction else {
-            return
-        }
-        try? RecordService.setInvoicesPaid(
-            action.invoices,
-            isPaid: action.previousIsPaid,
-            context: context
-        )
-        resetAndLoadPaid()
-        undoAction = nil
-    }
-
-    private func showUndoAction(invoices: [E2invoice], movedToPaid: Bool, previousIsPaid: Bool) {
+    private func showToast(movedToPaid: Bool) {
         let token = UUID()
-        undoAction = PaymentToggleUndoAction(
-            invoices: invoices,
-            previousIsPaid: previousIsPaid,
+        toastState = PaymentToastState(
             movedToPaid: movedToPaid,
             token: token
         )
         Task { @MainActor in
             // 一定時間で自動的に閉じる
             try? await Task.sleep(nanoseconds: 3_000_000_000)
-            if undoAction?.token == token {
-                undoAction = nil
+            if toastState?.token == token {
+                toastState = nil
             }
         }
     }
@@ -494,29 +476,22 @@ private struct PaymentBoundaryMidYPreferenceKey: PreferenceKey {
     }
 }
 
-private struct PaymentToggleUndoAction {
-    let invoices: [E2invoice]
-    let previousIsPaid: Bool
+private struct PaymentToastState {
     let movedToPaid: Bool
     let token: UUID
 }
 
-private struct PaymentUndoToast: View {
-    let action: PaymentToggleUndoAction
-    let onUndo: () -> Void
+private struct PaymentToastView: View {
+    let toastState: PaymentToastState
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: action.movedToPaid ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
-                .foregroundStyle(action.movedToPaid ? COLOR_PAID : COLOR_UNPAID)
-            Text(action.movedToPaid ? "payment.toast.movedToPaid" : "payment.toast.movedToUnpaid")
+            Image(systemName: toastState.movedToPaid ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
+                .foregroundStyle(toastState.movedToPaid ? COLOR_PAID : COLOR_UNPAID)
+            Text(toastState.movedToPaid ? "payment.toast.movedToPaid" : "payment.toast.movedToUnpaid")
                 .font(.subheadline)
                 .foregroundStyle(.primary)
-            Spacer(minLength: 6)
-            Button("button.undo") {
-                onUndo()
-            }
-            .font(.subheadline.weight(.semibold))
+            Spacer(minLength: 0)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
