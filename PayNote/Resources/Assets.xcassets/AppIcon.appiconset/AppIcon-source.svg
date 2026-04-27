@@ -39,35 +39,49 @@
   <!-- 境界線 -->
   <rect x="0" y="509" width="1024" height="6" fill="#FFF4DA"/>
 
-  <!-- 上側テキスト -->
+  <!-- 上側テキスト: CASH は白、LESS は金系 -->
   <text
-    x="512"
-    y="428"
+    x="352"
+    y="372"
     text-anchor="middle"
     dominant-baseline="middle"
     font-family="Avenir Next, Helvetica Neue, Arial, sans-serif"
-    font-size="92"
+    font-size="96"
     font-weight="500"
-    letter-spacing="24"
-    fill="#F7D9A4"
+    letter-spacing="16"
+    fill="#FFF9F2"
     filter="url(#softGlow)"
   >
-    CASH LESS
+    CASH
+  </text>
+  <text
+    x="684"
+    y="372"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-family="Avenir Next, Helvetica Neue, Arial, sans-serif"
+    font-size="96"
+    font-weight="500"
+    letter-spacing="16"
+    fill="#F3C15A"
+    filter="url(#softGlow)"
+  >
+    LESS
   </text>
 
   <!-- 下側テキスト -->
   <text
     x="512"
-    y="650"
+    y="720"
     text-anchor="middle"
     dominant-baseline="middle"
     font-family="Avenir Next, Helvetica Neue, Arial, sans-serif"
-    font-size="110"
+    font-size="120"
     font-weight="500"
-    letter-spacing="16"
+    letter-spacing="18"
     fill="#E9F0B9"
     filter="url(#softGlow)"
   >
-    PAID
+    PAY
   </text>
 </svg>
