@@ -39,7 +39,9 @@ struct CardListView: View {
         }
         .alert("alert.deleteConfirm.title", isPresented: $showDeleteAlert) {
             Button("button.delete", role: .destructive) {
-                if let c = deleteTarget { context.delete(c) }
+                if let c = deleteTarget {
+                    try? CardService.delete(c, context: context)
+                }
             }
             Button("button.cancel", role: .cancel) {}
         } message: {

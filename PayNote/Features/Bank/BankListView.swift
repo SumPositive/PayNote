@@ -39,7 +39,9 @@ struct BankListView: View {
         }
         .alert("alert.deleteConfirm.title", isPresented: $showDeleteAlert) {
             Button("button.delete", role: .destructive) {
-                if let b = deleteTarget { context.delete(b) }
+                if let b = deleteTarget {
+                    try? BankService.delete(b, context: context)
+                }
             }
             Button("button.cancel", role: .cancel) {}
         } message: {

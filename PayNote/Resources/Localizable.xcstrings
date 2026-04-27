@@ -1280,53 +1280,19 @@
         }
       }
     },
-    "payment.footer.paid.trailing" : {
+    "payment.bank.noSelection" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : " tap to move to Unpaid (Before Debit)."
+            "value" : "Account Not Selected"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "をタップすると、未払に戻ります。"
-          }
-        }
-      }
-    },
-    "payment.footer.unpaid.trailing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : " tap to move to Paid (Debited)."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "をタップすると、引き落とし済みに変わります。"
-          }
-        }
-      }
-    },
-    "payment.list.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schedule"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "引き落とし状況"
+            "value" : "口座 未選択"
           }
         }
       }
@@ -1416,19 +1382,53 @@
         }
       }
     },
-    "payment.bank.noSelection" : {
+    "payment.footer.paid.trailing" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Account Not Selected"
+            "value" : " tap to move to Unpaid (Before Debit)."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "口座 未選択"
+            "value" : "をタップすると、未払に戻ります。"
+          }
+        }
+      }
+    },
+    "payment.footer.unpaid.trailing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " tap to move to Paid (Debited)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "をタップすると、引き落とし済みに変わります。"
+          }
+        }
+      }
+    },
+    "payment.list.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schedule"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引き落とし状況"
           }
         }
       }
@@ -1637,6 +1637,74 @@
         }
       }
     },
+    "record.beginner.guide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Start with the amount. The payment method, label, and tags can be edited later."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まずは金額を入れて保存してください。決済手段、ラベル、タグはあとから直せます。"
+          }
+        }
+      }
+    },
+    "record.beginner.guide.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Next, choose the payment method and debit account. If you have time, add a payment label or tags."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次に決済手段と引き落とし口座に未選択があれば、選択して保存してください。余裕があれば決済ラベルやタグも活用してください。"
+          }
+        }
+      }
+    },
+    "record.beginner.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start With Amount"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まずは金額"
+          }
+        }
+      }
+    },
+    "record.beginner.title.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次に"
+          }
+        }
+      }
+    },
     "record.edit.title.add" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1841,74 +1909,6 @@
         }
       }
     },
-    "record.beginner.guide" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start with the amount. The payment method, label, and tags can be edited later."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "まずは金額を入れて保存してください。決済手段、ラベル、タグはあとで直せます。"
-          }
-        }
-      }
-    },
-    "record.beginner.guide.edit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Next, choose the payment method and debit account. If you have time, add a payment label or tags."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "次に決済手段と引き落とし口座に未選択があれば、選択して保存します。余裕があれば決済ラベルやタグも活用してください。"
-          }
-        }
-      }
-    },
-    "record.beginner.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start With Amount"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "まずは金額"
-          }
-        }
-      }
-    },
-    "record.beginner.title.edit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Next"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "次に"
-          }
-        }
-      }
-    },
     "record.help.label" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1960,23 +1960,6 @@
         }
       }
     },
-    "record.list.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "History"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "決済履歴"
-          }
-        }
-      }
-    },
     "record.list.beginner.guide" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2007,6 +1990,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "あとで直す"
+          }
+        }
+      }
+    },
+    "record.list.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "決済履歴"
           }
         }
       }
@@ -2470,6 +2470,23 @@
         }
       }
     },
+    "settings.help.userLevel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beginner shows more guidance. Expert hides most of it."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "初心者は説明を多めに表示します。達人にすると説明を減らし、詳細メニューを表示します。使い慣れて流れが分かってきたら、達人に切り替えてください。"
+          }
+        }
+      }
+    },
     "settings.jsonExport" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2602,23 +2619,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "共有"
-          }
-        }
-      }
-    },
-    "settings.help.userLevel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beginner shows more guidance. Expert hides most of it."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "初心者は説明を多めに表示します。達人にすると説明を減らし、詳細メニューを表示します。使い慣れて流れが分かってきたら、達人に切り替えてください。"
           }
         }
       }
@@ -2986,13 +2986,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pay or Charge"
+            "value" : "Pay"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "新しい決済（チャージ）"
+            "value" : "新しい決済"
           }
         }
       }
@@ -3010,6 +3010,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "引き落とし口座"
+          }
+        }
+      }
+    },
+    "top.beginner.guide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Start with New Payment. Enter the amount first, then edit the rest later from History."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まずは「新しい決済」から始めてください。金額だけでも保存できます。足りない情報はあとから直せます。"
+          }
+        }
+      }
+    },
+    "top.beginner.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting Started"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "はじめに"
           }
         }
       }
@@ -3061,40 +3095,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "まずここから入力します。金額だけ先に入れて、残りはあとで履歴から編集できます。"
-          }
-        }
-      }
-    },
-    "top.beginner.guide" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start with New Payment. Enter the amount first, then edit the rest later from History."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "まずは「新しい決済」から始めてください。金額だけでも保存できます。足りない情報はあとで「決済履歴」から直せます。"
-          }
-        }
-      }
-    },
-    "top.beginner.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Getting Started"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "はじめに"
           }
         }
       }

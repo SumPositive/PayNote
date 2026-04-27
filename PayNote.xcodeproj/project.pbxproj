@@ -14,6 +14,8 @@
 		1EC1A3B5C7312FB9E9E97EAB /* PayNoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0864042EF421461DBA308F5E /* PayNoteApp.swift */; };
 		2921018F4FA6C238795FFF40 /* RecordEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3733DDAFE02614F6EA7B3BC9 /* RecordEditView.swift */; };
 		2FEDE3564704BC980B8C9B9C /* RecordService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A1B2E2DD399FBFF391B2C5 /* RecordService.swift */; };
+		38369112251625BA00E7A110 /* CardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38369111251625BA00E7A110 /* CardService.swift */; };
+		38369114251626D100E7A110 /* BankService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38369113251626D100E7A110 /* BankService.swift */; };
 		40D3FC4B9A6E4F56FE8D485C /* ShopEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D0B3C93B518431C1ED8CA94 /* ShopEditView.swift */; };
 		4531D860CDB0FDF2415DD421 /* View+ScalableTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F95EF3EE0B184C7D267B8C7 /* View+ScalableTitle.swift */; };
 		490F8CBDAB27E8464CFC9A8C /* SplitPayListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97721A91036068831138735 /* SplitPayListView.swift */; };
@@ -75,6 +77,8 @@
 		17B4815A12B4099B3F8C2A8D /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		20DFCCAE92513D9BAEE0F5EF /* PayNoteUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayNoteUITests.swift; sourceTree = "<group>"; };
 		3733DDAFE02614F6EA7B3BC9 /* RecordEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordEditView.swift; sourceTree = "<group>"; };
+		38369111251625BA00E7A110 /* CardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardService.swift; sourceTree = "<group>"; };
+		38369113251626D100E7A110 /* BankService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BankService.swift; sourceTree = "<group>"; };
 		3BB8D0C0693934C17D3BFD21 /* E8bank.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E8bank.swift; sourceTree = "<group>"; };
 		3DEDEA1DAEEECF14059168DE /* CardEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardEditView.swift; sourceTree = "<group>"; };
 		42741B6237122AF552033F2F /* ShopListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopListView.swift; sourceTree = "<group>"; };
@@ -350,7 +354,9 @@
 		F0AF934EEAE7E8689700F354 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				38369113251626D100E7A110 /* BankService.swift */,
 				838545C9F18F5C517D3C170E /* BillingService.swift */,
+				38369111251625BA00E7A110 /* CardService.swift */,
 				F1A1B2E2DD399FBFF391B2C5 /* RecordService.swift */,
 			);
 			path = Services;
@@ -533,6 +539,8 @@
 				8F1D97C3807BF181B8479E3F /* BankEditView.swift in Sources */,
 				D893C9EB004052F1DE062529 /* BankListView.swift in Sources */,
 				8E02093F98A02096C69C9426 /* BillingService.swift in Sources */,
+				38369112251625BA00E7A110 /* CardService.swift in Sources */,
+				38369114251626D100E7A110 /* BankService.swift in Sources */,
 				A0404AAC7B624DF4CFF89D0F /* CardEditView.swift in Sources */,
 				8D7B62BEB4834D19FE03E024 /* CardListView.swift in Sources */,
 				5036733F44C02792D514BAB7 /* CategoryEditView.swift in Sources */,
