@@ -5,7 +5,6 @@ import SwiftUI
 /// 00キー付きテンキー入力シート
 struct NumericKeypadSheet: View {
     let title: LocalizedStringKey
-    let unit: LocalizedStringKey
     let placeholder: Decimal
     let maxValue: Decimal
     let onCommit: (Decimal) -> Void
@@ -17,10 +16,22 @@ struct NumericKeypadSheet: View {
     private var isCompact: Bool { UIScreen.main.bounds.height <= 700 }
     private var sheetSpacing: CGFloat { isCompact ? 14 : 20 }
     private var displayFontSize: CGFloat { isCompact ? 44 : 52 }
+    private var locale: Locale { .current }
+    private var fractionDigits: Int { Decimal.currencyFractionDigits(locale: locale) }
 
     private var committedValue: Decimal {
-        guard !isEmpty, let d = Decimal(string: digits) else { return placeholder }
-        return min(d, maxValue)
+        guard !isEmpty, let minorUnits = Decimal(string: digits) else { return placeholder }
+        return min(Decimal.fromMinorUnits(minorUnits, locale: locale), maxValue)
+    }
+
+    /// 入力中の金額表示は、通貨記号の位置も含めてロケールへ合わせる
+    private var displayAmountText: String {
+        committedValue.currencyString(locale: locale)
+    }
+
+    /// 入力可能な最大小数単位の桁数
+    private var maxMinorUnitsText: String {
+        (maxValue.minorUnits(locale: locale) as NSDecimalNumber).stringValue
     }
 
     var body: some View {
@@ -29,14 +40,11 @@ struct NumericKeypadSheet: View {
                 // 入力表示
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
                     Spacer()
-                    Text(isEmpty ? "\(placeholder)" : digits)
+                    Text(displayAmountText)
                         .font(.system(size: displayFontSize, weight: .bold, design: .rounded).monospacedDigit())
                         .foregroundStyle(isEmpty ? Color(.tertiaryLabel) : Color(.label))
                         .contentTransition(.numericText())
                         .animation(.snappy, value: digits)
-                    Text(unit)
-                        .font(.title2.weight(.medium))
-                        .foregroundStyle(.secondary)
                     Spacer()
                 }
                 .padding(.horizontal)
@@ -91,10 +99,9 @@ struct NumericKeypadSheet: View {
         } else {
             next = digits + suffix
         }
-        guard let value = Decimal(string: next), value >= 0 else { return }
-        let maxStr = "\((maxValue.roundedAmount() as NSDecimalNumber).intValue)"
-        guard next.count <= maxStr.count else { return }
-        guard value <= maxValue else { return }
+        guard let minorUnits = Decimal(string: next), 0 <= minorUnits else { return }
+        guard next.count <= maxMinorUnitsText.count else { return }
+        guard Decimal.fromMinorUnits(minorUnits, locale: locale) <= maxValue else { return }
         digits = next
     }
 }

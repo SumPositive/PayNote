@@ -212,7 +212,6 @@ struct RecordEditView: View {
         .sheet(isPresented: $showAmountPad) {
             NumericKeypadSheet(
                 title: "record.field.amount",
-                unit: "record.unit.yen",
                 placeholder: nAmount,
                 maxValue: APP_MAX_AMOUNT
             ) { value in

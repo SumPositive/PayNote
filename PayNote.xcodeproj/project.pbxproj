@@ -31,6 +31,7 @@
 		922C371C4A3318E289CAE2CC /* E7payment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 612855EBB9B4EB1E945C4A9B /* E7payment.swift */; };
 		96CCBCA225154F1A89A67910 /* JSONImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96CCBCA125154F1A89A67910 /* JSONImport.swift */; };
 		97904E45ADF1EC29C7E38838 /* E5category.swift in Sources */ = {isa = PBXBuildFile; fileRef = 483AE700971FC77C80FC3F80 /* E5category.swift */; };
+		9A3B7A6325157E0900A17A10 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 9A3B7A6225157E0900A17A10 /* InfoPlist.strings */; };
 		9F7EEA2ED3C1E874D846C206 /* E4shop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFD7FE48DBF9525FAED5826E /* E4shop.swift */; };
 		A0404AAC7B624DF4CFF89D0F /* CardEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DEDEA1DAEEECF14059168DE /* CardEditView.swift */; };
 		A44EB7108F1EDB045B7358CE /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC4455D455525FC6393BF598 /* AppSettings.swift */; };
@@ -96,6 +97,7 @@
 		90A96AFAF7BCB93A9445E45C /* Decimal+Rounding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Decimal+Rounding.swift"; sourceTree = "<group>"; };
 		96CCBCA125154F1A89A67910 /* JSONImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONImport.swift; sourceTree = "<group>"; };
 		97AA8DA9E2505CC1D28F9BB1 /* E1card.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E1card.swift; sourceTree = "<group>"; };
+		9A3B7A6025157DD900A17A10 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		9AFC963C5C24B15862ECE64B /* PayNoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PayNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F95EF3EE0B184C7D267B8C7 /* View+ScalableTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+ScalableTitle.swift"; sourceTree = "<group>"; };
 		ACAC65A5428E245996B921E5 /* E6part.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E6part.swift; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 		FA5C86233C4FE3247A2D008B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		FDB4F7EAA70EE49D23DA0441 /* NumericKeypadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumericKeypadView.swift; sourceTree = "<group>"; };
 		FFD7FE48DBF9525FAED5826E /* E4shop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E4shop.swift; sourceTree = "<group>"; };
+		FFE96F1625157DEB00A17A10 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -218,6 +221,7 @@
 			children = (
 				461FBECA42994F0A6C9BEA37 /* Assets.xcassets */,
 				FA5C86233C4FE3247A2D008B /* Info.plist */,
+				9A3B7A6225157E0900A17A10 /* InfoPlist.strings */,
 				17B4815A12B4099B3F8C2A8D /* Localizable.xcstrings */,
 			);
 			path = Resources;
@@ -485,10 +489,23 @@
 			files = (
 				1698067491EBDA300104D152 /* Assets.xcassets in Resources */,
 				F7929AD07E62756D8EE69469 /* Localizable.xcstrings in Resources */,
+				9A3B7A6325157E0900A17A10 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		9A3B7A6225157E0900A17A10 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9A3B7A6025157DD900A17A10 /* en */,
+				FFE96F1625157DEB00A17A10 /* ja */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin PBXSourcesBuildPhase section */
 		3684EE7005B793E89A989F96 /* Sources */ = {
