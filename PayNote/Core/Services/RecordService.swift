@@ -45,8 +45,8 @@ enum RecordService {
         let invoiceDesc = FetchDescriptor<E2invoice>()
         let paymentDesc = FetchDescriptor<E7payment>()
         let cardDesc = FetchDescriptor<E1card>()
-        let invoices = (try? context.fetch(invoiceDesc)) ?? []
-        let payments = (try? context.fetch(paymentDesc)) ?? []
+        var invoices = (try? context.fetch(invoiceDesc)) ?? []
+        var payments = (try? context.fetch(paymentDesc)) ?? []
         let cards = (try? context.fetch(cardDesc)) ?? []
 
         for invoice in invoices where invoice.e6parts.isEmpty {
@@ -54,10 +54,17 @@ enum RecordService {
             invoice.e7payment = nil
             context.delete(invoice)
         }
+        // 同一の請求キーを1件へ統合する
+        invoices = (try? context.fetch(invoiceDesc)) ?? []
+        normalizeInvoices(invoices, context: context)
         for payment in payments where payment.e2invoices.isEmpty {
             clearPaymentState(payment)
             context.delete(payment)
         }
+        // 同一の支払キーを1件へ統合する
+        payments = (try? context.fetch(paymentDesc)) ?? []
+        normalizePayments(payments, context: context)
+        payments = (try? context.fetch(paymentDesc)) ?? []
         for payment in payments where !payment.e2invoices.isEmpty {
             recalculatePayment(payment)
         }
@@ -343,8 +350,8 @@ enum RecordService {
         let paymentDesc = FetchDescriptor<E7payment>()
         let invoiceDesc = FetchDescriptor<E2invoice>()
         let cards = (try? context.fetch(cardDesc)) ?? []
-        let payments = (try? context.fetch(paymentDesc)) ?? []
-        let invoices = (try? context.fetch(invoiceDesc)) ?? []
+        var payments = (try? context.fetch(paymentDesc)) ?? []
+        var invoices = (try? context.fetch(invoiceDesc)) ?? []
 
         for invoice in invoices where invoice.e6parts.isEmpty {
             if let payment = invoice.e7payment {
@@ -354,11 +361,25 @@ enum RecordService {
             invoice.e7payment = nil
             context.delete(invoice)
         }
+        invoices = (try? context.fetch(invoiceDesc)) ?? []
+        normalizeInvoices(
+            invoices.filter { cardIDs.contains($0.e1card?.id ?? "") },
+            context: context
+        )
 
         for card in cards where cardIDs.contains(card.id) {
             recalculateCard(card)
         }
 
+        payments = (try? context.fetch(paymentDesc)) ?? []
+        normalizePayments(
+            payments.filter { payment in
+                let key = paymentKey(bankID: payment.e8bank?.id, date: payment.date, isPaid: payment.isPaid)
+                return paymentKeys.contains(key)
+            },
+            context: context
+        )
+        payments = (try? context.fetch(paymentDesc)) ?? []
         for payment in payments {
             let key = paymentKey(bankID: payment.e8bank?.id, date: payment.date, isPaid: payment.isPaid)
             if payment.e2invoices.isEmpty {
@@ -426,6 +447,47 @@ enum RecordService {
     private static func recalculatePayment(_ payment: E7payment) {
         payment.sumAmount = payment.e2invoices.reduce(.zero) { $0 + $1.sumAmount }
         payment.sumNoCheck = payment.e2invoices.reduce(0) { $0 + $1.sumNoCheck }
+    }
+
+    private static func normalizeInvoices(_ invoices: [E2invoice], context: ModelContext) {
+        var canonicalByKey: [String: E2invoice] = [:]
+
+        for invoice in invoices {
+            let key = invoiceKey(cardID: invoice.e1card?.id, date: invoice.date, isPaid: invoice.isPaid)
+            if let canonical = canonicalByKey[key] {
+                // 同一請求へ part を集約する
+                for part in invoice.e6parts {
+                    part.e2invoice = canonical
+                }
+                // 親 payment が無ければ引き継ぐ
+                if canonical.e7payment == nil {
+                    canonical.e7payment = invoice.e7payment
+                }
+                clearInvoiceState(invoice)
+                invoice.e7payment = nil
+                context.delete(invoice)
+            } else {
+                canonicalByKey[key] = invoice
+            }
+        }
+    }
+
+    private static func normalizePayments(_ payments: [E7payment], context: ModelContext) {
+        var canonicalByKey: [String: E7payment] = [:]
+
+        for payment in payments {
+            let key = paymentKey(bankID: payment.e8bank?.id, date: payment.date, isPaid: payment.isPaid)
+            if let canonical = canonicalByKey[key] {
+                // 同一支払へ invoice を集約する
+                for invoice in payment.e2invoices {
+                    invoice.e7payment = canonical
+                }
+                clearPaymentState(payment)
+                context.delete(payment)
+            } else {
+                canonicalByKey[key] = payment
+            }
+        }
     }
 
     private static func setInvoiceCard(_ invoice: E2invoice, card: E1card?, isPaid: Bool) {

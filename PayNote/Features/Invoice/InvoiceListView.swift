@@ -2,23 +2,35 @@ import SwiftUI
 import SwiftData
 
 struct InvoiceListView: View {
-    let group: PaymentDisplayGroup
+    let payment: E7payment
 
     @Environment(\.modelContext) private var context
     @State private var editRecord: E3record?
 
+    private var includesUnselectedCard: Bool {
+        payment.e2invoices.contains { $0.e1card == nil }
+    }
+
     private var bankNameText: String {
-        group.bankNameText
+        if includesUnselectedCard {
+            let cardLabel = NSLocalizedString("record.field.card", comment: "")
+            let noSelection = NSLocalizedString("label.noSelection", comment: "")
+            return "\(cardLabel) \(noSelection)"
+        }
+        if let bankName = payment.e8bank?.zName, !bankName.isEmpty {
+            return bankName
+        }
+        return NSLocalizedString("payment.bank.noSelection", comment: "")
     }
 
     private var statementTitleText: String {
-        let dateText = AppDateFormat.singleLineText(group.payment.date)
+        let dateText = AppDateFormat.singleLineText(payment.date)
         let suffix = NSLocalizedString("invoice.statement.debitSuffix", comment: "")
         return "\(dateText)\(suffix)"
     }
 
     private var invoices: [E2invoice] {
-        group.invoices.sorted {
+        payment.e2invoices.sorted {
             ($0.e1card?.zName ?? "") < ($1.e1card?.zName ?? "")
         }
     }
@@ -38,22 +50,22 @@ struct InvoiceListView: View {
                 HStack {
                     ZStack {
                         // 口座合計セルの中央に未払/済みを表示する
-                        Text(group.isPaid ? "payment.status.paidShort" : "payment.status.unpaidShort")
+                        Text(payment.isPaid ? "payment.status.paidShort" : "payment.status.unpaidShort")
                             .font(.subheadline.weight(.semibold))
                             .padding(.horizontal, 12)
                             .padding(.vertical, 5)
-                            .background(group.isPaid
+                            .background(payment.isPaid
                                 ? COLOR_PAID.opacity(0.2)
                                 : COLOR_UNPAID.opacity(0.2))
-                            .foregroundStyle(group.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                            .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
                             .clipShape(Capsule())
 
                         HStack {
                             Text("label.total")
                             Spacer()
-                            Text(group.sumAmount.currencyString())
+                            Text(payment.sumAmount.currencyString())
                                 .font(.headline.monospacedDigit())
-                                .foregroundStyle(group.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                                .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
                         }
                     }
                 }

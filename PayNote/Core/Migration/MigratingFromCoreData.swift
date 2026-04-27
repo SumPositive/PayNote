@@ -363,7 +363,6 @@ private struct LegacyCoreDataStack {
                     .map { LegacyShopDTO(mo: $0) }
                 result.categories = try self.fetch("E5category")
                     .map { LegacyCategoryDTO(mo: $0) }
-                result.payments   = try self.fetchPayments()
                 result.cards      = try self.fetchCards()
             } catch let e {
                 error = e
@@ -377,19 +376,6 @@ private struct LegacyCoreDataStack {
         let req = NSFetchRequest<NSManagedObject>(entityName: entity)
         req.returnsObjectsAsFaults = false
         return try context.fetch(req)
-    }
-
-    private func fetchPayments() throws -> [LegacyPaymentDTO] {
-        // E0root から paid/unpaid の E7payment を判定
-        var paidIDs = Set<NSManagedObjectID>()
-        if let roots = try? fetch("E0root") {
-            for root in roots {
-                if let set = root.value(forKey: "e7paids") as? Set<NSManagedObject> {
-                    set.forEach { paidIDs.insert($0.objectID) }
-                }
-            }
-        }
-        return try fetch("E7payment").map { LegacyPaymentDTO(mo: $0, isPaid: paidIDs.contains($0.objectID)) }
     }
 
     private func fetchCards() throws -> [LegacyCardDTO] {
@@ -570,7 +556,6 @@ private struct LegacyDataDTO {
     var banks: [LegacyBankDTO] = []
     var shops: [LegacyShopDTO] = []
     var categories: [LegacyCategoryDTO] = []
-    var payments: [LegacyPaymentDTO] = []
     var cards: [LegacyCardDTO] = []
 }
 
@@ -604,17 +589,6 @@ private struct LegacyCategoryDTO {
         zName = mo.str("zName"); zNote = mo.str("zNote"); sortName = mo.str("sortName")
         sortAmount = mo.decimal("sortAmount"); sortCount = mo.int32("sortCount")
         sortDate = mo.value(forKey: "sortDate") as? Date
-    }
-}
-
-private struct LegacyPaymentDTO {
-    let objectID: NSManagedObjectID
-    let nYearMMDD: Int32; let sumAmount: Decimal; let sumNoCheck: Int16
-    let isPaid: Bool
-    init(mo: NSManagedObject, isPaid: Bool) {
-        objectID = mo.objectID
-        nYearMMDD = mo.int32("nYearMMDD"); sumAmount = mo.decimal("sumAmount")
-        sumNoCheck = mo.int16("sumNoCheck"); self.isPaid = isPaid
     }
 }
 

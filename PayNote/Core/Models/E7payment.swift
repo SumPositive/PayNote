@@ -17,7 +17,10 @@ final class E7payment {
     @Relationship(deleteRule: .cascade) var e2invoices: [E2invoice]
 
     var e8bank: E8bank? { e8paid ?? e8unpaid }
-    var isPaid: Bool { e8paid != nil && e8unpaid == nil }
+    // 口座未選択でも状態判定できるよう、配下 invoice から求める
+    var isPaid: Bool {
+        !e2invoices.isEmpty && e2invoices.allSatisfy(\.isPaid)
+    }
 
     init(
         id: String = UUID().uuidString,
