@@ -6,8 +6,9 @@ struct PaymentListView: View {
     @Environment(\.modelContext) private var context
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
     @State private var didInitialScroll = false
-    @State private var toastState: PaymentToastState?
     @State private var paidVisibleCount = 0
+    @State private var togglingPaymentIDs: Set<String> = []
+    private let paymentMoveAnimation = Animation.easeInOut(duration: 0.55)
     private let pageSize = 100
     private let paidFirstRowAnchorID = "payment-paid-first-row-anchor"
 
@@ -71,6 +72,7 @@ struct PaymentListView: View {
                                 unpaidPayments: unpaidPayments,
                                 paidPayments: paidPayments,
                                 onToggle: togglePaid,
+                                togglingPaymentIDs: togglingPaymentIDs,
                                 hasMorePaid: hasMorePaid,
                                 onLoadMorePaid: loadMorePaidIfNeeded,
                                 paidFirstRowAnchorID: paidFirstRowAnchorID
@@ -89,15 +91,6 @@ struct PaymentListView: View {
             }
         }
         .scalableNavigationTitle("payment.list.title")
-        .overlay(alignment: .bottom) {
-            if let toastState {
-                PaymentToastView(toastState: toastState)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 10)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
-        .animation(.easeInOut(duration: 0.2), value: toastState != nil)
         .onChange(of: allPayments.map(\.id)) { _, _ in
             // 表示集合が変わったら、済み側の表示件数だけ整える
             resetAndLoadPaid()
@@ -123,41 +116,36 @@ struct PaymentListView: View {
     }
 
     private func togglePaid(_ payment: E7payment) {
+        // 連打で同じ支払を二重更新しないよう、短時間ロックする
+        if togglingPaymentIDs.contains(payment.id) {
+            return
+        }
         let previousIsPaid = payment.isPaid
         let nextIsPaid = !previousIsPaid
         // 決済手段未選択を含む支払は、未払→済みへの更新を禁止する
         if !previousIsPaid && payment.includesUnselectedCard {
             return
         }
+        togglingPaymentIDs.insert(payment.id)
         applyPaidState(payment, isPaid: nextIsPaid)
-        // トグル後は通知だけ表示する
-        showToast(movedToPaid: nextIsPaid)
-    }
-
-    private func showToast(movedToPaid: Bool) {
-        let token = UUID()
-        toastState = PaymentToastState(
-            movedToPaid: movedToPaid,
-            token: token
-        )
         Task { @MainActor in
-            // 一定時間で自動的に閉じる
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
-            if toastState?.token == token {
-                toastState = nil
-            }
+            // 画面更新が落ち着くまで短くロックを残す
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            togglingPaymentIDs.remove(payment.id)
         }
     }
 
     private func applyPaidState(_ payment: E7payment, isPaid: Bool) {
-        // 未払/済みの変更はサービス層でまとめて保存する
-        try? RecordService.setInvoicesPaid(
-            payment.e2invoices,
-            isPaid: isPaid,
-            context: context
-        )
-        // 済みセクションは表示件数だけ持っているため、変更後に件数を整える
-        resetAndLoadPaid()
+        withAnimation(paymentMoveAnimation) {
+            // 未払/済みの変更はサービス層でまとめて保存する
+            try? RecordService.setInvoicesPaid(
+                payment.e2invoices,
+                isPaid: isPaid,
+                context: context
+            )
+            // 済みセクションは表示件数だけ持っているため、変更後に件数を整える
+            resetAndLoadPaid()
+        }
     }
 
     private func resetAndLoadPaid() {
@@ -176,10 +164,15 @@ struct PaymentListView: View {
 
 private struct PaymentRow: View {
     let payment: E7payment
+    let isToggling: Bool
     let onToggle: () -> Void
     private var canToggleToPaid: Bool {
         // 未選択決済を含む場合は「済み」へ遷移させない
         payment.isPaid || !payment.includesUnselectedCard
+    }
+
+    private var canTapToggle: Bool {
+        canToggleToPaid && !isToggling
     }
 
     private var bankNameText: String {
@@ -201,8 +194,8 @@ private struct PaymentRow: View {
                 // セルと説明フッターで同じ見た目を再利用する
                 PaymentStatusPill(isPaid: payment.isPaid)
             }
-            .disabled(!canToggleToPaid)
-            .opacity(canToggleToPaid ? 1 : 0.4)
+            .disabled(!canTapToggle)
+            .opacity(canTapToggle ? 1 : 0.4)
             // 切替操作の意味を読み上げでも伝える
             .accessibilityLabel(payment.isPaid ? Text("payment.markUnpaid") : Text("payment.markPaid"))
             .buttonStyle(.plain)
@@ -274,29 +267,44 @@ private struct PaymentCombinedCard: View {
     let unpaidPayments: [E7payment]
     let paidPayments: [E7payment]
     let onToggle: (E7payment) -> Void
+    let togglingPaymentIDs: Set<String>
     let hasMorePaid: Bool
     let onLoadMorePaid: () -> Void
     let paidFirstRowAnchorID: String
     @State private var boundaryMidY: CGFloat = 0
 
+    /// ViewBuilder 内の型推論負荷を下げるため、表示用の添字付き配列を事前に作る
+    private var indexedUnpaidPayments: [(offset: Int, element: E7payment)] {
+        Array(unpaidPayments.enumerated())
+    }
+
+    /// ViewBuilder 内の型推論負荷を下げるため、表示用の添字付き配列を事前に作る
+    private var indexedPaidPayments: [(offset: Int, element: E7payment)] {
+        Array(paidPayments.enumerated())
+    }
+
+    /// 未払側の区切り線表示可否
+    private func showsUnpaidDivider(after index: Int) -> Bool {
+        index + 1 < unpaidPayments.count
+    }
+
+    /// 済み側の区切り線表示可否
+    private func showsPaidDivider(after index: Int) -> Bool {
+        index + 1 < paidPayments.count
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             if !unpaidPayments.isEmpty {
-                ForEach(Array(unpaidPayments.enumerated()), id: \.element.id) { index, payment in
-                    NavigationLink {
-                        InvoiceListView(payment: payment)
-                    } label: {
-                        PaymentRow(payment: payment) {
-                            onToggle(payment)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                    }
-                    .buttonStyle(.plain)
-                    .id(payment.id)
-                    if index + 1 < unpaidPayments.count {
-                        Divider()
-                            .padding(.leading, 12)
+                ForEach(indexedUnpaidPayments, id: \.element.id) { index, payment in
+                    PaymentNavigationRow(
+                        payment: payment,
+                        rowID: payment.id,
+                        isToggling: togglingPaymentIDs.contains(payment.id),
+                        onToggle: onToggle
+                    )
+                    if showsUnpaidDivider(after: index) {
+                        PaymentRowDivider()
                     }
                 }
             } else {
@@ -308,21 +316,15 @@ private struct PaymentCombinedCard: View {
             PaymentBoundaryMarker()
 
             if !paidPayments.isEmpty {
-                ForEach(Array(paidPayments.enumerated()), id: \.element.id) { index, payment in
-                    NavigationLink {
-                        InvoiceListView(payment: payment)
-                    } label: {
-                        PaymentRow(payment: payment) {
-                            onToggle(payment)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                    }
-                    .buttonStyle(.plain)
-                    .id(index == 0 ? paidFirstRowAnchorID : payment.id)
-                    if index + 1 < paidPayments.count {
-                        Divider()
-                            .padding(.leading, 12)
+                ForEach(indexedPaidPayments, id: \.element.id) { index, payment in
+                    PaymentNavigationRow(
+                        payment: payment,
+                        rowID: index == 0 ? paidFirstRowAnchorID : payment.id,
+                        isToggling: togglingPaymentIDs.contains(payment.id),
+                        onToggle: onToggle
+                    )
+                    if showsPaidDivider(after: index) {
+                        PaymentRowDivider()
                     }
                 }
                 if hasMorePaid {
@@ -371,6 +373,9 @@ private struct PaymentCombinedCard: View {
             }
         )
         .coordinateSpace(name: "paymentCombinedCard")
+        // 行が未払/済みの間を移る変化を自然に見せる
+        .animation(.easeInOut(duration: 0.55), value: unpaidPayments.map(\.id))
+        .animation(.easeInOut(duration: 0.55), value: paidPayments.map(\.id))
         .onPreferenceChange(PaymentBoundaryMidYPreferenceKey.self) { y in
             if y > 0 {
                 boundaryMidY = y
@@ -391,6 +396,34 @@ private struct PaymentEmptyRow: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 14)
+    }
+}
+
+private struct PaymentNavigationRow: View {
+    let payment: E7payment
+    let rowID: String
+    let isToggling: Bool
+    let onToggle: (E7payment) -> Void
+
+    var body: some View {
+        NavigationLink {
+            InvoiceListView(payment: payment)
+        } label: {
+            PaymentRow(payment: payment, isToggling: isToggling) {
+                onToggle(payment)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(.plain)
+        .id(rowID)
+    }
+}
+
+private struct PaymentRowDivider: View {
+    var body: some View {
+        Divider()
+            .padding(.leading, 12)
     }
 }
 
@@ -473,32 +506,5 @@ private struct PaymentBoundaryMidYPreferenceKey: PreferenceKey {
         if next > 0 {
             value = next
         }
-    }
-}
-
-private struct PaymentToastState {
-    let movedToPaid: Bool
-    let token: UUID
-}
-
-private struct PaymentToastView: View {
-    let toastState: PaymentToastState
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: toastState.movedToPaid ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
-                .foregroundStyle(toastState.movedToPaid ? COLOR_PAID : COLOR_UNPAID)
-            Text(toastState.movedToPaid ? "payment.toast.movedToPaid" : "payment.toast.movedToUnpaid")
-                .font(.subheadline)
-                .foregroundStyle(.primary)
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color.primary.opacity(0.12), lineWidth: 1)
-        )
     }
 }
