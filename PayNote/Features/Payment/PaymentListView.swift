@@ -240,7 +240,7 @@ private struct PaymentRow: View {
                         Spacer(minLength: 8)
                         Text(payment.sumAmount.currencyString())
                             .font(.body.monospacedDigit())
-                            .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                            .foregroundStyle(.primary)
                             .lineLimit(1)
                             .fixedSize(horizontal: true, vertical: false)
                     }
@@ -255,7 +255,7 @@ private struct PaymentRow: View {
                             Spacer(minLength: 0)
                             Text(payment.sumAmount.currencyString())
                                 .font(.body.monospacedDigit())
-                                .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                                .foregroundStyle(.primary)
                                 .lineLimit(1)
                                 // 金額は最優先で欠けないようにする
                                 .fixedSize(horizontal: true, vertical: false)
