@@ -53,15 +53,23 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                 }
 
-                HStack(spacing: 8) {
-                    Text("settings.fontScale")
-                        .font(.subheadline)
-                    Picker("settings.fontScale", selection: $fontScale) {
-                        ForEach(FontScale.allCases) { scale in
-                            Text(LocalizedStringKey(scale.localizedKey)).tag(scale)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Text("settings.fontScale")
+                            .font(.subheadline)
+                        Picker("settings.fontScale", selection: $fontScale) {
+                            ForEach(FontScale.allCases) { scale in
+                                Text(LocalizedStringKey(scale.localizedKey)).tag(scale)
+                            }
                         }
+                        .pickerStyle(.segmented)
                     }
-                    .pickerStyle(.segmented)
+                    if userLevel == .beginner {
+                        Text("settings.help.fontScale")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
 

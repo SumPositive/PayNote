@@ -2571,6 +2571,23 @@
         }
       }
     },
+    "settings.help.fontScale" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set to Auto to follow Accessibility > Display & Text Size for better readability."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動にすれば、システム設定：アクセシビリティ：画面表示とテキストサイズの設定に対応して見やすくできます"
+          }
+        }
+      }
+    },
     "settings.jsonExport" : {
       "extractionState" : "manual",
       "localizations" : {

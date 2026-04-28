@@ -8,6 +8,7 @@ struct ContentView: View {
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(AppStorageKey.openAddOnActive) private var openAddOnActive = false
     @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .standard
     @State private var selectedDestination: AppDestination?
@@ -15,9 +16,33 @@ struct ContentView: View {
     @ScaledMetric(relativeTo: .title) private var emptyIconSize: CGFloat = 64
     /// 特大モード用スタックパス
     @State private var stackPath: [AppDestination] = []
+    
+    private var shouldUseStackBody: Bool {
+        // iPad は常にスプリット表示を優先する
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            return false
+        }
+        // 手動で「特大」を選んだ場合は従来通りスタック表示
+        if fontScale == .xLarge {
+            return true
+        }
+        // 自動時は「大以上」でスタック表示へ切り替える（iPhoneのみ）
+        if fontScale.followsSystem && shouldUseStackForSystemFontSize {
+            return true
+        }
+        return false
+    }
+    private var shouldUseStackForSystemFontSize: Bool {
+        switch dynamicTypeSize {
+        case .xLarge, .xxLarge, .xxxLarge, .accessibility1, .accessibility2, .accessibility3, .accessibility4, .accessibility5:
+            return true
+        default:
+            return false
+        }
+    }
 
     var body: some View {
-        if fontScale == .xLarge {
+        if shouldUseStackBody {
             xlargeBody
         } else {
             splitBody

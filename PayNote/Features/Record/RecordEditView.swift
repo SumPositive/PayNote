@@ -314,8 +314,8 @@ struct RecordEditView: View {
             }
         }
         .animation(.spring(duration: 0.3), value: savedBanner)
-        // 決済編集画面は設定の文字サイズを明示適用して追従させる
-        .dynamicTypeSize(fontScale.dynamicTypeSize)
+        // 自動時はシステム設定をそのまま使い、手動時のみ固定サイズを適用する
+        .modifier(ConditionalDynamicTypeModifier(fontScale: fontScale))
     }
 
     // MARK: - Form Sections
@@ -878,6 +878,19 @@ struct RecordEditView: View {
         isUsePointFocused = false
         // 候補反映後はフォーム先頭へ戻す
         scrollToTopRequest += 1
+    }
+}
+
+/// 文字サイズの自動/手動適用を切り替える共通モディファイア
+private struct ConditionalDynamicTypeModifier: ViewModifier {
+    let fontScale: FontScale
+
+    func body(content: Content) -> some View {
+        if fontScale.followsSystem {
+            content
+        } else {
+            content.dynamicTypeSize(fontScale.dynamicTypeSize)
+        }
     }
 }
 

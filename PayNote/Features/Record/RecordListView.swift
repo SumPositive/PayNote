@@ -266,8 +266,12 @@ struct RecordSummaryRow: View {
     private var statusTextColor: Color {
         isUnpaid ? COLOR_UNPAID : COLOR_PAID
     }
-    private var payMethodText: String {
-        record.e1card?.zName ?? "—"
+    private var hasMissingSelection: Bool {
+        // 決済手段未選択、または引き落とし口座未選択のときに未アイコンを出す
+        if record.e1card == nil {
+            return true
+        }
+        return record.e1card?.e8bank == nil
     }
     private var recordLabelText: String {
         // 決済ラベルを優先し、旧データは利用店名へフォールバック
@@ -297,30 +301,35 @@ struct RecordSummaryRow: View {
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .foregroundStyle(amountToneColor)
+                }
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    HStack(spacing: 6) {
+                        Text(statusKey)
+                            .font(.caption)
+                            .foregroundStyle(statusTextColor)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .allowsTightening(true)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(statusCapsuleColor)
+                            .clipShape(Capsule())
+                        if hasMissingSelection {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.caption)
+                                .foregroundStyle(COLOR_UNPAID)
+                        }
+                    }
                     Spacer(minLength: 8)
                     Text(record.nAmount.currencyString())
                         .font(.body.monospacedDigit())
                         .foregroundStyle(amountToneColor)
                 }
-                HStack(spacing: 6) {
-                    Text(statusKey)
-                        .font(.caption)
-                        .foregroundStyle(statusTextColor)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(statusCapsuleColor)
-                        .clipShape(Capsule())
-                    Text(payMethodText)
-                        .font(.caption)
-                        .foregroundStyle(amountToneColor)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                }
             }
         }
-        // セル高さは固定で44ptにする
-        .frame(height: 44, alignment: .center)
-        .padding(.vertical, 0)
+        // 2行構成のため最小高さのみ指定して情報を欠けさせない
+        .frame(minHeight: 52, alignment: .center)
+        .padding(.vertical, 2)
         .contentShape(Rectangle())
     }
 }

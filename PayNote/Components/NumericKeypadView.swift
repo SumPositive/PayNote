@@ -88,7 +88,7 @@ struct NumericKeypadSheet: View {
                 }
             }
         }
-        .dynamicTypeSize(fontScale.dynamicTypeSize)
+        .modifier(ConditionalSheetDynamicTypeModifier(fontScale: fontScale))
         .presentationDetents(isCompact ? [.fraction(0.7), .large] : [.fraction(0.65), .large])
         .presentationDragIndicator(.visible)
     }
@@ -113,6 +113,19 @@ struct NumericKeypadSheet: View {
         guard next.count <= maxMinorUnitsText.count else { return }
         guard Decimal.fromMinorUnits(minorUnits, locale: locale) <= maxValue else { return }
         digits = next
+    }
+}
+
+/// 自動設定時はシステム文字サイズを優先する
+private struct ConditionalSheetDynamicTypeModifier: ViewModifier {
+    let fontScale: FontScale
+
+    func body(content: Content) -> some View {
+        if fontScale.followsSystem {
+            content
+        } else {
+            content.dynamicTypeSize(fontScale.dynamicTypeSize)
+        }
     }
 }
 
