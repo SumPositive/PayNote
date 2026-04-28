@@ -229,22 +229,37 @@ private struct PaymentRow: View {
                 // 日付は優先表示して欠けにくくする
                 .fixedSize(horizontal: true, vertical: false)
                 .layoutPriority(2)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(bankNameText)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    HStack(spacing: 8) {
-                        Spacer(minLength: 0)
+                // 右側は1行表示を優先し、収まらない場合のみ2行表示へ切り替える
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(bankNameText)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        Spacer(minLength: 8)
                         Text(payment.sumAmount.currencyString())
                             .font(.body.monospacedDigit())
                             .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
                             .lineLimit(1)
-                            // 金額は最優先で欠けないようにする
                             .fixedSize(horizontal: true, vertical: false)
-                            .layoutPriority(3)
+                    }
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(bankNameText)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        HStack(spacing: 8) {
+                            Spacer(minLength: 0)
+                            Text(payment.sumAmount.currencyString())
+                                .font(.body.monospacedDigit())
+                                .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                                .lineLimit(1)
+                                // 金額は最優先で欠けないようにする
+                                .fixedSize(horizontal: true, vertical: false)
+                        }
                     }
                 }
                 .layoutPriority(1)
@@ -718,12 +733,17 @@ private struct PaymentUnpaidGrouped {
 
 private struct PaymentSectionSeparator: View {
     var body: some View {
-        Divider()
-            .frame(height: 2)
-            .overlay(Color(.separator).opacity(0.55))
-            .padding(.horizontal, 12)
-            .padding(.top, 12)
-            .padding(.bottom, 10)
+        Rectangle()
+            .fill(
+                LinearGradient(
+                    colors: [COLOR_UNPAID.opacity(0.35), .clear],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .frame(height: 10)
+            .padding(.top, 2)
+            .padding(.bottom, 6)
     }
 }
 
