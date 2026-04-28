@@ -1336,14 +1336,14 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "If needed,"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "必要なら"
+            "value" : "必要ならいつでも"
           }
         }
       }
@@ -2516,6 +2516,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "標準"
+          }
+        }
+      }
+    },
+    "settings.fontScale.system" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動"
           }
         }
       }

@@ -54,22 +54,29 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
 
 /// フォントサイズ倍率
 enum FontScale: String, CaseIterable, Identifiable {
-    case standard = "standard"  // 標準
-    case large    = "large"     // 1.5倍相当 (.xxxLarge)
-    case xLarge   = "xLarge"   // 2.0倍相当 (.accessibility2)
+    case system   = "system"    // 自動　システム設定に合わせる
+    case standard = "standard"  // 標準　1.0
+    case large    = "large"     // 大　　1.5倍相当 (.xxxLarge)
+    case xLarge   = "xLarge"    // 特大　2.0倍相当 (.accessibility2)
 
     var id: String { rawValue }
 
     var localizedKey: String {
         switch self {
+        case .system:  "settings.fontScale.system"
         case .standard: "settings.fontScale.standard"
         case .large:    "settings.fontScale.large"
         case .xLarge:   "settings.fontScale.xLarge"
         }
     }
 
+    var followsSystem: Bool {
+        self == .system
+    }
+
     var dynamicTypeSize: DynamicTypeSize {
         switch self {
+        case .system:   .large
         case .standard: .large
         case .large:    .xxxLarge
         case .xLarge:   .accessibility2
@@ -79,6 +86,7 @@ enum FontScale: String, CaseIterable, Identifiable {
     /// 固定サイズ指定が必要なUI向けの補正倍率
     var uiScale: CGFloat {
         switch self {
+        case .system:   1.0
         case .standard: 1.0
         case .large:    1.2
         case .xLarge:   1.35

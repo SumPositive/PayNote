@@ -37,17 +37,14 @@ struct PayNoteApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if let container = sharedModelContainer {
-                    ContentView()
-                        .modelContainer(container)
+                if fontScale.followsSystem {
+                    appRootView
                 } else {
-                    DatabaseErrorView(error: containerError) {
-                        renameStoreForRecovery()
-                    }
+                    appRootView
+                        .dynamicTypeSize(fontScale.dynamicTypeSize)
                 }
             }
             .preferredColorScheme(appearanceMode.colorScheme)
-            .dynamicTypeSize(fontScale.dynamicTypeSize)
             .overlay {
                 if isMigrating {
                     ZStack {
@@ -106,6 +103,18 @@ struct PayNoteApp: App {
             try? fm.moveItem(at: src, to: dst)
         }
         exit(0)
+    }
+
+    @ViewBuilder
+    private var appRootView: some View {
+        if let container = sharedModelContainer {
+            ContentView()
+                .modelContainer(container)
+        } else {
+            DatabaseErrorView(error: containerError) {
+                renameStoreForRecovery()
+            }
+        }
     }
 }
 

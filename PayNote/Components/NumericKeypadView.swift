@@ -15,8 +15,11 @@ struct NumericKeypadSheet: View {
 
     private var isEmpty: Bool { digits.isEmpty }
     private var isCompact: Bool { UIScreen.main.bounds.height <= 700 }
-    private var sheetSpacing: CGFloat { (isCompact ? 14 : 20) * fontScale.uiScale }
-    private var displayFontSize: CGFloat { (isCompact ? 44 : 52) * fontScale.uiScale }
+    private var uiScale: CGFloat { fontScale.uiScale }
+    // 金額表示の拡大は上限を設け、ナビゲーション領域との重なりを防ぐ
+    private var displayScale: CGFloat { min(uiScale, 1.2) }
+    private var sheetSpacing: CGFloat { (isCompact ? 10 : 14) * fontScale.uiScale }
+    private var displayFontSize: CGFloat { (isCompact ? 44 : 52) * displayScale }
     private var locale: Locale { .current }
     private var fractionDigits: Int { Decimal.currencyFractionDigits(locale: locale) }
 
@@ -44,15 +47,19 @@ struct NumericKeypadSheet: View {
                     Text(displayAmountText)
                         .font(.system(size: displayFontSize, weight: .bold, design: .rounded).monospacedDigit())
                         .foregroundStyle(isEmpty ? Color(.tertiaryLabel) : Color(.label))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.65)
                         .contentTransition(.numericText())
                         .animation(.snappy, value: digits)
                     Spacer()
                 }
+                .frame(minHeight: 62 * uiScale)
                 .padding(.horizontal)
-                .padding(.top, isCompact ? 4 : 8)
+                // ナビゲーションタイトルとの重なりを避けるため、金額表示を下げる
+                .padding(.top, (isCompact ? 18 : 24) * uiScale)
 
                 // テンキー
-                NumericKeypad(compact: isCompact, scale: fontScale.uiScale) { key in handleKey(key) }
+                NumericKeypad(compact: isCompact, scale: uiScale) { key in handleKey(key) }
 
                 // 決定ボタン
                 Button {
@@ -62,11 +69,12 @@ struct NumericKeypadSheet: View {
                     Text("button.done")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
+                        .padding(.vertical, 14 * uiScale)
                 }
                 .buttonStyle(.borderedProminent)
-                .padding(.horizontal, 32)
-                .padding(.bottom, isCompact ? 6 : 12)
+                .padding(.horizontal, 32 * uiScale)
+                // 下余白を詰めて完了ボタンを少し上へ寄せる
+                .padding(.bottom, (isCompact ? 2 : 6) * uiScale)
             }
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
@@ -74,12 +82,13 @@ struct NumericKeypadSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button { dismiss() } label: {
                         Image(systemName: "chevron.down")
-                            .imageScale(.large)
+                            .font(.title3)
                             .symbolRenderingMode(.hierarchical)
                     }
                 }
             }
         }
+        .dynamicTypeSize(fontScale.dynamicTypeSize)
         .presentationDetents(isCompact ? [.fraction(0.7), .large] : [.fraction(0.65), .large])
         .presentationDragIndicator(.visible)
     }

@@ -71,12 +71,33 @@ struct SettingsView: View {
                 HStack(spacing: 8) {
                     Text("settings.afterSave")
                         .font(.subheadline)
-                    Picker("settings.afterSave", selection: $afterSaveAction) {
+                        .fixedSize(horizontal: false, vertical: true)
+                    Menu {
                         ForEach(AfterSaveAction.allCases) { action in
-                            Text(LocalizedStringKey(action.localizedKey)).tag(action)
+                            Button {
+                                afterSaveAction = action
+                            } label: {
+                                if afterSaveAction == action {
+                                    Label(LocalizedStringKey(action.localizedKey), systemImage: "checkmark")
+                                } else {
+                                    Text(LocalizedStringKey(action.localizedKey))
+                                }
+                            }
+                        }
+                    } label: {
+                        // 値は欠けないことを優先し、複数行で右寄せ表示する
+                        HStack(spacing: 4) {
+                            Spacer(minLength: 0)
+                            Text(LocalizedStringKey(afterSaveAction.localizedKey))
+                                .font(.subheadline)
+                                .multilineTextAlignment(.trailing)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Image(systemName: "chevron.down")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
                         }
                     }
-                    .pickerStyle(.segmented)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
 
@@ -366,6 +387,7 @@ struct SettingsView: View {
         """
     }
 }
+
 
 // MARK: - UIActivityViewController ラッパー
 
