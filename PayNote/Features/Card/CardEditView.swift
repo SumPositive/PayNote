@@ -56,14 +56,14 @@ struct CardEditView: View {
 
             // 基本情報
             Section {
-                LabeledContent("card.field.name") {
+                AdaptiveValueRow(titleKey: "card.field.name") {
                     TextField("", text: $zName)
                         .autocorrectionDisabled()
                         .focused($focusName)
                         .multilineTextAlignment(.trailing)
                 }
 
-                LabeledContent("card.field.bank") {
+                AdaptiveValueRow(titleKey: "card.field.bank") {
                     Picker("", selection: $bankSelection) {
                         Text("label.noSelection").tag(BankSelection.none)
                         // 口座追加導線を目立たせる
@@ -81,7 +81,7 @@ struct CardEditView: View {
             // 締日〜支払設定を1パネルにまとめる
             Section {
                 if !isEnglishLocale {
-                    LabeledContent("card.field.closingDay") {
+                    AdaptiveValueRow(titleKey: "card.field.closingDay") {
                         Picker("", selection: $closingDaySelection) {
                             ForEach(Array(1...28), id: \.self) { d in
                                 Text("\(d)").tag(Optional(Int16(d)))
@@ -91,7 +91,7 @@ struct CardEditView: View {
                         .pickerStyle(.menu)
                         .labelsHidden()
                     }
-                    LabeledContent("card.field.payMonth") {
+                    AdaptiveValueRow(titleKey: "card.field.payMonth") {
                         Picker("", selection: $payMonth) {
                             Text("card.payMonth.current").tag(Int16(0))
                             Text("card.payMonth.next").tag(Int16(1))
@@ -100,7 +100,7 @@ struct CardEditView: View {
                         .pickerStyle(.menu)
                         .labelsHidden()
                     }
-                    LabeledContent("card.field.payDay") {
+                    AdaptiveValueRow(titleKey: "card.field.payDay") {
                         Picker("", selection: $payDay) {
                             ForEach(Array(1...28), id: \.self) { d in
                                 Text("\(d)").tag(Int16(d))
@@ -111,7 +111,7 @@ struct CardEditView: View {
                         .labelsHidden()
                     }
                 } else {
-                    LabeledContent("card.field.payDay") {
+                    AdaptiveValueRow(titleKey: "card.field.payDay") {
                         Picker("", selection: $payDay) {
                             ForEach(Array(1...28), id: \.self) { d in
                                 Text("\(d)").tag(Int16(d))
@@ -121,7 +121,7 @@ struct CardEditView: View {
                         .pickerStyle(.menu)
                         .labelsHidden()
                     }
-                    LabeledContent("card.field.closingDay") {
+                    AdaptiveValueRow(titleKey: "card.field.closingDay") {
                         Picker("", selection: $closingDaySelection) {
                             Text("label.noSelection").tag(Optional<Int16>.none)
                             ForEach(Array(1...28), id: \.self) { d in
@@ -137,7 +137,7 @@ struct CardEditView: View {
 
             // メモ
             Section {
-                LabeledContent("card.field.note") {
+                AdaptiveValueRow(titleKey: "card.field.note") {
                     TextField("", text: $zNote)
                         .multilineTextAlignment(.trailing)
                         .autocorrectionDisabled()
@@ -319,4 +319,32 @@ struct CardEditView: View {
         )
     }
 
+}
+
+/// 1行優先で表示し、収まらない場合だけ値を2行目右寄せで表示する行コンポーネント
+private struct AdaptiveValueRow<ValueView: View>: View {
+    let titleKey: LocalizedStringKey
+    @ViewBuilder let valueView: () -> ValueView
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(titleKey)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                valueView()
+                    .lineLimit(1)
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                Text(titleKey)
+                    .lineLimit(1)
+                HStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    valueView()
+                        .lineLimit(1)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
 }
