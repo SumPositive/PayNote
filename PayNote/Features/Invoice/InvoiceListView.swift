@@ -39,17 +39,13 @@ struct InvoiceListView: View {
         List {
             // 口座名・日付・合計を同一セクションにまとめる
             Section {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(bankNameText)
-                        .font(.headline)
-                    Text(statementTitleText)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                HStack {
-                    ZStack {
-                        // 口座合計セルの中央に未払/済みを表示する
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(bankNameText)
+                            .font(.headline)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                        Spacer(minLength: 8)
                         Text(payment.isPaid ? "payment.status.paidShort" : "payment.status.unpaidShort")
                             .font(.subheadline.weight(.semibold))
                             .padding(.horizontal, 12)
@@ -59,14 +55,21 @@ struct InvoiceListView: View {
                                 : COLOR_UNPAID.opacity(0.2))
                             .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
                             .clipShape(Capsule())
-
-                        HStack {
-                            Text("label.total")
-                            Spacer()
-                            Text(payment.sumAmount.currencyString())
-                                .font(.headline.monospacedDigit())
-                                .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
-                        }
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
+                    }
+                    Text(statementTitleText)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                HStack {
+                    HStack {
+                        Text("label.total")
+                        Spacer()
+                        Text(payment.sumAmount.currencyString())
+                            .font(.headline.monospacedDigit())
+                            .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
                     }
                 }
             }

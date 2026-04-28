@@ -8,6 +8,7 @@ struct SettingsView: View {
     @AppStorage(AppStorageKey.fontScale)         private var fontScale: FontScale = .standard
     @AppStorage(AppStorageKey.afterSaveAction)   private var afterSaveAction: AfterSaveAction = .goBack
     @AppStorage(AppStorageKey.openAddOnActive)   private var openAddOnActive = false
+    @AppStorage(AppStorageKey.paymentWindowDays) private var paymentWindowDays = 7
 
     @Environment(\.modelContext) private var context
 
@@ -97,6 +98,46 @@ struct SettingsView: View {
                         HStack(spacing: 4) {
                             Spacer(minLength: 0)
                             Text(LocalizedStringKey(afterSaveAction.localizedKey))
+                                .font(.subheadline)
+                                .multilineTextAlignment(.trailing)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Image(systemName: "chevron.down")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+
+                HStack(spacing: 8) {
+                    Text("settings.paymentWindow")
+                        .font(.subheadline)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Menu {
+                        ForEach(Array(1...20), id: \.self) { day in
+                            Button {
+                                paymentWindowDays = day
+                            } label: {
+                                if paymentWindowDays == day {
+                                    Label(windowLabel(day), systemImage: "checkmark")
+                                } else {
+                                    Text(windowLabel(day))
+                                }
+                            }
+                        }
+                        Button {
+                            paymentWindowDays = 30
+                        } label: {
+                            if paymentWindowDays == 30 {
+                                Label(windowLabel(30), systemImage: "checkmark")
+                            } else {
+                                Text(windowLabel(30))
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Spacer(minLength: 0)
+                            Text(windowLabel(paymentWindowDays))
                                 .font(.subheadline)
                                 .multilineTextAlignment(.trailing)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -393,6 +434,17 @@ struct SettingsView: View {
         Invoice States: \(result.invoiceStateCount)
         Payment States: \(result.paymentStateCount)
         """
+    }
+}
+
+private extension SettingsView {
+    /// 集計期間ラベル
+    func windowLabel(_ days: Int) -> String {
+        let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
+        if days == 30 {
+            return isJapanese ? "1ヶ月" : "1 Month"
+        }
+        return isJapanese ? "\(days)日" : "\(days) Days"
     }
 }
 

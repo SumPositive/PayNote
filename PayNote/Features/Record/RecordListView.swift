@@ -302,8 +302,8 @@ struct RecordSummaryRow: View {
                         .truncationMode(.tail)
                         .foregroundStyle(amountToneColor)
                 }
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    HStack(spacing: 6) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        HStack(spacing: 6) {
                         Text(statusKey)
                             .font(.caption)
                             .foregroundStyle(statusTextColor)
@@ -319,14 +319,20 @@ struct RecordSummaryRow: View {
                                 .font(.caption)
                                 .foregroundStyle(COLOR_UNPAID)
                         }
+                        }
+                        .layoutPriority(0)
+                        Spacer(minLength: 8)
+                        Text(record.nAmount.currencyString())
+                            .font(.body.monospacedDigit())
+                            .foregroundStyle(amountToneColor)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                            .allowsTightening(true)
+                            .fixedSize(horizontal: true, vertical: false)
+                            .layoutPriority(2)
                     }
-                    Spacer(minLength: 8)
-                    Text(record.nAmount.currencyString())
-                        .font(.body.monospacedDigit())
-                        .foregroundStyle(amountToneColor)
                 }
             }
-        }
         // 2行構成のため最小高さのみ指定して情報を欠けさせない
         .frame(minHeight: 52, alignment: .center)
         .padding(.vertical, 2)

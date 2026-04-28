@@ -4,6 +4,7 @@ import SwiftData
 struct TopMenuView: View {
     @Binding var selectedDestination: AppDestination?
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
+    @AppStorage(AppStorageKey.paymentWindowDays) private var paymentWindowDays = 7
 
     @Query(sort: \E7payment.date, order: .reverse)
     private var allPayments: [E7payment]
@@ -12,9 +13,29 @@ struct TopMenuView: View {
         allPayments.filter { !$0.isPaid }
     }
 
-    private var totalUnpaid: Decimal {
-        // メニューの未払計は支払状態の元データ（E7payment）から直接算出する
-        unpaidPayments.reduce(.zero) { $0 + $1.sumAmount }
+    private var recentUnpaidTotal: Decimal {
+        // メニュー表示は「直近の引き落とし計」を使う
+        let windowDays = max(1, min(paymentWindowDays, 30))
+        let sorted = unpaidPayments.sorted { $0.date < $1.date }
+        let today = Calendar.current.startOfDay(for: Date())
+        let firstAnchor = sorted
+            .map { Calendar.current.startOfDay(for: $0.date) }
+            .first { today <= $0 } ?? sorted.first.map { Calendar.current.startOfDay(for: $0.date) }
+        guard let firstAnchor else { return .zero }
+        let end: Date
+        if windowDays == 30 {
+            end = Calendar.current.date(byAdding: .month, value: 1, to: firstAnchor) ?? firstAnchor
+        } else {
+            end = Calendar.current.date(byAdding: .day, value: windowDays - 1, to: firstAnchor) ?? firstAnchor
+        }
+        return sorted
+            .filter {
+                let date = Calendar.current.startOfDay(for: $0.date)
+                return firstAnchor <= date && date <= end
+            }
+            .reduce(.zero) { partialResult, payment in
+                partialResult + payment.sumAmount
+            }
     }
 
     var body: some View {
@@ -40,7 +61,7 @@ struct TopMenuView: View {
                         Image(systemName: "calendar.badge.clock")
                             .foregroundStyle(.orange)
                             .frame(width: 28)
-                        // タイトルと未払計が1行に収まらない場合は2行目に表示する
+                        // タイトルと直近計が1行に収まらない場合は2行目に表示する
                         ViewThatFits(in: .horizontal) {
                             // 1行版: 各テキストを自然幅で固定して収まるか試す
                             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -48,27 +69,37 @@ struct TopMenuView: View {
                                     .fixedSize(horizontal: true, vertical: false)
                                 Spacer(minLength: 8)
                                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                    Text("top.paymentList.unpaidTotal")
+                                    Text("top.paymentList.recentTotal")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.5)
+                                        .allowsTightening(true)
                                         .fixedSize(horizontal: true, vertical: false)
-                                    Text(totalUnpaid.currencyString())
+                                    Text(recentUnpaidTotal.currencyString())
                                         .font(.callout.weight(.semibold))
                                         .foregroundStyle(COLOR_UNPAID)
                                         .fixedSize(horizontal: true, vertical: false)
                                 }
                             }
-                            // 2行版: 収まらない場合は未払計を2行目に右寄せで表示
+                            // 2行版: 収まらない場合は直近計を2行目に右寄せで表示
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("top.paymentList")
                                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                                     Spacer(minLength: 0)
-                                    Text("top.paymentList.unpaidTotal")
+                                    Text("top.paymentList.recentTotal")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
-                                    Text(totalUnpaid.currencyString())
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.5)
+                                        .allowsTightening(true)
+                                        .fixedSize(horizontal: true, vertical: false)
+                                    Text(recentUnpaidTotal.currencyString())
                                         .font(.callout.weight(.semibold))
                                         .foregroundStyle(COLOR_UNPAID)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.6)
+                                        .fixedSize(horizontal: true, vertical: false)
                                 }
                             }
                         }

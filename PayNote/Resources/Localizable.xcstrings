@@ -2571,23 +2571,6 @@
         }
       }
     },
-    "settings.help.userLevel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beginner shows more guidance. Expert hides most of it."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "初心者は説明を多めに表示します。達人にすると説明を減らし、詳細メニューを表示します。使い慣れて流れが分かってきたら、達人に切り替えてください。"
-          }
-        }
-      }
-    },
     "settings.help.fontScale" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2601,6 +2584,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "自動にすれば、システム設定：アクセシビリティ：画面表示とテキストサイズの設定に対応して見やすくできます"
+          }
+        }
+      }
+    },
+    "settings.help.userLevel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beginner shows more guidance. Expert hides most of it."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "初心者は説明を多めに表示します。達人にすると説明を減らし、詳細メニューを表示します。使い慣れて流れが分かってきたら、達人に切り替えてください。"
           }
         }
       }
@@ -2754,6 +2754,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "サポート"
+          }
+        }
+      }
+    },
+    "settings.paymentWindow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Schedule Summary Range"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引き落とし集計期間"
           }
         }
       }
@@ -3383,6 +3400,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "引き落とし状況"
+          }
+        }
+      }
+    },
+    "top.paymentList.recentTotal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current Debit Total"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直近計"
           }
         }
       }

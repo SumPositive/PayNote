@@ -89,7 +89,8 @@ struct NumericKeypadSheet: View {
             }
         }
         .modifier(ConditionalSheetDynamicTypeModifier(fontScale: fontScale))
-        .presentationDetents(isCompact ? [.fraction(0.7), .large] : [.fraction(0.65), .large])
+        // SE3 などの小画面では .large 固定にして、完了ボタン欠けを防ぐ
+        .presentationDetents(isCompact ? [.large] : [.fraction(0.65), .large])
         .presentationDragIndicator(.visible)
     }
 

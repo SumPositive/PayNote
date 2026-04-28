@@ -5,6 +5,7 @@ struct PaymentListView: View {
     @Query(sort: \E7payment.date, order: .reverse) private var allPayments: [E7payment]
     @Environment(\.modelContext) private var context
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
+    @AppStorage(AppStorageKey.paymentWindowDays) private var paymentWindowDays = 7
     @State private var didInitialScroll = false
     @State private var paidVisibleCount = 0
     @State private var togglingPaymentIDs: Set<String> = []
@@ -84,7 +85,8 @@ struct PaymentListView: View {
                                 togglingPaymentIDs: togglingPaymentIDs,
                                 hasMorePaid: hasMorePaid,
                                 onLoadMorePaid: loadMorePaidIfNeeded,
-                                paidFirstRowAnchorID: paidFirstRowAnchorID
+                                paidFirstRowAnchorID: paidFirstRowAnchorID,
+                                windowDays: paymentWindowDays
                             )
                         }
                         .padding(.horizontal, 16)
@@ -283,27 +285,16 @@ private struct PaymentCombinedCard: View {
     let hasMorePaid: Bool
     let onLoadMorePaid: () -> Void
     let paidFirstRowAnchorID: String
+    let windowDays: Int
     @State private var boundaryMidY: CGFloat = 0
-
-    /// ViewBuilder 内の型推論負荷を下げるため、表示用の添字付き配列を事前に作る
-    private var indexedUnpaidPayments: [(offset: Int, element: E7payment)] {
-        Array(unpaidPayments.enumerated())
-    }
 
     /// ViewBuilder 内の型推論負荷を下げるため、表示用の添字付き配列を事前に作る
     private var indexedPaidPayments: [(offset: Int, element: E7payment)] {
         Array(paidPayments.enumerated())
     }
     
-    private var unpaidTotalAmount: Decimal {
-        unpaidPayments.reduce(Decimal.zero) { partialResult, payment in
-            partialResult + payment.sumAmount
-        }
-    }
-
-    /// 未払側の区切り線表示可否
-    private func showsUnpaidDivider(after index: Int) -> Bool {
-        index + 1 < unpaidPayments.count
+    private var unpaidGrouped: PaymentUnpaidGrouped {
+        PaymentUnpaidGrouped.build(from: unpaidPayments, windowDays: windowDays)
     }
 
     /// 済み側の区切り線表示可否
@@ -313,25 +304,35 @@ private struct PaymentCombinedCard: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if !unpaidPayments.isEmpty {
-                ForEach(indexedUnpaidPayments, id: \.element.id) { index, payment in
-                    PaymentNavigationRow(
-                        payment: payment,
-                        rowID: payment.id,
-                        isToggling: togglingPaymentIDs.contains(payment.id),
-                        onToggle: onToggle
-                    )
-                    if showsUnpaidDivider(after: index) {
-                        PaymentRowDivider()
+            let indexedSections = Array(unpaidGrouped.sections.enumerated())
+            ForEach(indexedSections, id: \.element.id) { sectionIndex, section in
+                if 0 < sectionIndex {
+                    PaymentSectionSeparator()
+                }
+                if section.items.isEmpty {
+                    PaymentEmptyRow()
+                } else {
+                    let indexedItems = Array(section.items.enumerated())
+                    ForEach(indexedItems, id: \.element.id) { index, payment in
+                        PaymentNavigationRow(
+                            payment: payment,
+                            rowID: payment.id,
+                            isToggling: togglingPaymentIDs.contains(payment.id),
+                            onToggle: onToggle
+                        )
+                        if index + 1 < section.items.count {
+                            PaymentRowDivider()
+                        }
                     }
                 }
-            } else {
-                // 未払が空のときは空セルを表示する
-                PaymentEmptyRow()
+                PaymentPeriodFooter(
+                    title: section.footerTitle,
+                    amount: section.totalAmount
+                )
             }
 
             // 境目を太線で区切り、上下にラベルを置いて文脈を維持する
-            PaymentBoundaryMarker(unpaidTotalAmount: unpaidTotalAmount)
+            PaymentBoundaryMarker()
 
             if !paidPayments.isEmpty {
                 ForEach(indexedPaidPayments, id: \.element.id) { index, payment in
@@ -446,7 +447,6 @@ private struct PaymentRowDivider: View {
 }
 
 private struct PaymentBoundaryMarker: View {
-    let unpaidTotalAmount: Decimal
     @Environment(\.colorScheme) private var colorScheme
 
     private var boundaryColor: Color {
@@ -458,11 +458,6 @@ private struct PaymentBoundaryMarker: View {
         colorScheme == .dark ? 0.44 : 0.26
     }
 
-    private var edgeGradientHeight: CGFloat {
-        // グラデーションが分かる最小限の高さ
-        12
-    }
-
     private var labelColor: Color {
         // ダーク時のみラベル文字を見やすくする
         colorScheme == .dark ? Color.white.opacity(0.92) : Color.secondary
@@ -470,22 +465,11 @@ private struct PaymentBoundaryMarker: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                Text("payment.section.unpaidTotal")
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(labelColor)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-                Spacer(minLength: 0)
-                Text(unpaidTotalAmount.currencyString())
-                    .font(.headline.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(COLOR_UNPAID)
-                    .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            Text("payment.section.unpaidBeforeDebit")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(labelColor)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 10)
             .background(
                 // 上端の色をラベル帯に自然に引き込む
                 LinearGradient(
@@ -536,5 +520,235 @@ private struct PaymentBoundaryMidYPreferenceKey: PreferenceKey {
         if next > 0 {
             value = next
         }
+    }
+}
+
+/// 未払集計の表示値
+private struct PaymentUnpaidSummaries {
+    let currentTitle: String
+    let currentAmount: Decimal
+    let nextTitle: String
+    let nextAmount: Decimal
+    let futureTitle: String
+    let futureAmount: Decimal
+
+    static func build(from payments: [E7payment], windowDays rawWindowDays: Int) -> PaymentUnpaidSummaries {
+        let windowDays = max(1, min(rawWindowDays, 30))
+        let sorted = payments.sorted { $0.date < $1.date }
+        let today = Calendar.current.startOfDay(for: Date())
+        let allDates = sorted.map { Calendar.current.startOfDay(for: $0.date) }
+
+        let firstAnchor = allDates.first { today <= $0 } ?? allDates.first
+        guard let firstAnchor else {
+            return PaymentUnpaidSummaries(
+                currentTitle: localizedCurrentTitle(windowDays: windowDays),
+                currentAmount: .zero,
+                nextTitle: localizedNextTitle(windowDays: windowDays),
+                nextAmount: .zero,
+                futureTitle: localizedFutureTitle(),
+                futureAmount: .zero
+            )
+        }
+
+        let secondAnchor = allDates.first { firstAnchor < $0 }
+        let firstRange = windowRange(start: firstAnchor, windowDays: windowDays)
+        let secondRange = secondAnchor.map { windowRange(start: $0, windowDays: windowDays) }
+
+        let currentAmount = sorted
+            .filter { firstRange.contains(Calendar.current.startOfDay(for: $0.date)) }
+            .reduce(Decimal.zero) { partialResult, payment in
+                partialResult + payment.sumAmount
+            }
+        let nextAmount = sorted
+            .filter { payment in
+                guard let secondRange else { return false }
+                return secondRange.contains(Calendar.current.startOfDay(for: payment.date))
+            }
+            .reduce(Decimal.zero) { partialResult, payment in
+                partialResult + payment.sumAmount
+            }
+
+        let futureBoundary = (secondRange?.upperBound ?? firstRange.upperBound)
+        let futureAmount = sorted
+            .filter { futureBoundary < Calendar.current.startOfDay(for: $0.date) }
+            .reduce(Decimal.zero) { partialResult, payment in
+                partialResult + payment.sumAmount
+            }
+
+        return PaymentUnpaidSummaries(
+            currentTitle: localizedCurrentTitle(windowDays: windowDays),
+            currentAmount: currentAmount,
+            nextTitle: localizedNextTitle(windowDays: windowDays),
+            nextAmount: nextAmount,
+            futureTitle: localizedFutureTitle(),
+            futureAmount: futureAmount
+        )
+    }
+
+    /// 期間終端を含むため ClosedRange を返す
+    static func windowRange(start: Date, windowDays: Int) -> ClosedRange<Date> {
+        if windowDays == 30 {
+            let end = Calendar.current.date(byAdding: .month, value: 1, to: start) ?? start
+            return start...end
+        }
+        let end = Calendar.current.date(byAdding: .day, value: windowDays - 1, to: start) ?? start
+        return start...end
+    }
+
+    static func localizedCurrentTitle(windowDays: Int) -> String {
+        let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
+        if windowDays == 30 {
+            return isJapanese ? "1ヶ月の引き落とし計" : "Current 1-Month Debit Total"
+        }
+        return isJapanese ? "\(windowDays)日間の引き落とし計" : "Current \(windowDays)-Day Debit Total"
+    }
+
+    static func localizedNextTitle(windowDays: Int) -> String {
+        let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
+        if windowDays == 30 {
+            return isJapanese ? "次の1ヶ月の引き落とし計" : "Next 1-Month Debit Total"
+        }
+        return isJapanese ? "次の\(windowDays)日間の引き落とし計" : "Next \(windowDays)-Day Debit Total"
+    }
+
+    static func localizedFutureTitle() -> String {
+        let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
+        return isJapanese ? "将来の引き落とし計" : "Future Debit Total"
+    }
+
+    static func localizedCurrentSummaryTitle() -> String {
+        let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
+        return isJapanese ? "直近の引き落とし計" : "Current Debit Total"
+    }
+
+    static func localizedNextSummaryTitle() -> String {
+        let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
+        return isJapanese ? "次の引き落とし計" : "Next Debit Total"
+    }
+}
+
+/// 未払を3期間に分ける表示モデル
+private struct PaymentUnpaidGrouped {
+    struct Section: Identifiable {
+        let id: String
+        let footerTitle: String
+        let items: [E7payment]
+        let totalAmount: Decimal
+    }
+
+    let sections: [Section]
+
+    static func build(from payments: [E7payment], windowDays rawWindowDays: Int) -> PaymentUnpaidGrouped {
+        let windowDays = max(1, min(rawWindowDays, 30))
+        let sorted = payments.sorted { $0.date < $1.date }
+        let today = Calendar.current.startOfDay(for: Date())
+        let allDates = sorted.map { Calendar.current.startOfDay(for: $0.date) }
+        let firstAnchor = allDates.first { today <= $0 } ?? allDates.first
+
+        guard let firstAnchor else {
+            return PaymentUnpaidGrouped(
+                sections: [
+                    Section(id: "current", footerTitle: PaymentUnpaidSummaries.localizedCurrentSummaryTitle(), items: [], totalAmount: .zero),
+                    Section(id: "next", footerTitle: PaymentUnpaidSummaries.localizedNextTitle(windowDays: windowDays), items: [], totalAmount: .zero),
+                    Section(id: "future", footerTitle: PaymentUnpaidSummaries.localizedFutureTitle(), items: [], totalAmount: .zero),
+                ]
+            )
+        }
+
+        let secondAnchor = allDates.first { firstAnchor < $0 }
+        let firstRange = PaymentUnpaidSummaries.windowRange(start: firstAnchor, windowDays: windowDays)
+        let secondRange = secondAnchor.map { PaymentUnpaidSummaries.windowRange(start: $0, windowDays: windowDays) }
+        let nextRangeLowerBound = Calendar.current.date(byAdding: .day, value: 1, to: firstRange.upperBound) ?? firstRange.upperBound
+        let futureLowerBound = Calendar.current.date(byAdding: .day, value: 1, to: (secondRange?.upperBound ?? firstRange.upperBound)) ?? (secondRange?.upperBound ?? firstRange.upperBound)
+
+        // 期間が重複しないよう、直近/次/将来を排他的な範囲で分割する
+        let currentItems = sorted
+            .filter { firstRange.contains(Calendar.current.startOfDay(for: $0.date)) }
+            .sorted { $1.date < $0.date }
+        let nextItems = sorted
+            .filter { payment in
+                let date = Calendar.current.startOfDay(for: payment.date)
+                if let secondRange {
+                    if date < nextRangeLowerBound {
+                        return false
+                    }
+                    return date <= secondRange.upperBound
+                }
+                return nextRangeLowerBound <= date
+            }
+            .sorted { $1.date < $0.date }
+        let futureItems = sorted
+            .filter { futureLowerBound <= Calendar.current.startOfDay(for: $0.date) }
+            .sorted { $1.date < $0.date }
+
+        let currentTotal = currentItems.reduce(Decimal.zero) { partialResult, payment in
+            partialResult + payment.sumAmount
+        }
+        let nextTotal = nextItems.reduce(Decimal.zero) { partialResult, payment in
+            partialResult + payment.sumAmount
+        }
+        let futureTotal = futureItems.reduce(Decimal.zero) { partialResult, payment in
+            partialResult + payment.sumAmount
+        }
+
+        return PaymentUnpaidGrouped(
+            sections: [
+                Section(
+                    id: "future",
+                    footerTitle: PaymentUnpaidSummaries.localizedFutureTitle(),
+                    items: futureItems,
+                    totalAmount: futureTotal
+                ),
+                Section(
+                    id: "next",
+                    footerTitle: PaymentUnpaidSummaries.localizedNextSummaryTitle(),
+                    items: nextItems,
+                    totalAmount: nextTotal
+                ),
+                Section(
+                    id: "current",
+                    footerTitle: PaymentUnpaidSummaries.localizedCurrentSummaryTitle(),
+                    items: currentItems,
+                    totalAmount: currentTotal
+                ),
+            ]
+        )
+    }
+}
+
+private struct PaymentSectionSeparator: View {
+    var body: some View {
+        Divider()
+            .frame(height: 2)
+            .overlay(Color(.separator).opacity(0.55))
+            .padding(.horizontal, 12)
+            .padding(.top, 12)
+            .padding(.bottom, 10)
+    }
+}
+
+private struct PaymentPeriodFooter: View {
+    let title: String
+    let amount: Decimal
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .allowsTightening(true)
+                .layoutPriority(1)
+            Spacer(minLength: 0)
+            Text(amount.currencyString())
+                .font(.subheadline.monospacedDigit())
+                .foregroundStyle(COLOR_UNPAID)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 4)
+        .padding(.bottom, 8)
     }
 }
