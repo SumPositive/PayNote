@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct SettingsView: View {
     @AppStorage(AppStorageKey.userLevel)         private var userLevel: UserLevel = .beginner
     @AppStorage(AppStorageKey.appearanceMode)    private var appearanceMode: AppearanceMode = .automatic
+    @AppStorage(AppStorageKey.fontScale)         private var fontScale: FontScale = .standard
     @AppStorage(AppStorageKey.afterSaveAction)   private var afterSaveAction: AfterSaveAction = .goBack
     @AppStorage(AppStorageKey.openAddOnActive)   private var openAddOnActive = false
 
@@ -40,6 +41,12 @@ struct SettingsView: View {
                 Picker("settings.appearance", selection: $appearanceMode) {
                     ForEach(AppearanceMode.allCases) { mode in
                         Text(LocalizedStringKey(mode.localizedKey)).tag(mode)
+                    }
+                }
+
+                Picker("settings.fontScale", selection: $fontScale) {
+                    ForEach(FontScale.allCases) { scale in
+                        Text(LocalizedStringKey(scale.localizedKey)).tag(scale)
                     }
                 }
             }

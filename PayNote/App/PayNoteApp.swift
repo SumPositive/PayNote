@@ -6,6 +6,7 @@ struct PayNoteApp: App {
 
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(AppStorageKey.appearanceMode) private var appearanceMode: AppearanceMode = .automatic
+    @AppStorage(AppStorageKey.fontScale)      private var fontScale: FontScale = .standard
 
     var sharedModelContainer: ModelContainer?
     private var containerError: Error?
@@ -46,6 +47,7 @@ struct PayNoteApp: App {
                 }
             }
             .preferredColorScheme(appearanceMode.colorScheme)
+            .dynamicTypeSize(fontScale.dynamicTypeSize)
             .overlay {
                 if isMigrating {
                     ZStack {

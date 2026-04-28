@@ -5,6 +5,7 @@ import SwiftUI
 enum AppStorageKey {
     static let userLevel         = "setting.userLevel"
     static let appearanceMode    = "setting.appearanceMode"
+    static let fontScale         = "setting.fontScale"
     static let shopSortMode      = "setting.shopSortMode"
     static let categorySortMode  = "setting.categorySortMode"
     static let afterSaveAction   = "setting.afterSaveAction"
@@ -47,6 +48,31 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
         case .automatic: "settings.appearance.automatic"
         case .light:     "settings.appearance.light"
         case .dark:      "settings.appearance.dark"
+        }
+    }
+}
+
+/// フォントサイズ倍率
+enum FontScale: String, CaseIterable, Identifiable {
+    case standard = "standard"  // 標準
+    case large    = "large"     // 1.5倍相当 (.xxxLarge)
+    case xLarge   = "xLarge"   // 2.0倍相当 (.accessibility2)
+
+    var id: String { rawValue }
+
+    var localizedKey: String {
+        switch self {
+        case .standard: "settings.fontScale.standard"
+        case .large:    "settings.fontScale.large"
+        case .xLarge:   "settings.fontScale.xLarge"
+        }
+    }
+
+    var dynamicTypeSize: DynamicTypeSize {
+        switch self {
+        case .standard: .large
+        case .large:    .xxxLarge
+        case .xLarge:   .accessibility2
         }
     }
 }
