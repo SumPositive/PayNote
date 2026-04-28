@@ -209,13 +209,15 @@ private struct PaymentRow: View {
             .accessibilityLabel(payment.isPaid ? Text("payment.markUnpaid") : Text("payment.markPaid"))
             .buttonStyle(.plain)
 
-            HStack(spacing: 8) {
+            HStack(alignment: .center, spacing: 8) {
                 // 日付は2段表示にして中央揃えにする
                 VStack(spacing: 0) {
                     Text(AppDateFormat.yearWeekdayText(payment.date))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                        .allowsTightening(true)
                     Text(AppDateFormat.monthDayText(payment.date))
                         .font(.subheadline)
                         .lineLimit(1)
@@ -225,25 +227,26 @@ private struct PaymentRow: View {
                 // 日付は優先表示して欠けにくくする
                 .fixedSize(horizontal: true, vertical: false)
                 .layoutPriority(2)
-                Text(bankNameText)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    // 省略は口座名側で受ける
-                    .layoutPriority(0)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(bankNameText)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    HStack(spacing: 8) {
+                        Spacer(minLength: 0)
+                        Text(payment.sumAmount.currencyString())
+                            .font(.body.monospacedDigit())
+                            .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                            .lineLimit(1)
+                            // 金額は最優先で欠けないようにする
+                            .fixedSize(horizontal: true, vertical: false)
+                            .layoutPriority(3)
+                    }
+                }
+                .layoutPriority(1)
             }
-            .layoutPriority(1)
-
-            Spacer()
-
-            Text(payment.sumAmount.currencyString())
-                .font(.body.monospacedDigit())
-                .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
-                .lineLimit(1)
-                // 金額は最優先で欠けないようにする
-                .fixedSize(horizontal: true, vertical: false)
-                .layoutPriority(3)
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
@@ -291,6 +294,12 @@ private struct PaymentCombinedCard: View {
     private var indexedPaidPayments: [(offset: Int, element: E7payment)] {
         Array(paidPayments.enumerated())
     }
+    
+    private var unpaidTotalAmount: Decimal {
+        unpaidPayments.reduce(Decimal.zero) { partialResult, payment in
+            partialResult + payment.sumAmount
+        }
+    }
 
     /// 未払側の区切り線表示可否
     private func showsUnpaidDivider(after index: Int) -> Bool {
@@ -322,7 +331,7 @@ private struct PaymentCombinedCard: View {
             }
 
             // 境目を太線で区切り、上下にラベルを置いて文脈を維持する
-            PaymentBoundaryMarker()
+            PaymentBoundaryMarker(unpaidTotalAmount: unpaidTotalAmount)
 
             if !paidPayments.isEmpty {
                 ForEach(indexedPaidPayments, id: \.element.id) { index, payment in
@@ -437,6 +446,7 @@ private struct PaymentRowDivider: View {
 }
 
 private struct PaymentBoundaryMarker: View {
+    let unpaidTotalAmount: Decimal
     @Environment(\.colorScheme) private var colorScheme
 
     private var boundaryColor: Color {
@@ -460,19 +470,30 @@ private struct PaymentBoundaryMarker: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("payment.section.unpaidBeforeDebit")
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(labelColor)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 10)
-                .background(
-                    // 上端の色をラベル帯に自然に引き込む
-                    LinearGradient(
-                        colors: [COLOR_UNPAID.opacity(edgeHighlightOpacity * 0.55), .clear],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+            HStack(spacing: 8) {
+                Text("payment.section.unpaidTotal")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(labelColor)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                Spacer(minLength: 0)
+                Text(unpaidTotalAmount.currencyString())
+                    .font(.headline.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(COLOR_UNPAID)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                // 上端の色をラベル帯に自然に引き込む
+                LinearGradient(
+                    colors: [COLOR_UNPAID.opacity(edgeHighlightOpacity * 0.55), .clear],
+                    startPoint: .top,
+                    endPoint: .bottom
                 )
+            )
 
             // 境界線だけ明るくする
             Rectangle()
