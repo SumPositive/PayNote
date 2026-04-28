@@ -151,43 +151,80 @@ private extension ManagementLevel {
 
 private struct PartRow: View {
     let part: E6part
+    private var record: E3record? { part.e3record }
     private var usePointText: String {
         // 利用点は自由入力の記録名を優先し、旧データは店舗名を使う
-        if let recordName = part.e3record?.zName, !recordName.isEmpty {
+        if let recordName = record?.zName, !recordName.isEmpty {
             return recordName
         }
-        if let shopName = part.e3record?.e4shop?.zName, !shopName.isEmpty {
+        if let shopName = record?.e4shop?.zName, !shopName.isEmpty {
             return shopName
         }
         return "—"
     }
-    private var dateText: String {
-        guard let record = part.e3record else { return "—" }
-        return AppDateFormat.singleLineText(record.dateUse)
+    private var amountToneColor: Color {
+        part.nAmount < 0 ? COLOR_AMOUNT_NEGATIVE : COLOR_AMOUNT_POSITIVE
+    }
+    private var hasMissingSelection: Bool {
+        // 決済手段未選択、または引き落とし口座未選択のときに未アイコンを表示する
+        if record?.e1card == nil {
+            return true
+        }
+        return record?.e1card?.e8bank == nil
+    }
+    private var payMethodText: String {
+        record?.e1card?.zName ?? NSLocalizedString("record.field.card", comment: "")
     }
 
     var body: some View {
-        HStack(spacing: 10) {
-            Text(dateText)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+        HStack(alignment: .center, spacing: 6) {
+            // 決済履歴セルと同じ2段の日付表示
+            VStack(spacing: 0) {
+                Text(record.map { AppDateFormat.yearWeekdayText($0.dateUse) } ?? "—")
+                    .font(.caption2)
+                    .foregroundStyle(Color(.secondaryLabel))
+                    .lineLimit(1)
+                Text(record.map { AppDateFormat.monthDayText($0.dateUse) } ?? "—")
+                    .font(.subheadline)
+                    .foregroundStyle(amountToneColor)
+                    .lineLimit(1)
+            }
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: true, vertical: false)
 
-            Text(usePointText)
-                .font(.body)
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .layoutPriority(0)
-
-            Spacer()
-
-            Text(part.nAmount.currencyString())
-                .font(.body.monospacedDigit())
-                .lineLimit(1)
-                .layoutPriority(1)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(usePointText)
+                        .font(.body)
+                        .foregroundStyle(amountToneColor)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    HStack(spacing: 6) {
+                        if hasMissingSelection {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.caption)
+                                .foregroundStyle(COLOR_UNPAID)
+                        }
+                        Text(payMethodText)
+                            .font(.caption)
+                            .foregroundStyle(amountToneColor)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                    Spacer(minLength: 8)
+                    Text(part.nAmount.currencyString())
+                        .font(.body.monospacedDigit())
+                        .foregroundStyle(amountToneColor)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+                }
+            }
         }
-        // 状態表示はセクション右肩ラベル（未払/済み）へ統一する
+        // 状態表示（未払/済み）は明細セルには出さない
+        .frame(minHeight: 52, alignment: .center)
+        .padding(.vertical, 2)
         .contentShape(Rectangle())
     }
 }
