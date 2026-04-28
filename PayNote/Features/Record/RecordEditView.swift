@@ -133,11 +133,17 @@ struct RecordEditView: View {
         ("repeat.none", 0), ("repeat.nextMonth", 1),
         ("repeat.2months", 2), ("repeat.12months", 12)
     ]
-    private var repeatLabelKey: LocalizedStringKey {
+    private var repeatLabelText: String {
         if let option = repeatOptions.first(where: { $0.value == nRepeat }) {
-            return LocalizedStringKey(option.label)
+            return NSLocalizedString(option.label, comment: "")
         }
-        return LocalizedStringKey("repeat.none")
+        return NSLocalizedString("repeat.none", comment: "")
+    }
+    private var categoryValueText: String {
+        if selectedCategories.isEmpty {
+            return NSLocalizedString("label.noSelection", comment: "")
+        }
+        return selectedCategories.map(\.zName).joined(separator: " / ")
     }
 
     var body: some View {
@@ -327,15 +333,13 @@ struct RecordEditView: View {
         Section {
             // 金額
             Button { showAmountPad = true } label: {
-                HStack {
-                    Text("record.field.amount")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(nAmount == 0 ? "—" : nAmount.currencyString())
-                        .font(.title2.bold().monospacedDigit())
-                        .foregroundStyle(nAmount == 0 ? Color(.tertiaryLabel) : COLOR_AMOUNT_POSITIVE)
-                }
-                .contentShape(Rectangle())
+                twoLineValueRow(
+                    titleKey: "record.field.amount",
+                    valueText: nAmount == 0 ? "—" : nAmount.currencyString(),
+                    valueColor: nAmount == 0 ? Color(.tertiaryLabel) : COLOR_AMOUNT_POSITIVE,
+                    valueFont: .title2.bold().monospacedDigit(),
+                    showsChevron: false
+                )
             }
             .id(formTopAnchorID)
             .buttonStyle(.plain)
@@ -343,35 +347,21 @@ struct RecordEditView: View {
 
             // 利用日はセル全体のタップで選択画面を開く
             Button { showDatePicker = true } label: {
-                HStack {
-                    Text("record.field.date")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(AppDateFormat.singleLineText(dateUse))
-                        .foregroundStyle(.primary)
-                    Image(systemName: "chevron.right")
-                        .font(.caption).foregroundStyle(.tertiary)
-                }
-                .contentShape(Rectangle())
+                twoLineValueRow(
+                    titleKey: "record.field.date",
+                    valueText: AppDateFormat.singleLineText(dateUse)
+                )
             }
             .buttonStyle(.plain)
             .disabled(isCoreFieldsLocked)
 
             // 決済手段（必須パネル・保存は未選択でも可）
             Button { showCardPicker = true } label: {
-                HStack {
-                    Text("record.field.card")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    if let card = selectedCard {
-                        Text(card.zName).foregroundStyle(.primary)
-                    } else {
-                        Text("label.noSelection").foregroundStyle(.secondary)
-                    }
-                    Image(systemName: "chevron.right")
-                        .font(.caption).foregroundStyle(.tertiary)
-                }
-                .contentShape(Rectangle())
+                twoLineValueRow(
+                    titleKey: "record.field.card",
+                    valueText: selectedCard?.zName ?? NSLocalizedString("label.noSelection", comment: ""),
+                    valueColor: selectedCard == nil ? .secondary : .primary
+                )
             }
             .buttonStyle(.plain)
             .disabled(isCoreFieldsLocked)
@@ -379,21 +369,11 @@ struct RecordEditView: View {
             if shouldShowBankPickerRow {
                 // 口座未設定なら、この画面上で口座を選択できるようにする
                 Button { showBankPicker = true } label: {
-                    HStack {
-                        Text("card.field.bank")
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        if let bank = selectedBankForCard {
-                            Text(bank.zName)
-                                .foregroundStyle(.primary)
-                        } else {
-                            Text("label.noSelection")
-                                .foregroundStyle(.secondary)
-                        }
-                        Image(systemName: "chevron.right")
-                            .font(.caption).foregroundStyle(.tertiary)
-                    }
-                    .contentShape(Rectangle())
+                    twoLineValueRow(
+                        titleKey: "card.field.bank",
+                        valueText: selectedBankForCard?.zName ?? NSLocalizedString("label.noSelection", comment: ""),
+                        valueColor: selectedBankForCard == nil ? .secondary : .primary
+                    )
                 }
                 .buttonStyle(.plain)
                 .disabled(isCoreFieldsLocked)
@@ -405,16 +385,29 @@ struct RecordEditView: View {
         Section {
             // 利用点（自由入力 + 頻度候補）
             VStack(alignment: .leading, spacing: 8) {
-                TextField("record.field.usePoint", text: $zName)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .focused($isUsePointFocused)
-                    .onChange(of: zName) { _, newValue in
-                        // 利用点は最大100文字までに制限する
-                        if 100 < newValue.count {
-                            zName = String(newValue.prefix(100))
-                        }
+                ZStack(alignment: .topLeading) {
+                    // 入力前はプレースホルダーだけ表示する
+                    if zName.isEmpty {
+                        Text("record.field.usePoint")
+                            .foregroundStyle(.tertiary)
+                            .padding(.top, 8)
+                            .padding(.leading, 5)
                     }
+                    // ラベルは改行を許可し、全文を表示する
+                    TextEditor(text: $zName)
+                        .focused($isUsePointFocused)
+                        .frame(height: editorHeight(for: zName, minHeight: 40, maxHeight: 120))
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .onChange(of: zName) { _, newValue in
+                            // ラベルは最大100文字までに制限する
+                            if 100 < newValue.count {
+                                zName = String(newValue.prefix(100))
+                            }
+                        }
+                }
 
                 if isUsePointFocused && !shownUsePointCandidates.isEmpty {
                     VStack(spacing: 0) {
@@ -450,17 +443,48 @@ struct RecordEditView: View {
             // 分類タグ（複数選択）
             VStack(alignment: .leading, spacing: 6) {
                 Button { showCategoryPicker = true } label: {
-                    HStack(alignment: .top, spacing: 6) {
-                        // 見出しは固定幅を確保して欠けないようにする
-                        Text("record.field.category")
-                            .foregroundStyle(.secondary)
-                            .frame(width: 44, alignment: .leading)
-                        categoryLabel
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Image(systemName: "chevron.right")
-                            .font(.caption).foregroundStyle(.tertiary)
-                            .padding(.top, 2)
+                    ViewThatFits(in: .horizontal) {
+                        // 1行版: タイトルと値が収まる場合
+                        HStack(spacing: 8) {
+                            Text("record.field.category")
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .fixedSize(horizontal: true, vertical: false)
+                            Spacer(minLength: 8)
+                            Text(categoryValueText)
+                                .foregroundStyle(selectedCategories.isEmpty ? .secondary : .primary)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .fixedSize(horizontal: true, vertical: false)
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                                .fixedSize(horizontal: true, vertical: false)
+                        }
+
+                        // 2行版: 値は全文を右寄せで表示する
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(spacing: 0) {
+                                Text("record.field.category")
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                                Spacer(minLength: 8)
+                            }
+                            HStack(alignment: .top, spacing: 6) {
+                                Spacer(minLength: 8)
+                                Text(categoryValueText)
+                                    .foregroundStyle(selectedCategories.isEmpty ? .secondary : .primary)
+                                    .multilineTextAlignment(.trailing)
+                                    .lineLimit(nil)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundStyle(.tertiary)
+                                    .padding(.top, 2)
+                            }
+                        }
                     }
                     .contentShape(Rectangle())
                 }
@@ -471,26 +495,31 @@ struct RecordEditView: View {
             if payType == .lumpSum {
                 VStack(alignment: .leading, spacing: 6) {
                     Button { showRepeatPicker = true } label: {
-                        HStack {
-                            Text("record.field.repeat")
-                                // 他の見出しと同じ薄さにそろえる
-                                .foregroundStyle(Color(.secondaryLabel))
-                            Spacer()
-                            Text(repeatLabelKey)
-                                .foregroundStyle(.primary)
-                            Image(systemName: "chevron.right")
-                                .font(.caption).foregroundStyle(.tertiary)
-                        }
-                        .contentShape(Rectangle())
+                        twoLineValueRow(
+                            titleKey: "record.field.repeat",
+                            valueText: repeatLabelText
+                        )
                     }
                     .buttonStyle(.plain)
                 }
             }
 
             // メモ
-            TextField("record.field.note", text: $zNote, axis: .vertical)
-                .lineLimit(3...)
-                .autocorrectionDisabled()
+            ZStack(alignment: .topLeading) {
+                // 入力前はプレースホルダーだけ表示する
+                if zNote.isEmpty {
+                    Text("record.field.note")
+                        .foregroundStyle(.tertiary)
+                        .padding(.top, 8)
+                        .padding(.leading, 5)
+                }
+                // メモは改行を許可し、全文を表示する
+                TextEditor(text: $zNote)
+                    .frame(height: editorHeight(for: zNote, minHeight: 40, maxHeight: 180))
+                    .scrollContentBackground(.hidden)
+                    .background(Color.clear)
+                    .autocorrectionDisabled()
+            }
         }
     }
 
@@ -517,32 +546,6 @@ struct RecordEditView: View {
                     }
                 }
             }
-        }
-    }
-
-    // MARK: - Category Label
-
-    @ViewBuilder private var categoryLabel: some View {
-        if selectedCategories.isEmpty {
-            Text("label.noSelection")
-                .foregroundStyle(.secondary)
-        } else {
-            // タグはカプセルを横並びにし、収まらない分は折り返す
-            ChipFlowLayout(spacing: 6) {
-                ForEach(selectedCategories) { category in
-                    Text(category.zName)
-                        .font(.caption.weight(.medium))
-                        .lineLimit(1)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(.secondarySystemFill))
-                        .clipShape(Capsule())
-                        .foregroundStyle(.primary)
-                }
-            }
-            // セル幅いっぱいを使って折り返し、高さを自然に拡張する
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -664,6 +667,79 @@ struct RecordEditView: View {
         cachedLatestCard = pastRecords.first(where: { $0.e1card != nil })?.e1card
         // 候補適用時にIDから即座に引けるようにカテゴリ辞書を保持する
         cachedCategoryByID = Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0) })
+    }
+
+    /// 見出しと値を、収まる場合は1行、収まらない場合は2行で表示する共通セル
+    private func twoLineValueRow(
+        titleKey: LocalizedStringKey,
+        valueText: String,
+        valueColor: Color = .primary,
+        valueFont: Font = .body,
+        showsChevron: Bool = true
+    ) -> some View {
+        ViewThatFits(in: .horizontal) {
+            // 1行版: 収まる場合はこちらを採用する
+            HStack(spacing: 8) {
+                Text(titleKey)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .fixedSize(horizontal: true, vertical: false)
+                Spacer(minLength: 8)
+                Text(valueText)
+                    .font(valueFont)
+                    .foregroundStyle(valueColor)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .fixedSize(horizontal: true, vertical: false)
+                if showsChevron {
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .fixedSize(horizontal: true, vertical: false)
+                }
+            }
+
+            // 2行版: 1行に収まらない場合のみこちらを採用する
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 0) {
+                    Text(titleKey)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Spacer(minLength: 8)
+                }
+
+                HStack(spacing: 6) {
+                    Spacer(minLength: 8)
+                    Text(valueText)
+                        .font(valueFont)
+                        .foregroundStyle(valueColor)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    if showsChevron {
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            }
+        }
+        .contentShape(Rectangle())
+    }
+
+    /// 入力文字量に応じたエディタ高さを返す
+    private func editorHeight(
+        for text: String,
+        minHeight: CGFloat,
+        maxHeight: CGFloat
+    ) -> CGFloat {
+        // 改行数と文字数から概算行数を求めて高さを決める
+        let explicitLines = max(1, text.components(separatedBy: "\n").count)
+        let wrappedLines = max(1, text.count / 18 + 1)
+        let lineCount = max(explicitLines, wrappedLines)
+        let estimated = CGFloat(lineCount) * 22 + 14
+        return min(maxHeight, max(minHeight, estimated))
     }
 
     // MARK: - Similar Records
@@ -1022,73 +1098,6 @@ private struct CategoryMultiPickerSheet: View {
                 return
             }
             selectedCategories.append(item)
-        }
-    }
-}
-
-// MARK: - Chip Flow Layout
-
-private struct ChipFlowLayout: Layout {
-    let spacing: CGFloat
-
-    init(spacing: CGFloat = 6) {
-        self.spacing = spacing
-    }
-
-    func sizeThatFits(
-        proposal: ProposedViewSize,
-        subviews: Subviews,
-        cache: inout ()
-    ) -> CGSize {
-        // 横幅提案が未指定の場合は固定幅で折り返しを有効化する
-        let proposedWidth = proposal.width ?? 240
-        let maxWidth = max(0, proposedWidth)
-        var x: CGFloat = 0
-        var y: CGFloat = 0
-        var lineHeight: CGFloat = 0
-        var usedWidth: CGFloat = 0
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if maxWidth < x + size.width, x != 0 {
-                usedWidth = max(usedWidth, x - spacing)
-                y += lineHeight + spacing
-                x = 0
-                lineHeight = 0
-            }
-            x += size.width + spacing
-            lineHeight = max(lineHeight, size.height)
-        }
-        if !subviews.isEmpty {
-            usedWidth = max(usedWidth, x - spacing)
-            y += lineHeight
-        }
-        return CGSize(width: min(maxWidth, usedWidth), height: y)
-    }
-
-    func placeSubviews(
-        in bounds: CGRect,
-        proposal: ProposedViewSize,
-        subviews: Subviews,
-        cache: inout ()
-    ) {
-        var x = bounds.minX
-        var y = bounds.minY
-        var lineHeight: CGFloat = 0
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if bounds.maxX < x + size.width, bounds.minX != x {
-                x = bounds.minX
-                y += lineHeight + spacing
-                lineHeight = 0
-            }
-            subview.place(
-                at: CGPoint(x: x, y: y),
-                proposal: ProposedViewSize(width: size.width, height: size.height)
-            )
-            x += size.width + spacing
-            lineHeight = max(lineHeight, size.height)
         }
     }
 }

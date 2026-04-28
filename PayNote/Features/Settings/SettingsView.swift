@@ -23,13 +23,17 @@ struct SettingsView: View {
     var body: some View {
         List {
             Section("settings.panel.display") {
-                VStack(alignment: .leading, spacing: 6) {
-                    Picker("settings.userLevel", selection: $userLevel) {
-                        ForEach(UserLevel.allCases) { level in
-                            Text(LocalizedStringKey(level.localizedKey)).tag(level)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Text("settings.userLevel")
+                            .font(.subheadline)
+                        Picker("settings.userLevel", selection: $userLevel) {
+                            ForEach(UserLevel.allCases) { level in
+                                Text(LocalizedStringKey(level.localizedKey)).tag(level)
+                            }
                         }
+                        .pickerStyle(.segmented)
                     }
-
                     if userLevel == .beginner {
                         Text("settings.help.userLevel")
                             .font(.caption)
@@ -38,26 +42,41 @@ struct SettingsView: View {
                     }
                 }
 
-                Picker("settings.appearance", selection: $appearanceMode) {
-                    ForEach(AppearanceMode.allCases) { mode in
-                        Text(LocalizedStringKey(mode.localizedKey)).tag(mode)
+                HStack(spacing: 8) {
+                    Text("settings.appearance")
+                        .font(.subheadline)
+                    Picker("settings.appearance", selection: $appearanceMode) {
+                        ForEach(AppearanceMode.allCases) { mode in
+                            Text(LocalizedStringKey(mode.localizedKey)).tag(mode)
+                        }
                     }
+                    .pickerStyle(.segmented)
                 }
 
-                Picker("settings.fontScale", selection: $fontScale) {
-                    ForEach(FontScale.allCases) { scale in
-                        Text(LocalizedStringKey(scale.localizedKey)).tag(scale)
+                HStack(spacing: 8) {
+                    Text("settings.fontScale")
+                        .font(.subheadline)
+                    Picker("settings.fontScale", selection: $fontScale) {
+                        ForEach(FontScale.allCases) { scale in
+                            Text(LocalizedStringKey(scale.localizedKey)).tag(scale)
+                        }
                     }
+                    .pickerStyle(.segmented)
                 }
             }
 
             Section("settings.panel.payment") {
                 Toggle("settings.openAddOnActive", isOn: $openAddOnActive)
 
-                Picker("settings.afterSave", selection: $afterSaveAction) {
-                    ForEach(AfterSaveAction.allCases) { action in
-                        Text(LocalizedStringKey(action.localizedKey)).tag(action)
+                HStack(spacing: 8) {
+                    Text("settings.afterSave")
+                        .font(.subheadline)
+                    Picker("settings.afterSave", selection: $afterSaveAction) {
+                        ForEach(AfterSaveAction.allCases) { action in
+                            Text(LocalizedStringKey(action.localizedKey)).tag(action)
+                        }
                     }
+                    .pickerStyle(.segmented)
                 }
             }
 

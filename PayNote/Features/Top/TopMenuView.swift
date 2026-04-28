@@ -40,13 +40,29 @@ struct TopMenuView: View {
                         Image(systemName: "calendar.badge.clock")
                             .foregroundStyle(.orange)
                             .frame(width: 28)
-                        VStack(alignment: .leading, spacing: 8) {
-                            // 上段はタイトルと「未払計」を分け、金額を右寄せで強調する
+                        // タイトルと未払計が1行に収まらない場合は2行目に表示する
+                        ViewThatFits(in: .horizontal) {
+                            // 1行版: 各テキストを自然幅で固定して収まるか試す
                             HStack(alignment: .firstTextBaseline, spacing: 8) {
                                 Text("top.paymentList")
+                                    .fixedSize(horizontal: true, vertical: false)
                                 Spacer(minLength: 8)
-                                // 「未払計 + 金額」は1行で表示する
                                 HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                    Text("top.paymentList.unpaidTotal")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .fixedSize(horizontal: true, vertical: false)
+                                    Text(totalUnpaid.currencyString())
+                                        .font(.callout.weight(.semibold))
+                                        .foregroundStyle(COLOR_UNPAID)
+                                        .fixedSize(horizontal: true, vertical: false)
+                                }
+                            }
+                            // 2行版: 収まらない場合は未払計を2行目に右寄せで表示
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("top.paymentList")
+                                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                    Spacer(minLength: 0)
                                     Text("top.paymentList.unpaidTotal")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
@@ -55,8 +71,6 @@ struct TopMenuView: View {
                                         .foregroundStyle(COLOR_UNPAID)
                                 }
                             }
-
-                            // 初心者モードではセル内に操作説明を表示する
                         }
                     }
                 }
