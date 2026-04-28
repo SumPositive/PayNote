@@ -75,6 +75,15 @@ enum FontScale: String, CaseIterable, Identifiable {
         case .xLarge:   .accessibility2
         }
     }
+
+    /// 固定サイズ指定が必要なUI向けの補正倍率
+    var uiScale: CGFloat {
+        switch self {
+        case .standard: 1.0
+        case .large:    1.2
+        case .xLarge:   1.35
+        }
+    }
 }
 
 /// 新しい決済入力後の動作

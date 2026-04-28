@@ -10,12 +10,13 @@ struct NumericKeypadSheet: View {
     let onCommit: (Decimal) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .standard
     @State private var digits: String = ""
 
     private var isEmpty: Bool { digits.isEmpty }
     private var isCompact: Bool { UIScreen.main.bounds.height <= 700 }
-    private var sheetSpacing: CGFloat { isCompact ? 14 : 20 }
-    private var displayFontSize: CGFloat { isCompact ? 44 : 52 }
+    private var sheetSpacing: CGFloat { (isCompact ? 14 : 20) * fontScale.uiScale }
+    private var displayFontSize: CGFloat { (isCompact ? 44 : 52) * fontScale.uiScale }
     private var locale: Locale { .current }
     private var fractionDigits: Int { Decimal.currencyFractionDigits(locale: locale) }
 
@@ -51,7 +52,7 @@ struct NumericKeypadSheet: View {
                 .padding(.top, isCompact ? 4 : 8)
 
                 // テンキー
-                NumericKeypad(compact: isCompact) { key in handleKey(key) }
+                NumericKeypad(compact: isCompact, scale: fontScale.uiScale) { key in handleKey(key) }
 
                 // 決定ボタン
                 Button {
@@ -118,33 +119,35 @@ enum NumericKeypadKey {
 
 struct NumericKeypad: View {
     let compact: Bool
+    let scale: CGFloat
     let onKey: (NumericKeypadKey) -> Void
 
     private let rows = [[7, 8, 9], [4, 5, 6], [1, 2, 3]]
 
-    init(compact: Bool = false, onKey: @escaping (NumericKeypadKey) -> Void) {
+    init(compact: Bool = false, scale: CGFloat = 1.0, onKey: @escaping (NumericKeypadKey) -> Void) {
         self.compact = compact
+        self.scale = scale
         self.onKey = onKey
     }
 
-    private var spacing: CGFloat    { compact ? 8 : 10 }
-    private var hPadding: CGFloat   { compact ? 16 : 20 }
+    private var spacing: CGFloat    { (compact ? 8 : 10) * scale }
+    private var hPadding: CGFloat   { (compact ? 16 : 20) * scale }
 
     var body: some View {
         VStack(spacing: spacing) {
             ForEach(rows, id: \.self) { row in
                 HStack(spacing: spacing) {
                     ForEach(row, id: \.self) { digit in
-                        KeypadDigitButton(label: "\(digit)", compact: compact) {
+                        KeypadDigitButton(label: "\(digit)", compact: compact, scale: scale) {
                             onKey(.digit(digit))
                         }
                     }
                 }
             }
             HStack(spacing: spacing) {
-                KeypadDigitButton(label: "0",  compact: compact) { onKey(.digit(0)) }
-                KeypadDigitButton(label: "00", compact: compact) { onKey(.doubleZero) }
-                KeypadDeleteButton(compact: compact)             { onKey(.delete) }
+                KeypadDigitButton(label: "0",  compact: compact, scale: scale) { onKey(.digit(0)) }
+                KeypadDigitButton(label: "00", compact: compact, scale: scale) { onKey(.doubleZero) }
+                KeypadDeleteButton(compact: compact, scale: scale)             { onKey(.delete) }
             }
         }
         .padding(.horizontal, hPadding)
@@ -156,9 +159,10 @@ struct NumericKeypad: View {
 private struct KeypadDigitButton: View {
     let label: String
     let compact: Bool
+    let scale: CGFloat
     let action: () -> Void
 
-    private var minHeight: CGFloat { compact ? 52 : 56 }
+    private var minHeight: CGFloat { (compact ? 52 : 56) * scale }
     private var font: Font { compact ? .title2.weight(.medium) : .title.weight(.medium) }
 
     var body: some View {
@@ -175,9 +179,10 @@ private struct KeypadDigitButton: View {
 
 private struct KeypadDeleteButton: View {
     let compact: Bool
+    let scale: CGFloat
     let action: () -> Void
 
-    private var minHeight: CGFloat { compact ? 52 : 56 }
+    private var minHeight: CGFloat { (compact ? 52 : 56) * scale }
     private var font: Font { compact ? .title3 : .title2 }
 
     var body: some View {

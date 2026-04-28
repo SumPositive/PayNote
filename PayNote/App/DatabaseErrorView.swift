@@ -3,11 +3,12 @@ import SwiftUI
 struct DatabaseErrorView: View {
     let error: Error?
     let onReset: () -> Void
+    @ScaledMetric(relativeTo: .title) private var warningIconSize: CGFloat = 64
 
     var body: some View {
         VStack(spacing: 24) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 64))
+                .font(.system(size: warningIconSize))
                 .foregroundStyle(.orange)
 
             Text("error.db.title")

@@ -12,6 +12,7 @@ struct ContentView: View {
     @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .standard
     @State private var selectedDestination: AppDestination?
     @State private var addRecordRefreshID = UUID()
+    @ScaledMetric(relativeTo: .title) private var emptyIconSize: CGFloat = 64
     /// 特大モード用スタックパス
     @State private var stackPath: [AppDestination] = []
 
@@ -68,7 +69,7 @@ struct ContentView: View {
                     // iPad 初期表示
                     VStack(spacing: 16) {
                         Image(systemName: "creditcard")
-                            .font(.system(size: 64))
+                            .font(.system(size: emptyIconSize))
                             .foregroundStyle(.secondary)
                         Text("app.selectMenu")
                             .font(.title3)

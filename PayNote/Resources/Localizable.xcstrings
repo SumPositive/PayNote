@@ -1320,13 +1320,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "to mark it as paid."
+            "value" : "mark it as paid."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "で引き落とし済みにします。"
+            "value" : "引き落とし済みにします。"
           }
         }
       }
@@ -1354,13 +1354,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "to move it back to unpaid."
+            "value" : "move it back to unpaid."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "で未払に戻せます。"
+            "value" : "未払に戻せます。"
           }
         }
       }

@@ -33,6 +33,7 @@ struct RecordEditView: View {
 
     @AppStorage(AppStorageKey.afterSaveAction)   private var afterSaveAction: AfterSaveAction = .goBack
     @AppStorage(AppStorageKey.userLevel)         private var userLevel: UserLevel = .beginner
+    @AppStorage(AppStorageKey.fontScale)         private var fontScale: FontScale = .standard
 
     @State private var dateUse:    Date     = Date()
     @State private var zName:      String   = ""
@@ -313,6 +314,8 @@ struct RecordEditView: View {
             }
         }
         .animation(.spring(duration: 0.3), value: savedBanner)
+        // 決済編集画面は設定の文字サイズを明示適用して追従させる
+        .dynamicTypeSize(fontScale.dynamicTypeSize)
     }
 
     // MARK: - Form Sections
@@ -738,8 +741,8 @@ struct RecordEditView: View {
         let explicitLines = max(1, text.components(separatedBy: "\n").count)
         let wrappedLines = max(1, text.count / 18 + 1)
         let lineCount = max(explicitLines, wrappedLines)
-        let estimated = CGFloat(lineCount) * 22 + 14
-        return min(maxHeight, max(minHeight, estimated))
+        let estimated = (CGFloat(lineCount) * 22 + 14) * fontScale.uiScale
+        return min(maxHeight * fontScale.uiScale, max(minHeight * fontScale.uiScale, estimated))
     }
 
     // MARK: - Similar Records

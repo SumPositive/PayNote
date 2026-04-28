@@ -44,27 +44,36 @@ struct PaymentListView: View {
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text("payment.beginner.title")
                                         .font(.subheadline.weight(.semibold))
-                                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                    // 文とアイコン付き操作文を分け、改行位置を自然にする
+                                    VStack(alignment: .leading, spacing: 2) {
                                         Text("payment.beginner.line1")
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
-                                        Image(systemName: "arrow.down.circle.fill")
-                                            .foregroundStyle(COLOR_UNPAID)
-                                            .font(.caption.weight(.bold))
-                                        Text("payment.beginner.line2")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                            Image(systemName: "arrow.down.circle.fill")
+                                                .foregroundStyle(COLOR_UNPAID)
+                                                .font(.caption.weight(.bold))
+                                            Text("payment.beginner.line2")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                        }
                                     }
-                                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                    VStack(alignment: .leading, spacing: 2) {
                                         Text("payment.beginner.line3")
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
-                                        Image(systemName: "arrow.up.circle.fill")
-                                            .foregroundStyle(COLOR_PAID)
-                                            .font(.caption.weight(.bold))
-                                        Text("payment.beginner.line4")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                            Image(systemName: "arrow.up.circle.fill")
+                                                .foregroundStyle(COLOR_PAID)
+                                                .font(.caption.weight(.bold))
+                                            Text("payment.beginner.line4")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                        }
                                     }
                                 }
                             }
