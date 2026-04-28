@@ -37,7 +37,6 @@ enum JSONImport {
         var payMonth: Int
         var bonus1: Int
         var bonus2: Int
-        var manageLevel: Int?
         var bankID: String?
     }
 
@@ -242,9 +241,6 @@ enum JSONImport {
             card.nPayMonth = Int16(item.payMonth)
             card.nBonus1 = Int16(item.bonus1)
             card.nBonus2 = Int16(item.bonus2)
-            if let manageLevel = item.manageLevel {
-                card.nManageLevel = Int16(manageLevel)
-            }
             card.e8bank = item.bankID.flatMap { bankByID[$0] }
         }
         return items.count

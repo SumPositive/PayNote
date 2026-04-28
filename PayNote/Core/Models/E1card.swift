@@ -18,7 +18,6 @@ final class E1card {
     var nPayMonth: Int16
     var nBonus1: Int16
     var nBonus2: Int16
-    var nManageLevel: Int16 = 0
     var dateUpdate: Date?
     // 集計値（子レコード変更時に更新）
     var sumPaid: Decimal
@@ -33,7 +32,6 @@ final class E1card {
 
     /// 旧データ互換: nClosingDay=0 は即日デビット（新規作成不可）
     var isDebit: Bool { nClosingDay == 0 }
-    var manageLevel: ManagementLevel { ManagementLevel(rawValue: nManageLevel) ?? .precise }
     // 互換参照用に請求全体を返す
     var e2invoices: [E2invoice] { e2paids + e2unpaids }
 
@@ -47,7 +45,6 @@ final class E1card {
         nPayMonth: Int16 = 1,
         nBonus1: Int16 = 0,
         nBonus2: Int16 = 0,
-        nManageLevel: Int16 = 0,
         dateUpdate: Date? = nil,
         sumPaid: Decimal = 0,
         sumUnpaid: Decimal = 0,
@@ -62,7 +59,6 @@ final class E1card {
         self.nPayMonth = nPayMonth
         self.nBonus1 = nBonus1
         self.nBonus2 = nBonus2
-        self.nManageLevel = nManageLevel
         self.dateUpdate = dateUpdate
         self.sumPaid = sumPaid
         self.sumUnpaid = sumUnpaid

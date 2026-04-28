@@ -98,16 +98,6 @@ struct InvoiceListView: View {
                 } header: {
                     HStack {
                         Text(invoice.e1card?.zName ?? "—")
-                        Spacer()
-                        let level = invoice.e1card?.manageLevel ?? .precise
-                        // 右肩は状態表示ではなく、決済手段の管理レベルを表示する
-                        Text(LocalizedStringKey(level.labelKey))
-                            .font(.caption2.bold())
-                            .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(level.badgeColor.opacity(0.18))
-                            .foregroundStyle(level.badgeColor)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                        .textCase(nil)
                     }
                 }
             }
@@ -130,20 +120,6 @@ struct InvoiceListView: View {
             isPaid: !invoice.isPaid,
             context: context
         )
-    }
-}
-
-private extension ManagementLevel {
-    /// 管理レベルごとの識別色
-    var badgeColor: Color {
-        switch self {
-        case .precise:
-            return .blue
-        case .approximate:
-            return .green
-        case .largeOnly:
-            return .purple
-        }
     }
 }
 

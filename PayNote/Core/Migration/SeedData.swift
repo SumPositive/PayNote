@@ -8,7 +8,6 @@ enum SeedData {
         var closingDay: Int16
         var payDay: Int16
         var payMonth: Int16
-        var manageLevel: ManagementLevel = .precise
     }
 
     struct BankPreset {
@@ -42,8 +41,7 @@ enum SeedData {
                 nRow: Int32(row),
                 nClosingDay: p.closingDay,
                 nPayDay: p.payDay,
-                nPayMonth: p.payMonth,
-                nManageLevel: p.manageLevel.rawValue
+                nPayMonth: p.payMonth
             )
             context.insert(card)
         }
@@ -106,23 +104,23 @@ enum SeedData {
     /// 日本向けの代表的な決済方法
     private static func japaneseCardPresets() -> [CardPreset] {
         [
-            CardPreset(name: "VIEWカード Suica", closingDay: 5, payDay: 4, payMonth: 1, manageLevel: .precise),
-            CardPreset(name: "PayPayカード PayPay", closingDay: 29, payDay: 27, payMonth: 1, manageLevel: .approximate),
-            CardPreset(name: "楽天カード Rpay", closingDay: 29, payDay: 27, payMonth: 1, manageLevel: .approximate),
-            CardPreset(name: "イオンカード AEONPay", closingDay: 10, payDay: 2, payMonth: 1, manageLevel: .precise),
-            CardPreset(name: "ｄカード", closingDay: 15, payDay: 10, payMonth: 1, manageLevel: .approximate),
-            CardPreset(name: "三井住友カード", closingDay: 15, payDay: 10, payMonth: 1, manageLevel: .largeOnly),
-            CardPreset(name: "AMEXカード", closingDay: 20, payDay: 10, payMonth: 1, manageLevel: .largeOnly),
+            CardPreset(name: "VIEWカード Suica", closingDay: 5, payDay: 4, payMonth: 1),
+            CardPreset(name: "PayPayカード PayPay", closingDay: 29, payDay: 27, payMonth: 1),
+            CardPreset(name: "楽天カード Rpay", closingDay: 29, payDay: 27, payMonth: 1),
+            CardPreset(name: "イオンカード AEONPay", closingDay: 10, payDay: 2, payMonth: 1),
+            CardPreset(name: "ｄカード", closingDay: 15, payDay: 10, payMonth: 1),
+            CardPreset(name: "三井住友カード", closingDay: 15, payDay: 10, payMonth: 1),
+            CardPreset(name: "AMEXカード", closingDay: 20, payDay: 10, payMonth: 1),
         ]
     }
 
     /// 英語環境では欧米の代表的な決済方法を初期表示する
     private static func westernCardPresets() -> [CardPreset] {
         [
-            CardPreset(name: "Visa", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .approximate),
-            CardPreset(name: "Mastercard", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .approximate),
-            CardPreset(name: "American Express", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .largeOnly),
-            CardPreset(name: "Klarna", closingDay: 27, payDay: 27, payMonth: 1, manageLevel: .largeOnly),
+            CardPreset(name: "Visa", closingDay: 27, payDay: 27, payMonth: 1),
+            CardPreset(name: "Mastercard", closingDay: 27, payDay: 27, payMonth: 1),
+            CardPreset(name: "American Express", closingDay: 27, payDay: 27, payMonth: 1),
+            CardPreset(name: "Klarna", closingDay: 27, payDay: 27, payMonth: 1),
         ]
     }
 

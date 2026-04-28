@@ -73,15 +73,7 @@ private struct CardRow: View {
                 }
             }
             HStack(spacing: 8) {
-                // 管理レベルは既定値（きっちり）を含め常時表示する
-                Text(LocalizedStringKey(card.manageLevel.labelKey))
-                    .font(.caption2)
-                    .padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(card.manageLevel.badgeColor.opacity(0.18))
-                    .foregroundStyle(card.manageLevel.badgeColor)
-                    .clipShape(Capsule())
-
-                // 口座名は管理レベルの後ろに表示する
+                // 口座名のみを補足表示する
                 if let bank = card.e8bank {
                     Text(bank.zName).font(.caption).foregroundStyle(.secondary)
                 }
@@ -96,19 +88,5 @@ private struct CardRow: View {
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
-    }
-}
-
-private extension ManagementLevel {
-    /// 一覧表示用の管理レベル色
-    var badgeColor: Color {
-        switch self {
-        case .precise:
-            return .blue
-        case .approximate:
-            return .green
-        case .largeOnly:
-            return .purple
-        }
     }
 }

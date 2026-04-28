@@ -6,7 +6,6 @@ struct CardEditView: View {
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss)      private var dismiss
-    @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
     @Query(sort: \E1card.nRow)   private var allCards: [E1card]
     @Query(sort: \E8bank.nRow)   private var banks: [E8bank]
 
@@ -20,7 +19,6 @@ struct CardEditView: View {
     @State private var closingDaySelection: Int16? = 20
     @State private var payDay:     Int16 = 27
     @State private var payMonth:   Int16 = 1
-    @State private var manageLevel:  ManagementLevel = .precise
     @State private var showPresetDialog = false
     @State private var hasInitialized = false
     @State private var initialDraft: DraftState?
@@ -58,17 +56,11 @@ struct CardEditView: View {
 
             // 基本情報
             Section {
-                // 決済名と初心者ヘルプを同一セルに置いて区切り線を出さない
-                VStack(alignment: .leading, spacing: 6) {
-                    TextField("card.field.name", text: $zName)
+                LabeledContent("card.field.name") {
+                    TextField("", text: $zName)
                         .autocorrectionDisabled()
                         .focused($focusName)
-                    if userLevel == .beginner {
-                        Text("card.help.name")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
+                        .multilineTextAlignment(.trailing)
                 }
 
                 LabeledContent("card.field.bank") {
@@ -84,49 +76,31 @@ struct CardEditView: View {
                     .labelsHidden()
                 }
 
-                // 管理レベルと補足を同一行にまとめ、間の区切り線を出さない
-                LabeledContent("card.field.manageLevel") {
-                    Picker("", selection: $manageLevel) {
-                        ForEach(ManagementLevel.allCases, id: \.self) { level in
-                            Text(LocalizedStringKey(level.labelKey)).tag(level)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
-                }
             }
 
             // 締日〜支払設定を1パネルにまとめる
             Section {
-                VStack(alignment: .leading, spacing: 8) {
-                    if !isEnglishLocale {
-                        LabeledContent("card.field.closingDay") {
-                            Picker("", selection: $closingDaySelection) {
-                                ForEach(Array(1...28), id: \.self) { d in
-                                    Text("\(d)").tag(Optional(Int16(d)))
-                                }
-                                Text("card.closingDay.end").tag(Optional(Int16(29)))
+                if !isEnglishLocale {
+                    LabeledContent("card.field.closingDay") {
+                        Picker("", selection: $closingDaySelection) {
+                            ForEach(Array(1...28), id: \.self) { d in
+                                Text("\(d)").tag(Optional(Int16(d)))
                             }
-                            .pickerStyle(.menu)
-                            .labelsHidden()
+                            Text("card.closingDay.end").tag(Optional(Int16(29)))
                         }
-
-                        Text("card.field.paymentDebit")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.secondary)
-
-                        LabeledContent("月") {
-                            Picker("", selection: $payMonth) {
-                                Text("card.payMonth.current").tag(Int16(0))
-                                Text("card.payMonth.next").tag(Int16(1))
-                                Text("card.payMonth.twoMonths").tag(Int16(2))
-                            }
-                            .pickerStyle(.menu)
-                            .labelsHidden()
-                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
                     }
-
-                    LabeledContent(isEnglishLocale ? "card.field.payDay" : "日") {
+                    LabeledContent("card.field.payMonth") {
+                        Picker("", selection: $payMonth) {
+                            Text("card.payMonth.current").tag(Int16(0))
+                            Text("card.payMonth.next").tag(Int16(1))
+                            Text("card.payMonth.twoMonths").tag(Int16(2))
+                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                    }
+                    LabeledContent("card.field.payDay") {
                         Picker("", selection: $payDay) {
                             ForEach(Array(1...28), id: \.self) { d in
                                 Text("\(d)").tag(Int16(d))
@@ -136,32 +110,38 @@ struct CardEditView: View {
                         .pickerStyle(.menu)
                         .labelsHidden()
                     }
-
-                    if isEnglishLocale {
-                        LabeledContent("card.field.closingDay") {
-                            Picker("", selection: $closingDaySelection) {
-                                Text("label.noSelection").tag(Optional<Int16>.none)
-                                ForEach(Array(1...28), id: \.self) { d in
-                                    Text("\(d)").tag(Optional(Int16(d)))
-                                }
-                                Text("card.closingDay.end").tag(Optional(Int16(29)))
+                } else {
+                    LabeledContent("card.field.payDay") {
+                        Picker("", selection: $payDay) {
+                            ForEach(Array(1...28), id: \.self) { d in
+                                Text("\(d)").tag(Int16(d))
                             }
-                            .pickerStyle(.menu)
-                            .labelsHidden()
+                            Text("card.closingDay.end").tag(Int16(29))
                         }
-
-                        Text("card.field.closingDay.enHelp")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                    }
+                    LabeledContent("card.field.closingDay") {
+                        Picker("", selection: $closingDaySelection) {
+                            Text("label.noSelection").tag(Optional<Int16>.none)
+                            ForEach(Array(1...28), id: \.self) { d in
+                                Text("\(d)").tag(Optional(Int16(d)))
+                            }
+                            Text("card.closingDay.end").tag(Optional(Int16(29)))
+                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
                     }
                 }
             }
 
             // メモ
             Section {
-                TextField("card.field.note", text: $zNote, axis: .vertical)
-                    .lineLimit(3...)
-                    .autocorrectionDisabled()
+                LabeledContent("card.field.note") {
+                    TextField("", text: $zNote)
+                        .multilineTextAlignment(.trailing)
+                        .autocorrectionDisabled()
+                }
             }
         }
         .scalableNavigationTitle("card.list.title")
@@ -228,7 +208,6 @@ struct CardEditView: View {
         }
         payDay       = 0 < card.nPayDay ? card.nPayDay : 27
         payMonth     = card.nPayMonth
-        manageLevel  = card.manageLevel
         selectedBank = card.e8bank
         bankSelection = selectionFromBank(selectedBank)
         previousBankSelection = bankSelection
@@ -249,7 +228,6 @@ struct CardEditView: View {
             // ボーナス月は廃止し、常に未設定(0)で保存する
             card.nBonus1      = 0
             card.nBonus2      = 0
-            card.nManageLevel = manageLevel.rawValue
             card.e8bank       = selectedBank
             card.dateUpdate   = Date()
         } else {
@@ -258,7 +236,7 @@ struct CardEditView: View {
                 zName: name, zNote: zNote, nRow: row,
                 nClosingDay: closingDay, nPayDay: payDay, nPayMonth: savingPayMonth,
                 nBonus1: 0, nBonus2: 0,
-                nManageLevel: manageLevel.rawValue, dateUpdate: Date()
+                dateUpdate: Date()
             )
             c.e8bank = selectedBank
             context.insert(c)
@@ -316,8 +294,6 @@ struct CardEditView: View {
         closingDaySelection = isEnglishLocale ? nil : preset.closingDay
         payDay = preset.payDay
         payMonth = isEnglishLocale ? 1 : preset.payMonth
-        // プリセットの管理レベルをそのまま反映する
-        manageLevel = preset.manageLevel
     }
 
     // MARK: - Draft Diff
@@ -330,7 +306,6 @@ struct CardEditView: View {
         let closingDaySelection: Int16?
         let payDay: Int16
         let payMonth: Int16
-        let manageLevel: ManagementLevel
     }
 
     private func currentDraft() -> DraftState {
@@ -340,8 +315,7 @@ struct CardEditView: View {
             bankID: selectedBank?.id,
             closingDaySelection: closingDaySelection,
             payDay: payDay,
-            payMonth: payMonth,
-            manageLevel: manageLevel
+            payMonth: payMonth
         )
     }
 
