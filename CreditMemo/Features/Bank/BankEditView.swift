@@ -106,7 +106,8 @@ struct BankEditView: View {
             bank.zName = name
             bank.zNote = zNote
         } else {
-            let row = Int32((allBanks.map { Int($0.nRow) }.max() ?? -1) + 1)
+            // 新規追加は一覧先頭へ出すため、最小rowよりさらに小さい値を採用する
+            let row = Int32((allBanks.map { Int($0.nRow) }.min() ?? 1) - 1)
             context.insert(E8bank(zName: name, zNote: zNote, nRow: row))
         }
         dismiss()

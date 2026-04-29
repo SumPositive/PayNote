@@ -108,7 +108,8 @@ struct CategoryEditView: View {
             category.zNote    = zNote
             category.sortName = name
         } else {
-            let c = E5category(zName: name, zNote: zNote, sortName: name)
+            // 新規追加は「最近順」で先頭表示されるよう作成日時を入れる
+            let c = E5category(zName: name, zNote: zNote, sortDate: Date(), sortName: name)
             context.insert(c)
         }
         dismiss()

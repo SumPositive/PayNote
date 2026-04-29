@@ -289,7 +289,8 @@ struct CardEditView: View {
             card.e8bank       = selectedBank
             card.dateUpdate   = Date()
         } else {
-            let row = Int32((allCards.map { Int($0.nRow) }.max() ?? -1) + 1)
+            // 新規追加は一覧先頭へ出すため、最小rowよりさらに小さい値を採用する
+            let row = Int32((allCards.map { Int($0.nRow) }.min() ?? 1) - 1)
             let c = E1card(
                 zName: name, zNote: zNote, nRow: row,
                 nClosingDay: closingDay, nPayDay: payDay, nPayMonth: savingPayMonth,
