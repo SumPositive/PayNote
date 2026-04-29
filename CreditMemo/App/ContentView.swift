@@ -69,7 +69,14 @@ struct ContentView: View {
                     )
                 }
         }
-        .task { SeedData.seedIfNeeded(context: modelContext) }
+        .task {
+            SeedData.seedIfNeeded(context: modelContext)
+            // 起動時に1回だけ請求孤児を掃除して、旧データ不整合のクラッシュを抑える
+            RecordService.cleanupOrphanBilling(context: modelContext)
+            if modelContext.hasChanges {
+                try? modelContext.save()
+            }
+        }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active, openAddOnActive else { return }
             addRecordRefreshID = UUID()
@@ -104,7 +111,14 @@ struct ContentView: View {
                 }
             }
         }
-        .task { SeedData.seedIfNeeded(context: modelContext) }
+        .task {
+            SeedData.seedIfNeeded(context: modelContext)
+            // 起動時に1回だけ請求孤児を掃除して、旧データ不整合のクラッシュを抑える
+            RecordService.cleanupOrphanBilling(context: modelContext)
+            if modelContext.hasChanges {
+                try? modelContext.save()
+            }
+        }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active, openAddOnActive else { return }
             addRecordRefreshID = UUID()

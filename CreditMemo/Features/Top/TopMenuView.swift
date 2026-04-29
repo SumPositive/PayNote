@@ -10,7 +10,10 @@ struct TopMenuView: View {
     private var allPayments: [E7payment]
 
     private var unpaidPayments: [E7payment] {
-        allPayments.filter { !$0.isPaid }
+        // 起動直後クラッシュ回避:
+        // isPaid は e2invoices 関係を辿るため、旧データ不整合時に落ちることがある。
+        // メニュー集計は状態ラベルの関係参照を避け、支払側の所属で判定する。
+        allPayments.filter { $0.e8paid == nil }
     }
 
     private var recentUnpaidTotal: Decimal {
