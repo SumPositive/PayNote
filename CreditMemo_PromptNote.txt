@@ -526,3 +526,17 @@ yyyy(曜)は欠けないように自動縮小したい
 
 アプリ名(en)を CreditMemo に変更して旧アプリのバンドルIDを使いアップデートする方針、Project名を PayNote から　CreditMemo に統一して変更したい
 
+「カード型（現行）」と「都度○日後型」に対応する件
+単一テーブル拡張（推奨）
+　・E1card を「決済手段マスタ」に一般化して項目追加。
+　・billingType: cardCycle / afterDays
+　・offsetDays: Int?（afterDays のとき必須）
+　・既存の closingDay/payDay/payMonth は cardCycle で使用
+で実装して。
+
+「カード型（現行）」を「締日/支払日型」に
+「都度○日後型」を「N日後（日付指定）型」に変更
+
+「分割納税、N日後型、0日後」このjaプリセットを追加して
+さらに、N日後型のja/enプリセットを3つほど追加して
+

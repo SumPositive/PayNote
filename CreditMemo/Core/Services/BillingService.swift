@@ -12,6 +12,14 @@ enum BillingService {
         if card.isDebit {
             return Calendar.current.startOfDay(for: useDate)
         }
+        // 請求方式ごとに計算方法を切り替える
+        if card.billingType == .afterDays {
+            return billingDateAfterDays(
+                useDate: useDate,
+                offsetDays: card.offsetDays ?? Int(fallbackPayDay),
+                partOffset: partOffset
+            )
+        }
         return billingDate(
             useDate: useDate,
             closingDay: card.nClosingDay,
@@ -57,6 +65,19 @@ enum BillingService {
         let totalOffset = Int(payMonth) + overClose + partOffset
 
         return makeDate(year: useYear, month: useMonth + totalOffset, payDay: Int(payDay))
+    }
+
+    /// 都度 n 日後型の請求日計算
+    private static func billingDateAfterDays(
+        useDate: Date,
+        offsetDays: Int,
+        partOffset: Int
+    ) -> Date {
+        let cal = Calendar.current
+        let baseDate = cal.startOfDay(for: useDate)
+        let monthShifted = cal.date(byAdding: .month, value: partOffset, to: baseDate) ?? baseDate
+        let billed = cal.date(byAdding: .day, value: offsetDays, to: monthShifted) ?? monthShifted
+        return cal.startOfDay(for: billed)
     }
 
     /// E3record の各 E6part に対応する支払日リストを返す

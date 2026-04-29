@@ -19,6 +19,8 @@ struct CardEditView: View {
     @State private var closingDaySelection: Int16? = 20
     @State private var payDay:     Int16 = 27
     @State private var payMonth:   Int16 = 1
+    @State private var billingType: BillingType = .cardCycle
+    @State private var offsetDays: Int16 = 27
     @State private var showPresetDialog = false
     @State private var hasInitialized = false
     @State private var initialDraft: DraftState?
@@ -36,9 +38,28 @@ struct CardEditView: View {
         }
         return payDay
     }
+    private var effectiveOffsetDays: Int16 {
+        // 0 は「当日」を許可する
+        if offsetDays < 0 {
+            return 0
+        }
+        return offsetDays
+    }
     private var hasChanges: Bool {
         guard let base = initialDraft else { return false }
         return currentDraft() != base
+    }
+    private var billingTypeCardCycleText: LocalizedStringKey {
+        isEnglishLocale ? "Closing/Payment Day" : "締日/支払日型"
+    }
+    private var billingTypeAfterDaysText: LocalizedStringKey {
+        isEnglishLocale ? "N Days" : "N日後型"
+    }
+    private var billingTypeTitleText: LocalizedStringKey {
+        isEnglishLocale ? "Billing Type" : "請求方式"
+    }
+    private var offsetDaysTitleText: LocalizedStringKey {
+        isEnglishLocale ? "Offset Days" : "○日後"
     }
 
     var body: some View {
@@ -79,54 +100,79 @@ struct CardEditView: View {
 
             // 締日〜支払設定を1パネルにまとめる
             Section {
-                if !isEnglishLocale {
-                    AdaptiveValueRow(titleKey: "card.field.closingDay") {
-                        Picker("", selection: $closingDaySelection) {
-                            ForEach(Array(1...28), id: \.self) { d in
-                                Text("\(d)").tag(Optional(Int16(d)))
-                            }
-                            Text("card.closingDay.end").tag(Optional(Int16(29)))
-                        }
-                        .pickerStyle(.menu)
-                        .labelsHidden()
+                AdaptiveValueRow(titleKey: billingTypeTitleText) {
+                    Picker("", selection: $billingType) {
+                        Text(billingTypeCardCycleText).tag(BillingType.cardCycle)
+                        Text(billingTypeAfterDaysText).tag(BillingType.afterDays)
                     }
-                    AdaptiveValueRow(titleKey: "card.field.payMonth") {
-                        Picker("", selection: $payMonth) {
-                            Text("card.payMonth.current").tag(Int16(0))
-                            Text("card.payMonth.next").tag(Int16(1))
-                            Text("card.payMonth.twoMonths").tag(Int16(2))
-                        }
-                        .pickerStyle(.menu)
-                        .labelsHidden()
-                    }
-                    AdaptiveValueRow(titleKey: "card.field.payDay") {
-                        Picker("", selection: $payDay) {
-                            ForEach(Array(1...28), id: \.self) { d in
-                                Text("\(d)").tag(Int16(d))
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                }
+
+                if billingType == .cardCycle {
+                    if !isEnglishLocale {
+                        AdaptiveValueRow(titleKey: "card.field.closingDay") {
+                            Picker("", selection: $closingDaySelection) {
+                                ForEach(Array(1...28), id: \.self) { d in
+                                    Text("\(d)").tag(Optional(Int16(d)))
+                                }
+                                Text("card.closingDay.end").tag(Optional(Int16(29)))
                             }
-                            Text("card.closingDay.end").tag(Int16(29))
+                            .pickerStyle(.menu)
+                            .labelsHidden()
                         }
-                        .pickerStyle(.menu)
-                        .labelsHidden()
+                        AdaptiveValueRow(titleKey: "card.field.payMonth") {
+                            Picker("", selection: $payMonth) {
+                                Text("card.payMonth.current").tag(Int16(0))
+                                Text("card.payMonth.next").tag(Int16(1))
+                                Text("card.payMonth.twoMonths").tag(Int16(2))
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                        }
+                        AdaptiveValueRow(titleKey: "card.field.payDay") {
+                            Picker("", selection: $payDay) {
+                                ForEach(Array(1...28), id: \.self) { d in
+                                    Text("\(d)").tag(Int16(d))
+                                }
+                                Text("card.closingDay.end").tag(Int16(29))
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                        }
+                    } else {
+                        AdaptiveValueRow(titleKey: "card.field.payDay") {
+                            Picker("", selection: $payDay) {
+                                ForEach(Array(1...28), id: \.self) { d in
+                                    Text("\(d)").tag(Int16(d))
+                                }
+                                Text("card.closingDay.end").tag(Int16(29))
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                        }
+                        AdaptiveValueRow(titleKey: "card.field.closingDay") {
+                            Picker("", selection: $closingDaySelection) {
+                                Text("label.noSelection").tag(Optional<Int16>.none)
+                                ForEach(Array(1...28), id: \.self) { d in
+                                    Text("\(d)").tag(Optional(Int16(d)))
+                                }
+                                Text("card.closingDay.end").tag(Optional(Int16(29)))
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                        }
                     }
                 } else {
-                    AdaptiveValueRow(titleKey: "card.field.payDay") {
-                        Picker("", selection: $payDay) {
-                            ForEach(Array(1...28), id: \.self) { d in
-                                Text("\(d)").tag(Int16(d))
+                    AdaptiveValueRow(titleKey: offsetDaysTitleText) {
+                        Picker("", selection: $offsetDays) {
+                            ForEach(Array(0...120), id: \.self) { day in
+                                if day == 0 {
+                                    Text(isEnglishLocale ? "0 (Same Day)" : "0（当日）").tag(Int16(day))
+                                } else {
+                                    Text("\(day)").tag(Int16(day))
+                                }
                             }
-                            Text("card.closingDay.end").tag(Int16(29))
-                        }
-                        .pickerStyle(.menu)
-                        .labelsHidden()
-                    }
-                    AdaptiveValueRow(titleKey: "card.field.closingDay") {
-                        Picker("", selection: $closingDaySelection) {
-                            Text("label.noSelection").tag(Optional<Int16>.none)
-                            ForEach(Array(1...28), id: \.self) { d in
-                                Text("\(d)").tag(Optional(Int16(d)))
-                            }
-                            Text("card.closingDay.end").tag(Optional(Int16(29)))
                         }
                         .pickerStyle(.menu)
                         .labelsHidden()
@@ -208,6 +254,8 @@ struct CardEditView: View {
         }
         zName        = card.zName
         zNote        = card.zNote
+        billingType  = card.billingType
+        offsetDays   = Int16(card.offsetDays ?? 27)
         if isEnglishLocale && card.nClosingDay == card.nPayDay {
             // en では「未設定(=支払日と同じ)」を表現する
             closingDaySelection = nil
@@ -224,12 +272,15 @@ struct CardEditView: View {
     private func save() {
         let name = zName.trimmingCharacters(in: .whitespaces)
         guard !name.isEmpty else { return }
-        let closingDay = effectiveClosingDay
+        let closingDay = billingType == .cardCycle ? effectiveClosingDay : Int16(0)
+        let offsetDaysToSave: Int16? = billingType == .afterDays ? effectiveOffsetDays : nil
         let savingPayMonth: Int16 = isEnglishLocale ? 1 : payMonth
 
         if let card {
             card.zName       = name
             card.zNote       = zNote
+            card.nBillingType = billingType.rawValue
+            card.nOffsetDays = offsetDaysToSave
             card.nClosingDay = closingDay
             card.nPayDay     = payDay
             card.nPayMonth   = savingPayMonth
@@ -244,6 +295,8 @@ struct CardEditView: View {
                 zName: name, zNote: zNote, nRow: row,
                 nClosingDay: closingDay, nPayDay: payDay, nPayMonth: savingPayMonth,
                 nBonus1: 0, nBonus2: 0,
+                nBillingType: billingType.rawValue,
+                nOffsetDays: offsetDaysToSave,
                 dateUpdate: Date()
             )
             c.e8bank = selectedBank
@@ -299,6 +352,8 @@ struct CardEditView: View {
 
     private func applyPreset(_ preset: SeedData.CardPreset) {
         zName = preset.name
+        billingType = preset.billingType
+        offsetDays = preset.offsetDays ?? 27
         closingDaySelection = isEnglishLocale ? nil : preset.closingDay
         payDay = preset.payDay
         payMonth = isEnglishLocale ? 1 : preset.payMonth
@@ -311,6 +366,8 @@ struct CardEditView: View {
         let zName: String
         let zNote: String
         let bankID: String?
+        let billingType: BillingType
+        let offsetDays: Int16
         let closingDaySelection: Int16?
         let payDay: Int16
         let payMonth: Int16
@@ -321,6 +378,8 @@ struct CardEditView: View {
             zName: zName,
             zNote: zNote,
             bankID: selectedBank?.id,
+            billingType: billingType,
+            offsetDays: offsetDays,
             closingDaySelection: closingDaySelection,
             payDay: payDay,
             payMonth: payMonth

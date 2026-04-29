@@ -22,6 +22,8 @@ enum JSONExport {
     struct CardData: Codable {
         var id, name, note: String
         var row, closingDay, payDay, payMonth, bonus1, bonus2: Int
+        var billingType: Int
+        var offsetDays: Int?
         var bankID: String?
     }
 
@@ -122,6 +124,8 @@ enum JSONExport {
                 payMonth: Int(c.nPayMonth),
                 bonus1: Int(c.nBonus1),
                 bonus2: Int(c.nBonus2),
+                billingType: Int(c.nBillingType ?? BillingType.cardCycle.rawValue),
+                offsetDays: c.offsetDays,
                 bankID: c.e8bank?.id
             )
         }

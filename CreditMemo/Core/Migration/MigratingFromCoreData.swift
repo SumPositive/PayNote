@@ -203,6 +203,9 @@ struct MigratingFromCoreData {
                 nClosingDay: c.nClosingDay, nPayDay: c.nPayDay,
                 nPayMonth: c.nPayMonth,
                 nBonus1: c.nBonus1, nBonus2: c.nBonus2,
+                // 旧アプリ互換: 既存カードは cardCycle として移行する
+                nBillingType: BillingType.cardCycle.rawValue,
+                nOffsetDays: nil,
                 dateUpdate: c.dateUpdate,
                 sumPaid: c.sumPaid, sumUnpaid: c.sumUnpaid, sumNoCheck: c.sumNoCheck
             )

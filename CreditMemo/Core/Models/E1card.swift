@@ -1,12 +1,21 @@
 import Foundation
 import SwiftData
 
+/// 決済手段の請求方式
+enum BillingType: Int16, CaseIterable {
+    case cardCycle = 1
+    case afterDays = 2
+}
+
 /// クレジットカード
 ///
 /// 締日 (nClosingDay): 1-28=締日, 29=末日, 0=デビット（当日・旧データ互換）
 /// 支払日 (nPayDay):   1-28=支払日, 29=末日
 /// 支払月 (nPayMonth): 0/1/2 = 支払月(利用月からの月数)
 /// ボーナス月 (nBonus1/2): 0=なし, 1-12=月
+/// 請求方式:
+/// - nBillingType=nil/cardCycle: 締日/支払日/支払月を利用
+/// - nBillingType=afterDays: nOffsetDays 日後で請求日を決定
 @Model
 final class E1card {
     @Attribute(.unique) var id: String
@@ -18,6 +27,8 @@ final class E1card {
     var nPayMonth: Int16
     var nBonus1: Int16
     var nBonus2: Int16
+    var nBillingType: Int16?
+    var nOffsetDays: Int16?
     var dateUpdate: Date?
     // 集計値（子レコード変更時に更新）
     var sumPaid: Decimal
@@ -32,6 +43,17 @@ final class E1card {
 
     /// 旧データ互換: nClosingDay=0 は即日デビット（新規作成不可）
     var isDebit: Bool { nClosingDay == 0 }
+    /// 請求方式を安全に返す（不正値は cardCycle 扱い）
+    var billingType: BillingType { BillingType(rawValue: nBillingType ?? BillingType.cardCycle.rawValue) ?? .cardCycle }
+    /// afterDays 用の日数（1未満は無効として nil 扱い）
+    var offsetDays: Int? {
+        guard let nOffsetDays else { return nil }
+        let value = Int(nOffsetDays)
+        if value < 1 {
+            return nil
+        }
+        return value
+    }
     // 互換参照用に請求全体を返す
     var e2invoices: [E2invoice] { e2paids + e2unpaids }
 
@@ -45,6 +67,8 @@ final class E1card {
         nPayMonth: Int16 = 1,
         nBonus1: Int16 = 0,
         nBonus2: Int16 = 0,
+        nBillingType: Int16? = BillingType.cardCycle.rawValue,
+        nOffsetDays: Int16? = nil,
         dateUpdate: Date? = nil,
         sumPaid: Decimal = 0,
         sumUnpaid: Decimal = 0,
@@ -59,6 +83,8 @@ final class E1card {
         self.nPayMonth = nPayMonth
         self.nBonus1 = nBonus1
         self.nBonus2 = nBonus2
+        self.nBillingType = nBillingType
+        self.nOffsetDays = nOffsetDays
         self.dateUpdate = dateUpdate
         self.sumPaid = sumPaid
         self.sumUnpaid = sumUnpaid
