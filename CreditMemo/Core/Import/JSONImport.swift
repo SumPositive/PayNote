@@ -78,6 +78,7 @@ enum JSONImport {
     struct RecordData: Decodable {
         var id: String
         var dateUse: Date
+        var dateUpdate: Date?
         var name: String
         var note: String
         var amount: String
@@ -333,6 +334,8 @@ enum JSONImport {
 
             // 明細の正本を id 単位で更新する
             record.dateUse = item.dateUse
+            // 入力順が無い旧JSONは利用日を代替値として使う
+            record.dateUpdate = item.dateUpdate ?? item.dateUse
             record.zName = item.name
             record.zNote = item.note
             record.nAmount = decimalValue(item.amount)

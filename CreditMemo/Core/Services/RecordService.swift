@@ -17,6 +17,8 @@ enum RecordService {
 
     static func save(_ record: E3record, context: ModelContext) throws {
         // 1回の保存操作で派生データ更新まで完結させる
+        // 新規/修正の入力順を更新日時で保持する
+        record.dateUpdate = Date()
         rebuildBilling(for: record, context: context)
         updateShopStats(record.e4shop, amount: record.nAmount, date: record.dateUse)
         let cats = record.e5categories.isEmpty ? [record.e5category].compactMap { $0 } : record.e5categories
@@ -222,7 +224,8 @@ enum RecordService {
                 ],
                 context: context
             )
-            if invoice.e7payment == nil {
+            // 口座変更時は既存invoiceでも支払先を最新のpaymentへ張り替える
+            if invoice.e7payment?.id != payment.id {
                 invoice.e7payment = payment
             }
             let part = E6part(nPartNo: partNo, nAmount: amount)

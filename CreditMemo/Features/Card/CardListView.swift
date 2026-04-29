@@ -73,20 +73,76 @@ private struct CardRow: View {
                 }
             }
             HStack(spacing: 8) {
-                // 口座名のみを補足表示する
-                if let bank = card.e8bank {
-                    Text(bank.zName).font(.caption).foregroundStyle(.secondary)
-                }
-                if card.isDebit {
-                    Text("card.closingDay.debitLegacy")
-                        .font(.caption2)
-                        .padding(.horizontal, 5).padding(.vertical, 2)
-                        .background(Color(.systemFill))
-                        .clipShape(Capsule())
-                }
+                Text(scheduleBadgeText)
+                    .font(.caption2)
+                    .foregroundStyle(scheduleBadgeForegroundColor)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(scheduleBadgeBackgroundColor)
+                    .clipShape(Capsule())
+                Text(card.e8bank?.zName ?? "口座未選択")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
             }
+            .padding(.leading, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
+    }
+
+    /// 2行目カプセル文言を請求方式ごとに出し分ける
+    private var scheduleBadgeText: String {
+        if card.billingType == .afterDays {
+            let offsetDays = card.offsetDays ?? 0
+            if offsetDays == 0 {
+                return "利用当日払"
+            }
+            return "\(offsetDays)日後払"
+        }
+
+        // 締日/支払日型
+        let closingDayText: String
+        if card.nClosingDay == 29 {
+            closingDayText = "末日締"
+        } else {
+            closingDayText = "\(card.nClosingDay)日締"
+        }
+
+        let payMonthText: String
+        if card.nPayMonth == 0 {
+            payMonthText = "当月"
+        } else if card.nPayMonth == 1 {
+            payMonthText = "翌月"
+        } else {
+            payMonthText = "翌々月"
+        }
+
+        let payDayText: String
+        if card.nPayDay == 29 {
+            payDayText = "末日払"
+        } else {
+            payDayText = "\(card.nPayDay)日払"
+        }
+
+        return "\(closingDayText)/\(payMonthText)/\(payDayText)"
+    }
+
+    /// 請求方式別のカプセル背景色
+    private var scheduleBadgeBackgroundColor: Color {
+        if card.billingType == .afterDays {
+            return Color.cyan.opacity(0.16)
+        }
+        return Color.indigo.opacity(0.14)
+    }
+
+    /// 請求方式別のカプセル文字色
+    private var scheduleBadgeForegroundColor: Color {
+        if card.billingType == .afterDays {
+            return Color.cyan.opacity(0.95)
+        }
+        return Color.indigo.opacity(0.95)
     }
 }

@@ -58,9 +58,6 @@ struct CardEditView: View {
     private var billingTypeTitleText: LocalizedStringKey {
         isEnglishLocale ? "Billing Type" : "請求方式"
     }
-    private var offsetDaysTitleText: LocalizedStringKey {
-        isEnglishLocale ? "Offset Days" : "○日後"
-    }
 
     var body: some View {
         Form {
@@ -164,13 +161,15 @@ struct CardEditView: View {
                         }
                     }
                 } else {
-                    AdaptiveValueRow(titleKey: offsetDaysTitleText) {
+                    // N日後型は見出しを出さず、値選択のみ表示する
+                    HStack(spacing: 0) {
+                        Spacer(minLength: 0)
                         Picker("", selection: $offsetDays) {
                             ForEach(Array(0...120), id: \.self) { day in
                                 if day == 0 {
-                                    Text(isEnglishLocale ? "0 (Same Day)" : "0（当日）").tag(Int16(day))
+                                    Text(isEnglishLocale ? "0 Days (Use Date)" : "0日後（利用日払）").tag(Int16(day))
                                 } else {
-                                    Text("\(day)").tag(Int16(day))
+                                    Text(isEnglishLocale ? "\(day) Days Later" : "\(day)日後").tag(Int16(day))
                                 }
                             }
                         }
@@ -255,7 +254,7 @@ struct CardEditView: View {
         zName        = card.zName
         zNote        = card.zNote
         billingType  = card.billingType
-        offsetDays   = Int16(card.offsetDays ?? 27)
+        offsetDays   = Int16(card.offsetDays ?? 0)
         if isEnglishLocale && card.nClosingDay == card.nPayDay {
             // en では「未設定(=支払日と同じ)」を表現する
             closingDaySelection = nil
@@ -355,7 +354,8 @@ struct CardEditView: View {
         // プリセットに説明メモがある場合はメモへ反映する
         zNote = preset.note
         billingType = preset.billingType
-        offsetDays = preset.offsetDays ?? 27
+        // N日後型の既定は 0日後（利用日払い）
+        offsetDays = preset.offsetDays ?? 0
         closingDaySelection = isEnglishLocale ? nil : preset.closingDay
         payDay = preset.payDay
         payMonth = isEnglishLocale ? 1 : preset.payMonth

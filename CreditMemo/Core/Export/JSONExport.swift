@@ -38,6 +38,7 @@ enum JSONExport {
     struct RecordData: Codable {
         var id: String
         var dateUse: Date
+        var dateUpdate: Date?
         var name, note, amount: String
         var payType, repeatMonths: Int
         var cardID, shopID, categoryID: String?
@@ -135,6 +136,7 @@ enum JSONExport {
             RecordData(
                 id: r.id,
                 dateUse: r.dateUse,
+                dateUpdate: r.dateUpdate,
                 name: r.zName,
                 note: r.zNote,
                 amount: "\(r.nAmount)",

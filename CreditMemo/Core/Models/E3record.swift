@@ -19,6 +19,8 @@ enum PayType: Int16, CaseIterable, Codable {
 final class E3record {
     @Attribute(.unique) var id: String
     var dateUse: Date
+    // 入力順を安定化するための更新日時（後方互換のためOptional）
+    var dateUpdate: Date?
     var zName: String
     var zNote: String
     var nAmount: Decimal
@@ -41,6 +43,7 @@ final class E3record {
     init(
         id: String = UUID().uuidString,
         dateUse: Date = Date(),
+        dateUpdate: Date? = Date(),
         zName: String = "",
         zNote: String = "",
         nAmount: Decimal = 0,
@@ -51,6 +54,7 @@ final class E3record {
     ) {
         self.id = id
         self.dateUse = dateUse
+        self.dateUpdate = dateUpdate
         self.zName = zName
         self.zNote = zNote
         self.nAmount = nAmount

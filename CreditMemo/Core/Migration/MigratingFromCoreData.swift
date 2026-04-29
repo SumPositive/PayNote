@@ -219,6 +219,7 @@ struct MigratingFromCoreData {
             for r in c.records {
                 let record = E3record(
                     dateUse: r.dateUse ?? Date(),
+                    dateUpdate: r.dateUse ?? Date(),
                     zName: r.zName, zNote: r.zNote,
                     nAmount: r.nAmount,
                     nPayType: min(r.nPayType, 2),  // 1か2に限定

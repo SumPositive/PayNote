@@ -17,6 +17,13 @@ struct RecordListView: View {
     @State private var showDeleteAlert = false
 
     private let pageSize = 100
+    private var allFilterText: String {
+        // フィルタの意図を明確化する
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return "すべて（保存日時順）"
+        }
+        return "All (Saved Order)"
+    }
     private var filtered: [E3record] {
         records
     }
@@ -119,7 +126,7 @@ struct RecordListView: View {
                     filterIncomplete = false
                 } label: {
                 HStack {
-                    Text("label.all")
+                    Text(allFilterText)
                     if filterCard == nil && !filterIncomplete { Image(systemName: "checkmark") }
                 }
             }
@@ -154,7 +161,7 @@ struct RecordListView: View {
                     Text(filterCard.zName)
                         .font(.subheadline)
                 } else {
-                    Text("label.all")
+                    Text(allFilterText)
                         .font(.subheadline)
                 }
             }
@@ -189,7 +196,7 @@ struct RecordListView: View {
             }
             .sorted { lhs, rhs in
                 if lhs.priority == rhs.priority {
-                    return rhs.record.dateUse < lhs.record.dateUse
+                    return sortDate(of: rhs.record) < sortDate(of: lhs.record)
                 }
                 return lhs.priority < rhs.priority
             }
@@ -208,9 +215,20 @@ struct RecordListView: View {
                 sortBy: [SortDescriptor(\E3record.dateUse, order: .reverse)]
             )
         } else {
-            descriptor = FetchDescriptor<E3record>(
-                sortBy: [SortDescriptor(\E3record.dateUse, order: .reverse)]
-            )
+            // 「すべて」は利用日ではなく直近入力順で表示する
+            descriptor = FetchDescriptor<E3record>()
+            let allRecords = (try? context.fetch(descriptor)) ?? []
+            let sorted = allRecords.sorted { lhs, rhs in
+                sortDate(of: rhs) < sortDate(of: lhs)
+            }
+            let start = recordPage * pageSize
+            let end = min(start + pageSize, sorted.count)
+            if start < end {
+                records.append(contentsOf: sorted[start..<end])
+            }
+            recordPage += 1
+            hasMoreRecords = end < sorted.count
+            return
         }
         descriptor.fetchOffset = recordPage * pageSize
         descriptor.fetchLimit = pageSize
@@ -219,6 +237,11 @@ struct RecordListView: View {
         records.append(contentsOf: fetched)
         recordPage += 1
         hasMoreRecords = pageSize <= fetched.count
+    }
+
+    /// 入力順ソート用の代表日時（未設定時は利用日へフォールバック）
+    private func sortDate(of record: E3record) -> Date {
+        record.dateUpdate ?? record.dateUse
     }
 
     /// 情報不足の優先順位（小さいほど優先）

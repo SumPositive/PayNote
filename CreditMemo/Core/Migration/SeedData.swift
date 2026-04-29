@@ -112,7 +112,7 @@ enum SeedData {
         [
             // N日後型プリセット: 住民税の分納など、支払日＝利用日として運用
             CardPreset(
-                name: "当日払（0日後）",
+                name: "利用日払（0日後）",
                 note: "先々の支払日を利用日として登録します。利用日が引き落とし日として管理できます",
                 billingType: .afterDays,
                 offsetDays: 0,
