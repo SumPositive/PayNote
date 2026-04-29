@@ -208,10 +208,6 @@ struct RecordEditView: View {
             // 口座未設定で表示開始した行は、この編集セッション中は保持する
             keepBankPickerRowVisible = selectedCard != nil && selectedBankForCard == nil
         }
-        .onChange(of: selectedBankForCard?.id) { _, _ in
-            // 口座選択の結果を決済手段へ反映する
-            selectedCard?.e8bank = selectedBankForCard
-        }
         .onChange(of: pastRecords.map(\.id)) { _, _ in
             // レコード集合が変わったときだけ再計算する
             refreshDerivedCaches()
@@ -587,14 +583,13 @@ struct RecordEditView: View {
         let usePoint = zName.trimmingCharacters(in: .whitespacesAndNewlines)
         switch mode {
         case .addNew:
-            // 決済手段が選択されている場合は、同時に口座設定も反映する
-            selectedCard?.e8bank = selectedBankForCard
             let r = E3record(dateUse: dateUse, zName: usePoint, zNote: zNote,
                              nAmount: nAmount, nPayType: PayType.lumpSum.rawValue, nRepeat: nRepeat)
             r.e1card = selectedCard; r.e4shop = nil
             r.e5categories = selectedCategories; r.e5category = nil
             context.insert(r)
             try? RecordService.save(r, context: context)
+            applyCardBankChangeIfNeeded(savedRecord: r)
             switch afterSaveAction {
             case .goBack:
                 dismiss()
@@ -607,14 +602,30 @@ struct RecordEditView: View {
                 onSaved?()
             }
         case .edit(let r):
-            // 決済手段が選択されている場合は、同時に口座設定も反映する
-            selectedCard?.e8bank = selectedBankForCard
             r.dateUse = dateUse; r.zName = usePoint; r.zNote = zNote
             r.nAmount = nAmount; r.nPayType = payType.rawValue; r.nRepeat = nRepeat
             r.e1card = selectedCard; r.e4shop = nil
             r.e5categories = selectedCategories; r.e5category = nil
             try? RecordService.save(r, context: context)
+            applyCardBankChangeIfNeeded(savedRecord: r)
             dismiss()
+        }
+    }
+
+    private func applyCardBankChangeIfNeeded(savedRecord: E3record) {
+        guard let card = selectedCard else { return }
+        let currentBankID = card.e8bank?.id
+        let selectedBankID = selectedBankForCard?.id
+        guard currentBankID != selectedBankID else { return }
+
+        // 決済手段マスタの口座変更は同カード配下の請求全体へ影響する
+        card.e8bank = selectedBankForCard
+        for sibling in card.e3records where sibling.id != savedRecord.id {
+            RecordService.rebuildBilling(for: sibling, context: context)
+        }
+        RecordService.cleanupOrphanBilling(context: context)
+        if context.hasChanges {
+            try? context.save()
         }
     }
 

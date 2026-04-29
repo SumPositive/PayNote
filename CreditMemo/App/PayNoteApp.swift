@@ -87,19 +87,20 @@ struct CreditMemoApp: App {
                             .ignoresSafeArea()
                         VStack(spacing: 14) {
                             if didShareLegacyData {
-                                Text("送信ありがとうございました。このまま次のアップデートをお待ちください")
+                                Text("migration.legacy.thanks")
                                     .font(.body)
                                     .multilineTextAlignment(.center)
                                     .foregroundStyle(.primary)
                             } else {
-                                Text("旧アプリのデータ読み出しに失敗しました。旧アプリのデータを送って頂ければ調査対応します。送信先: \(supportMailAddress)")
+                                // 送信先アドレスはローカライズ文字列のプレースホルダへ埋め込む
+                                Text(String(format: NSLocalizedString("migration.legacy.failed.message", comment: ""), supportMailAddress))
                                     .font(.body)
                                     .multilineTextAlignment(.center)
                                     .foregroundStyle(.primary)
                                 Button {
                                     shareLegacyStore()
                                 } label: {
-                                    Text("旧データをメールで送る")
+                                    Text("migration.legacy.send")
                                         .frame(maxWidth: .infinity)
                                 }
                                 .buttonStyle(.borderedProminent)
@@ -115,7 +116,7 @@ struct CreditMemoApp: App {
                                         try? container.mainContext.save()
                                     }
                                 } label: {
-                                    Text("旧データを破棄して新しく始める")
+                                    Text("migration.legacy.discard")
                                         .frame(maxWidth: .infinity)
                                 }
                                 .buttonStyle(.bordered)
@@ -137,7 +138,7 @@ struct CreditMemoApp: App {
                     }
                 }
             }
-            .alert("送信ありがとうございました。このまま次のアップデートをお待ちください", isPresented: $showThanksAlert) {
+            .alert(LocalizedStringKey("migration.legacy.thanks"), isPresented: $showThanksAlert) {
                 Button("OK", role: .cancel) {}
             }
             .task {

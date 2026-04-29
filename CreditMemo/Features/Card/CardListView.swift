@@ -60,6 +60,9 @@ struct CardListView: View {
 
 private struct CardRow: View {
     let card: E1card
+    private var isEnglishLocale: Bool {
+        (Bundle.main.preferredLocalizations.first ?? "en") == "en"
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -80,7 +83,7 @@ private struct CardRow: View {
                     .padding(.vertical, 2)
                     .background(scheduleBadgeBackgroundColor)
                     .clipShape(Capsule())
-                Text(card.e8bank?.zName ?? "口座未選択")
+                Text(card.e8bank?.zName ?? NSLocalizedString("payment.bank.noSelection", comment: ""))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -98,36 +101,37 @@ private struct CardRow: View {
         if card.billingType == .afterDays {
             let offsetDays = card.offsetDays ?? 0
             if offsetDays == 0 {
-                return "利用当日払"
+                return NSLocalizedString("card.schedule.sameDay", comment: "")
             }
-            return "\(offsetDays)日後払"
+            return String(format: NSLocalizedString("card.schedule.afterDays", comment: ""), offsetDays)
         }
 
         // 締日/支払日型
         let closingDayText: String
         if card.nClosingDay == 29 {
-            closingDayText = "末日締"
+            closingDayText = NSLocalizedString("card.schedule.closing.end", comment: "")
         } else {
-            closingDayText = "\(card.nClosingDay)日締"
+            closingDayText = String(format: NSLocalizedString("card.schedule.closing.day", comment: ""), card.nClosingDay)
         }
 
         let payMonthText: String
         if card.nPayMonth == 0 {
-            payMonthText = "当月"
+            payMonthText = NSLocalizedString("card.payMonth.current", comment: "")
         } else if card.nPayMonth == 1 {
-            payMonthText = "翌月"
+            payMonthText = NSLocalizedString("card.payMonth.next", comment: "")
         } else {
-            payMonthText = "翌々月"
+            payMonthText = NSLocalizedString("card.payMonth.twoMonths", comment: "")
         }
 
         let payDayText: String
         if card.nPayDay == 29 {
-            payDayText = "末日払"
+            payDayText = NSLocalizedString("card.schedule.pay.end", comment: "")
         } else {
-            payDayText = "\(card.nPayDay)日払"
+            payDayText = String(format: NSLocalizedString("card.schedule.pay.day", comment: ""), card.nPayDay)
         }
 
-        return "\(closingDayText)/\(payMonthText)/\(payDayText)"
+        let separator = isEnglishLocale ? " / " : "/"
+        return "\(closingDayText)\(separator)\(payMonthText)\(separator)\(payDayText)"
     }
 
     /// 請求方式別のカプセル背景色

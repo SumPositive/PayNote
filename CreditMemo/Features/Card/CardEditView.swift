@@ -288,6 +288,11 @@ struct CardEditView: View {
             card.nBonus2      = 0
             card.e8bank       = selectedBank
             card.dateUpdate   = Date()
+            // 口座や請求条件の変更を既存明細へ反映する
+            for record in card.e3records {
+                RecordService.rebuildBilling(for: record, context: context)
+            }
+            RecordService.cleanupOrphanBilling(context: context)
         } else {
             // 新規追加は一覧先頭へ出すため、最小rowよりさらに小さい値を採用する
             let row = Int32((allCards.map { Int($0.nRow) }.min() ?? 1) - 1)
@@ -301,6 +306,9 @@ struct CardEditView: View {
             )
             c.e8bank = selectedBank
             context.insert(c)
+        }
+        if context.hasChanges {
+            try? context.save()
         }
         dismiss()
     }

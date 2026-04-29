@@ -203,10 +203,8 @@ private struct PaymentRow: View {
     }
 
     private var bankNameText: String {
-        if payment.includesUnselectedCard {
-            let cardLabel = NSLocalizedString("record.field.card", comment: "")
-            let noSelection = NSLocalizedString("label.noSelection", comment: "")
-            return "\(cardLabel) \(noSelection)"
+        if !payment.hasAnySelectedCard && payment.includesUnselectedCard {
+            return NSLocalizedString("payment.card.noSelection", comment: "")
         }
         if let bankName = payment.e8bank?.zName, !bankName.isEmpty {
             return bankName
@@ -305,6 +303,16 @@ private extension E7payment {
     var includesUnselectedCard: Bool {
         // 1件でも決済手段未選択の請求があれば制御対象にする
         e2invoices.contains { $0.e1card == nil }
+    }
+
+    var hasAnySelectedCard: Bool {
+        // 明細レコード側に決済手段が残っていれば、口座未選択として扱う
+        if e2invoices.contains(where: { $0.e1card != nil }) {
+            return true
+        }
+        return e2invoices
+            .flatMap(\.e6parts)
+            .contains { $0.e3record?.e1card != nil }
     }
 }
 
