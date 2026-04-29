@@ -1,7 +1,7 @@
 import Testing
 @testable import PayNote
 
-struct PayNoteTests {
+struct CreditMemoTests {
     @Test func placeholder() async throws {
         // TODO: add unit tests
     }

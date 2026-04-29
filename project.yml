@@ -1,4 +1,4 @@
-name: PayNote
+name: CreditMemo
 options:
   bundleIdPrefix: com.azukid
   deploymentTarget:
@@ -17,18 +17,18 @@ settings:
     ENABLE_USER_SCRIPT_SANDBOXING: YES
 
 targets:
-  PayNote:
+  CreditMemo:
     type: application
     platform: iOS
     deploymentTarget: "18.0"
     sources:
-      - path: PayNote
+      - path: CreditMemo
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.azukid.AzCreditS1
         MARKETING_VERSION: "1.3.0"
         CURRENT_PROJECT_VERSION: "1"
-        INFOPLIST_FILE: PayNote/Resources/Info.plist
+        INFOPLIST_FILE: CreditMemo/Resources/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_VERSION: "6.0"
         SWIFT_STRICT_CONCURRENCY: complete
@@ -38,22 +38,22 @@ targets:
         Release:
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: ""
 
-  PayNoteTests:
+  CreditMemoTests:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - path: PayNoteTests
+      - path: CreditMemoTests
     settings:
       base:
         BUNDLE_LOADER: "$(TEST_HOST)"
-        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/PayNote.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PayNote"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/CreditMemo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CreditMemo"
     dependencies:
-      - target: PayNote
+      - target: CreditMemo
 
-  PayNoteUITests:
+  CreditMemoUITests:
     type: bundle.ui-testing
     platform: iOS
     sources:
-      - path: PayNoteUITests
+      - path: CreditMemoUITests
     dependencies:
-      - target: PayNote
+      - target: CreditMemo

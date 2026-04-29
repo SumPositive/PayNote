@@ -164,7 +164,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PayNote"
+            "value" : "CreditMemo"
           }
         },
         "ja" : {

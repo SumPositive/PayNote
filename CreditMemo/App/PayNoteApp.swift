@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct PayNoteApp: App {
+struct CreditMemoApp: App {
 
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(AppStorageKey.appearanceMode) private var appearanceMode: AppearanceMode = .automatic

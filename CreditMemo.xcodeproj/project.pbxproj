@@ -21,7 +21,7 @@
 		490F8CBDAB27E8464CFC9A8C /* SplitPayListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97721A91036068831138735 /* SplitPayListView.swift */; };
 		4DDA8A04C30B6B86A07A2D68 /* E8bank.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BB8D0C0693934C17D3BFD21 /* E8bank.swift */; };
 		5036733F44C02792D514BAB7 /* CategoryEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA39225A4BEA8B500F61FB /* CategoryEditView.swift */; };
-		5D16A4DE800A0F01FA95B662 /* PayNoteUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DFCCAE92513D9BAEE0F5EF /* PayNoteUITests.swift */; };
+		5D16A4DE800A0F01FA95B662 /* CreditMemoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DFCCAE92513D9BAEE0F5EF /* CreditMemoUITests.swift */; };
 		6B4262F22E9995FB3C3A513D /* DatabaseErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F79355C01D775C52E0C34B50 /* DatabaseErrorView.swift */; };
 		6B962B07029AF00C00FE072C /* SeedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2EF718F50B10EEBAAAD6744 /* SeedData.swift */; };
 		6C2049FCD813BC37C5047451 /* E1card.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97AA8DA9E2505CC1D28F9BB1 /* E1card.swift */; };
@@ -43,7 +43,7 @@
 		BDEAA58C8115B3513B809369 /* Decimal+Rounding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90A96AFAF7BCB93A9445E45C /* Decimal+Rounding.swift */; };
 		BFCEF1FB428B8D2A4C030C0A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C5C87297314999CAF44CF8 /* ContentView.swift */; };
 		C03BB2AEED264F9C4A50EAB7 /* TopMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 899029E259E53F50A679EB0C /* TopMenuView.swift */; };
-		C1640C6CCBBC0D2F5540C977 /* PayNoteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A3204006A7EA7EE85CEA06C /* PayNoteTests.swift */; };
+		C1640C6CCBBC0D2F5540C977 /* CreditMemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A3204006A7EA7EE85CEA06C /* CreditMemoTests.swift */; };
 		C736EED40B1697AC698B6F81 /* InvoiceListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D1DFD33101839DCB19540E9 /* InvoiceListView.swift */; };
 		CE6F6CD0071085C235BAF6F4 /* JSONExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF2D12827F146761299C2F9A /* JSONExport.swift */; };
 		CF1F84FA70C44A2D7D0E4EDC /* PaymentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C888720898CBE1F720F736D /* PaymentListView.swift */; };
@@ -60,14 +60,14 @@
 			containerPortal = AFACF2F53EE3B4B2DBE3D35E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 5C23C5DE3A3D3E947CA0B053;
-			remoteInfo = PayNote;
+			remoteInfo = CreditMemo;
 		};
 		CDB0A7A526B5161AE08A095D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = AFACF2F53EE3B4B2DBE3D35E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 5C23C5DE3A3D3E947CA0B053;
-			remoteInfo = PayNote;
+			remoteInfo = CreditMemo;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -75,7 +75,7 @@
 		0864042EF421461DBA308F5E /* PayNoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayNoteApp.swift; sourceTree = "<group>"; };
 		0D0B3C93B518431C1ED8CA94 /* ShopEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopEditView.swift; sourceTree = "<group>"; };
 		17B4815A12B4099B3F8C2A8D /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
-		20DFCCAE92513D9BAEE0F5EF /* PayNoteUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayNoteUITests.swift; sourceTree = "<group>"; };
+		20DFCCAE92513D9BAEE0F5EF /* CreditMemoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditMemoUITests.swift; sourceTree = "<group>"; };
 		3733DDAFE02614F6EA7B3BC9 /* RecordEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordEditView.swift; sourceTree = "<group>"; };
 		38369111251625BA00E7A110 /* CardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardService.swift; sourceTree = "<group>"; };
 		38369113251626D100E7A110 /* BankService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BankService.swift; sourceTree = "<group>"; };
@@ -86,8 +86,8 @@
 		483AE700971FC77C80FC3F80 /* E5category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E5category.swift; sourceTree = "<group>"; };
 		4DDA39225A4BEA8B500F61FB /* CategoryEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryEditView.swift; sourceTree = "<group>"; };
 		4F8B9D625DF47B15550D7F4C /* MigratingFromCoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigratingFromCoreData.swift; sourceTree = "<group>"; };
-		54F1C265A3492ECBB8AD9300 /* PayNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PayNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		54FAFE5527EBAC98E2BDA7D3 /* PayNoteUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PayNoteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		54F1C265A3492ECBB8AD9300 /* CreditMemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CreditMemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		54FAFE5527EBAC98E2BDA7D3 /* CreditMemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CreditMemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5D1DFD33101839DCB19540E9 /* InvoiceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvoiceListView.swift; sourceTree = "<group>"; };
 		612855EBB9B4EB1E945C4A9B /* E7payment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E7payment.swift; sourceTree = "<group>"; };
 		6AC306E701300663C94683C4 /* RecordListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordListView.swift; sourceTree = "<group>"; };
@@ -96,13 +96,13 @@
 		88C5C87297314999CAF44CF8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		899029E259E53F50A679EB0C /* TopMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopMenuView.swift; sourceTree = "<group>"; };
 		89AE62248E418344FADC921C /* CardListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardListView.swift; sourceTree = "<group>"; };
-		8A3204006A7EA7EE85CEA06C /* PayNoteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayNoteTests.swift; sourceTree = "<group>"; };
+		8A3204006A7EA7EE85CEA06C /* CreditMemoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditMemoTests.swift; sourceTree = "<group>"; };
 		8C888720898CBE1F720F736D /* PaymentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentListView.swift; sourceTree = "<group>"; };
 		90A96AFAF7BCB93A9445E45C /* Decimal+Rounding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Decimal+Rounding.swift"; sourceTree = "<group>"; };
 		96CCBCA125154F1A89A67910 /* JSONImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONImport.swift; sourceTree = "<group>"; };
 		97AA8DA9E2505CC1D28F9BB1 /* E1card.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E1card.swift; sourceTree = "<group>"; };
 		9A3B7A6025157DD900A17A10 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		9AFC963C5C24B15862ECE64B /* PayNoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PayNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9AFC963C5C24B15862ECE64B /* CreditMemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CreditMemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F95EF3EE0B184C7D267B8C7 /* View+ScalableTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+ScalableTitle.swift"; sourceTree = "<group>"; };
 		ACAC65A5428E245996B921E5 /* E6part.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E6part.swift; sourceTree = "<group>"; };
 		B0AA3264A9D08B8C5FAFC814 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
@@ -128,9 +128,9 @@
 		02B702B021CFC34BA6592EBF = {
 			isa = PBXGroup;
 			children = (
-				ED2C6CB4EC8872FC2CDBC64C /* PayNote */,
-				4134DBA93A3D961EE17AAB13 /* PayNoteTests */,
-				940C603D5A38298CEAF215E4 /* PayNoteUITests */,
+				ED2C6CB4EC8872FC2CDBC64C /* CreditMemo */,
+				4134DBA93A3D961EE17AAB13 /* CreditMemoTests */,
+				940C603D5A38298CEAF215E4 /* CreditMemoUITests */,
 				106FEC0C099A14C294BEC41D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -138,9 +138,9 @@
 		106FEC0C099A14C294BEC41D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				54F1C265A3492ECBB8AD9300 /* PayNote.app */,
-				9AFC963C5C24B15862ECE64B /* PayNoteTests.xctest */,
-				54FAFE5527EBAC98E2BDA7D3 /* PayNoteUITests.xctest */,
+				54F1C265A3492ECBB8AD9300 /* CreditMemo.app */,
+				9AFC963C5C24B15862ECE64B /* CreditMemoTests.xctest */,
+				54FAFE5527EBAC98E2BDA7D3 /* CreditMemoUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -184,12 +184,12 @@
 			path = Export;
 			sourceTree = "<group>";
 		};
-		4134DBA93A3D961EE17AAB13 /* PayNoteTests */ = {
+		4134DBA93A3D961EE17AAB13 /* CreditMemoTests */ = {
 			isa = PBXGroup;
 			children = (
-				8A3204006A7EA7EE85CEA06C /* PayNoteTests.swift */,
+				8A3204006A7EA7EE85CEA06C /* CreditMemoTests.swift */,
 			);
-			path = PayNoteTests;
+			path = CreditMemoTests;
 			sourceTree = "<group>";
 		};
 		59B013F3C2F9BA8CC57E74FE /* Category */ = {
@@ -274,12 +274,12 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
-		940C603D5A38298CEAF215E4 /* PayNoteUITests */ = {
+		940C603D5A38298CEAF215E4 /* CreditMemoUITests */ = {
 			isa = PBXGroup;
 			children = (
-				20DFCCAE92513D9BAEE0F5EF /* PayNoteUITests.swift */,
+				20DFCCAE92513D9BAEE0F5EF /* CreditMemoUITests.swift */,
 			);
-			path = PayNoteUITests;
+			path = CreditMemoUITests;
 			sourceTree = "<group>";
 		};
 		96CCBC9F25154EE889A67910 /* Import */ = {
@@ -330,7 +330,7 @@
 			path = SplitPay;
 			sourceTree = "<group>";
 		};
-		ED2C6CB4EC8872FC2CDBC64C /* PayNote */ = {
+		ED2C6CB4EC8872FC2CDBC64C /* CreditMemo */ = {
 			isa = PBXGroup;
 			children = (
 				5A22B2E658FAC59FAAD59E9E /* App */,
@@ -339,7 +339,8 @@
 				6E92F55323A0B7797C36B8E0 /* Features */,
 				5B155411FD36B0C994228CCD /* Resources */,
 			);
-			path = PayNote;
+			name = CreditMemo;
+			path = CreditMemo;
 			sourceTree = "<group>";
 		};
 		EF08BD039DE4DBD5B8EE006E /* Bank */ = {
@@ -391,9 +392,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		2428C92422D18A829E2F0849 /* PayNoteTests */ = {
+		2428C92422D18A829E2F0849 /* CreditMemoTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7C451D4092B60567630D400F /* Build configuration list for PBXNativeTarget "PayNoteTests" */;
+			buildConfigurationList = 7C451D4092B60567630D400F /* Build configuration list for PBXNativeTarget "CreditMemoTests" */;
 			buildPhases = (
 				7A11F7329FC1735604B31383 /* Sources */,
 			);
@@ -402,16 +403,16 @@
 			dependencies = (
 				469BFD816D32CA76A685B29C /* PBXTargetDependency */,
 			);
-			name = PayNoteTests;
+			name = CreditMemoTests;
 			packageProductDependencies = (
 			);
-			productName = PayNoteTests;
-			productReference = 9AFC963C5C24B15862ECE64B /* PayNoteTests.xctest */;
+			productName = CreditMemoTests;
+			productReference = 9AFC963C5C24B15862ECE64B /* CreditMemoTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		5C23C5DE3A3D3E947CA0B053 /* PayNote */ = {
+		5C23C5DE3A3D3E947CA0B053 /* CreditMemo */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3F0D4022A29402A6F70361F5 /* Build configuration list for PBXNativeTarget "PayNote" */;
+			buildConfigurationList = 3F0D4022A29402A6F70361F5 /* Build configuration list for PBXNativeTarget "CreditMemo" */;
 			buildPhases = (
 				FAB38D551A5A3B48DB07B7D4 /* Sources */,
 				AE60322F60504161EF7F3E87 /* Resources */,
@@ -420,16 +421,16 @@
 			);
 			dependencies = (
 			);
-			name = PayNote;
+			name = CreditMemo;
 			packageProductDependencies = (
 			);
-			productName = PayNote;
-			productReference = 54F1C265A3492ECBB8AD9300 /* PayNote.app */;
+			productName = CreditMemo;
+			productReference = 54F1C265A3492ECBB8AD9300 /* CreditMemo.app */;
 			productType = "com.apple.product-type.application";
 		};
-		B55591E6E567FD40E199B0D8 /* PayNoteUITests */ = {
+		B55591E6E567FD40E199B0D8 /* CreditMemoUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1BEA44F0517EBE4E24E01FD5 /* Build configuration list for PBXNativeTarget "PayNoteUITests" */;
+			buildConfigurationList = 1BEA44F0517EBE4E24E01FD5 /* Build configuration list for PBXNativeTarget "CreditMemoUITests" */;
 			buildPhases = (
 				3684EE7005B793E89A989F96 /* Sources */,
 			);
@@ -438,11 +439,11 @@
 			dependencies = (
 				4C686B3A162BB44BAD60EF8F /* PBXTargetDependency */,
 			);
-			name = PayNoteUITests;
+			name = CreditMemoUITests;
 			packageProductDependencies = (
 			);
-			productName = PayNoteUITests;
-			productReference = 54FAFE5527EBAC98E2BDA7D3 /* PayNoteUITests.xctest */;
+			productName = CreditMemoUITests;
+			productReference = 54FAFE5527EBAC98E2BDA7D3 /* CreditMemoUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -466,7 +467,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 1D61FF227BC03B6487B89B74 /* Build configuration list for PBXProject "PayNote" */;
+			buildConfigurationList = 1D61FF227BC03B6487B89B74 /* Build configuration list for PBXProject "CreditMemo" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -481,9 +482,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				5C23C5DE3A3D3E947CA0B053 /* PayNote */,
-				2428C92422D18A829E2F0849 /* PayNoteTests */,
-				B55591E6E567FD40E199B0D8 /* PayNoteUITests */,
+				5C23C5DE3A3D3E947CA0B053 /* CreditMemo */,
+				2428C92422D18A829E2F0849 /* CreditMemoTests */,
+				B55591E6E567FD40E199B0D8 /* CreditMemoUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -506,7 +507,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5D16A4DE800A0F01FA95B662 /* PayNoteUITests.swift in Sources */,
+				5D16A4DE800A0F01FA95B662 /* CreditMemoUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -514,7 +515,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C1640C6CCBBC0D2F5540C977 /* PayNoteTests.swift in Sources */,
+				C1640C6CCBBC0D2F5540C977 /* CreditMemoTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -570,12 +571,12 @@
 /* Begin PBXTargetDependency section */
 		469BFD816D32CA76A685B29C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 5C23C5DE3A3D3E947CA0B053 /* PayNote */;
+			target = 5C23C5DE3A3D3E947CA0B053 /* CreditMemo */;
 			targetProxy = CDB0A7A526B5161AE08A095D /* PBXContainerItemProxy */;
 		};
 		4C686B3A162BB44BAD60EF8F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 5C23C5DE3A3D3E947CA0B053 /* PayNote */;
+			target = 5C23C5DE3A3D3E947CA0B053 /* CreditMemo */;
 			targetProxy = 90D8C5AE47C0F8F221A14693 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -671,10 +672,10 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.PayNoteTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.CreditMemoTests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PayNote.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PayNote";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CreditMemo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CreditMemo";
 			};
 			name = Release;
 		};
@@ -749,10 +750,10 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.PayNoteUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.CreditMemoUITests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = PayNote;
+				TEST_TARGET_NAME = CreditMemo;
 			};
 			name = Release;
 		};
@@ -762,7 +763,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 0;
-				INFOPLIST_FILE = PayNote/Resources/Info.plist;
+				INFOPLIST_FILE = CreditMemo/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CreditMemo;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
@@ -786,7 +787,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 0;
-				INFOPLIST_FILE = PayNote/Resources/Info.plist;
+				INFOPLIST_FILE = CreditMemo/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CreditMemo;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
@@ -813,10 +814,10 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.PayNoteTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.CreditMemoTests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PayNote.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PayNote";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CreditMemo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CreditMemo";
 			};
 			name = Debug;
 		};
@@ -829,17 +830,17 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.PayNoteUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.CreditMemoUITests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = PayNote;
+				TEST_TARGET_NAME = CreditMemo;
 			};
 			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1BEA44F0517EBE4E24E01FD5 /* Build configuration list for PBXNativeTarget "PayNoteUITests" */ = {
+		1BEA44F0517EBE4E24E01FD5 /* Build configuration list for PBXNativeTarget "CreditMemoUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D2FE2C9BBFC79228F3D6C2A1 /* Debug */,
@@ -848,7 +849,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		1D61FF227BC03B6487B89B74 /* Build configuration list for PBXProject "PayNote" */ = {
+		1D61FF227BC03B6487B89B74 /* Build configuration list for PBXProject "CreditMemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				040225AD6A3E760922B95967 /* Debug */,
@@ -857,7 +858,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		3F0D4022A29402A6F70361F5 /* Build configuration list for PBXNativeTarget "PayNote" */ = {
+		3F0D4022A29402A6F70361F5 /* Build configuration list for PBXNativeTarget "CreditMemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				983EEC013E74D95089D82CFF /* Debug */,
@@ -866,7 +867,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		7C451D4092B60567630D400F /* Build configuration list for PBXNativeTarget "PayNoteTests" */ = {
+		7C451D4092B60567630D400F /* Build configuration list for PBXNativeTarget "CreditMemoTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B5D445021615F902F3BB5AA7 /* Debug */,

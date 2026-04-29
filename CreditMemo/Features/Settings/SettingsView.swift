@@ -308,7 +308,7 @@ struct SettingsView: View {
                 }
                 let fmt  = DateFormatter()
                 fmt.dateFormat = "yyyyMMdd_HHmmss"
-                let name = "PayNote_\(fmt.string(from: Date())).json"
+                let name = "CreditMemo_\(fmt.string(from: Date())).json"
                 let url  = FileManager.default.temporaryDirectory.appendingPathComponent(name)
                 progressMessage = exportWritingText
                 await Task.yield()

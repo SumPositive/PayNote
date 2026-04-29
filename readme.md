@@ -1,4 +1,4 @@
-# PayNote / クレメモ 開発メモ
+# CreditMemo / クレメモ 開発メモ
 
 この `readme.md` は、開発者向けの設計メモです
 
