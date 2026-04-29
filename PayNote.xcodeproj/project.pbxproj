@@ -192,14 +192,6 @@
 			path = PayNoteTests;
 			sourceTree = "<group>";
 		};
-		96CCBC9F25154EE889A67910 /* Import */ = {
-			isa = PBXGroup;
-			children = (
-				96CCBCA125154F1A89A67910 /* JSONImport.swift */,
-			);
-			path = Import;
-			sourceTree = "<group>";
-		};
 		59B013F3C2F9BA8CC57E74FE /* Category */ = {
 			isa = PBXGroup;
 			children = (
@@ -288,6 +280,14 @@
 				20DFCCAE92513D9BAEE0F5EF /* PayNoteUITests.swift */,
 			);
 			path = PayNoteUITests;
+			sourceTree = "<group>";
+		};
+		96CCBC9F25154EE889A67910 /* Import */ = {
+			isa = PBXGroup;
+			children = (
+				96CCBCA125154F1A89A67910 /* JSONImport.swift */,
+			);
+			path = Import;
 			sourceTree = "<group>";
 		};
 		C54AACA7AAE085AE4CB2B941 /* About */ = {
@@ -501,18 +501,6 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXVariantGroup section */
-		9A3B7A6225157E0900A17A10 /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				9A3B7A6025157DD900A17A10 /* en */,
-				FFE96F1625157DEB00A17A10 /* ja */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
-
 /* Begin PBXSourcesBuildPhase section */
 		3684EE7005B793E89A989F96 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -591,6 +579,18 @@
 			targetProxy = 90D8C5AE47C0F8F221A14693 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		9A3B7A6225157E0900A17A10 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9A3B7A6025157DD900A17A10 /* en */,
+				FFE96F1625157DEB00A17A10 /* ja */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		040225AD6A3E760922B95967 /* Debug */ = {
@@ -763,13 +763,15 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 0;
 				INFOPLIST_FILE = PayNote/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CreditMemo;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 2.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.PayNote;
+				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.AzCreditS1;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -785,13 +787,15 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 0;
 				INFOPLIST_FILE = PayNote/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CreditMemo;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 2.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.PayNote;
+				PRODUCT_BUNDLE_IDENTIFIER = com.azukid.AzCreditS1;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_STRICT_CONCURRENCY = complete;
