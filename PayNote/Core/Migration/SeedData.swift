@@ -104,13 +104,24 @@ enum SeedData {
     /// 日本向けの代表的な決済方法
     private static func japaneseCardPresets() -> [CardPreset] {
         [
-            CardPreset(name: "VIEWカード Suica", closingDay: 5, payDay: 4, payMonth: 1),
-            CardPreset(name: "PayPayカード PayPay", closingDay: 29, payDay: 27, payMonth: 1),
-            CardPreset(name: "楽天カード Rpay", closingDay: 29, payDay: 27, payMonth: 1),
-            CardPreset(name: "イオンカード AEONPay", closingDay: 10, payDay: 2, payMonth: 1),
+            CardPreset(name: "VIEWカード", closingDay: 5, payDay: 4, payMonth: 1),
+            CardPreset(name: "PayPayカード", closingDay: 29, payDay: 27, payMonth: 1),
+            CardPreset(name: "楽天カード", closingDay: 29, payDay: 27, payMonth: 1),
+            CardPreset(name: "イオンカード", closingDay: 10, payDay: 2, payMonth: 1),
             CardPreset(name: "ｄカード", closingDay: 15, payDay: 10, payMonth: 1),
             CardPreset(name: "三井住友カード", closingDay: 15, payDay: 10, payMonth: 1),
             CardPreset(name: "AMEXカード", closingDay: 20, payDay: 10, payMonth: 1),
+            // 追加: 日本の主要カード（発行数上位クラス）
+            CardPreset(name: "JCBカード", closingDay: 15, payDay: 10, payMonth: 1),
+            CardPreset(name: "セゾンカード", closingDay: 10, payDay: 4, payMonth: 1),
+            CardPreset(name: "エポスカード", closingDay: 4, payDay: 4, payMonth: 1),
+            CardPreset(name: "オリコカード", closingDay: 27, payDay: 27, payMonth: 1),
+            CardPreset(name: "ライフカード", closingDay: 5, payDay: 3, payMonth: 1),
+            CardPreset(name: "UCカード", closingDay: 10, payDay: 5, payMonth: 1),
+            CardPreset(name: "三菱UFJカード", closingDay: 15, payDay: 10, payMonth: 1),
+            CardPreset(name: "アプラスカード", closingDay: 27, payDay: 27, payMonth: 1),
+            CardPreset(name: "NICOSカード", closingDay: 5, payDay: 27, payMonth: 1),
+            CardPreset(name: "ジャックスカード", closingDay: 15, payDay: 10, payMonth: 1),
         ]
     }
 
@@ -160,15 +171,7 @@ enum SeedData {
     private static func japaneseCategoryPresets() -> [CategoryPreset] {
         [
             CategoryPreset(name: "チャージ"),
-            CategoryPreset(name: "食費"),
-            CategoryPreset(name: "交際費"),
-            CategoryPreset(name: "会費"),
-            CategoryPreset(name: "交通費"),
-            CategoryPreset(name: "有料道路(ETC)"),
-            CategoryPreset(name: "タクシー"),
-            CategoryPreset(name: "通信費"),
-            CategoryPreset(name: "水道代"),
-            CategoryPreset(name: "電気代"),
+            CategoryPreset(name: "ETC"),
         ]
     }
 
@@ -176,15 +179,7 @@ enum SeedData {
     private static func westernCategoryPresets() -> [CategoryPreset] {
         [
             CategoryPreset(name: "Top-up"),
-            CategoryPreset(name: "Food"),
-            CategoryPreset(name: "Social"),
-            CategoryPreset(name: "Subscription"),
-            CategoryPreset(name: "Transit"),
-            CategoryPreset(name: "Toll (ETC)"),
-            CategoryPreset(name: "Taxi"),
-            CategoryPreset(name: "Phone/Internet"),
-            CategoryPreset(name: "Water"),
-            CategoryPreset(name: "Electricity"),
+            CategoryPreset(name: "Toll"),
         ]
     }
 }

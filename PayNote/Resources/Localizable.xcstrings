@@ -623,13 +623,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Name"
+            "value" : "Payment Method Name"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "決済名"
+            "value" : "決済手段名"
           }
         }
       }

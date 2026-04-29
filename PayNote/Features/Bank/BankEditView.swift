@@ -39,8 +39,20 @@ struct BankEditView: View {
                 }
             }
             Section {
-                TextField("label.note", text: $zNote)
-                    .autocorrectionDisabled()
+                // メモは複数行入力できる TextEditor を使う
+                ZStack(alignment: .topLeading) {
+                    if zNote.isEmpty {
+                        Text("label.note")
+                            .foregroundStyle(.tertiary)
+                            .padding(.top, 8)
+                            .padding(.leading, 5)
+                    }
+                    TextEditor(text: $zNote)
+                        .frame(minHeight: 72)
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
+                        .autocorrectionDisabled()
+                }
             }
         }
         .navigationTitle(isNew ? "bank.edit.title.add" : "bank.edit.title.edit")

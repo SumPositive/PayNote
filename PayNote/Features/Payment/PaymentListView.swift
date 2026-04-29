@@ -52,9 +52,8 @@ struct PaymentListView: View {
                                             .foregroundStyle(.secondary)
                                             .fixedSize(horizontal: false, vertical: true)
                                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                            Image(systemName: "arrow.down.circle.fill")
-                                                .foregroundStyle(COLOR_UNPAID)
-                                                .font(.caption.weight(.bold))
+                                            PaymentStatusPill(isPaid: false)
+                                                .scaleEffect(0.52)
                                             Text("payment.beginner.line2")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
@@ -67,9 +66,8 @@ struct PaymentListView: View {
                                             .foregroundStyle(.secondary)
                                             .fixedSize(horizontal: false, vertical: true)
                                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                            Image(systemName: "arrow.up.circle.fill")
-                                                .foregroundStyle(COLOR_PAID)
-                                                .font(.caption.weight(.bold))
+                                            PaymentStatusPill(isPaid: true)
+                                                .scaleEffect(0.52)
                                             Text("payment.beginner.line4")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
@@ -93,6 +91,7 @@ struct PaymentListView: View {
                         .padding(.vertical, 10)
                     }
                     .onAppear {
+                        selfHealIfDuplicatedPaymentsExist()
                         if paidVisibleCount == 0 {
                             resetAndLoadPaid()
                         }
@@ -105,6 +104,24 @@ struct PaymentListView: View {
         .onChange(of: allPayments.map(\.id)) { _, _ in
             // 表示集合が変わったら、済み側の表示件数だけ整える
             resetAndLoadPaid()
+        }
+    }
+
+    /// 支払集計に重複キーが残っている場合のみ再構築して自動修復する
+    private func selfHealIfDuplicatedPaymentsExist() {
+        var seen: Set<String> = []
+        for payment in allPayments {
+            let day = Calendar.current.startOfDay(for: payment.date)
+            let dayKey = Int(day.timeIntervalSince1970)
+            let bankKey = payment.e8bank?.id ?? "__no_bank__"
+            let stateKey = payment.isPaid ? "paid" : "unpaid"
+            let key = "\(bankKey)#\(dayKey)#\(stateKey)"
+            if seen.contains(key) {
+                RecordService.rebuildBilling(context: context)
+                resetAndLoadPaid()
+                return
+            }
+            seen.insert(key)
         }
     }
 

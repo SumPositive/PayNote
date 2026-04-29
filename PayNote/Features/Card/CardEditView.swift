@@ -56,12 +56,11 @@ struct CardEditView: View {
 
             // 基本情報
             Section {
-                AdaptiveValueRow(titleKey: "card.field.name") {
-                    TextField("", text: $zName)
-                        .autocorrectionDisabled()
-                        .focused($focusName)
-                        .multilineTextAlignment(.trailing)
-                }
+                // 決済名はプレースホルダー表示にして左寄せ入力する
+                TextField("card.field.name", text: $zName)
+                    .autocorrectionDisabled()
+                    .focused($focusName)
+                    .multilineTextAlignment(.leading)
 
                 AdaptiveValueRow(titleKey: "card.field.bank") {
                     Picker("", selection: $bankSelection) {
@@ -137,9 +136,18 @@ struct CardEditView: View {
 
             // メモ
             Section {
-                AdaptiveValueRow(titleKey: "card.field.note") {
-                    TextField("", text: $zNote)
-                        .multilineTextAlignment(.trailing)
+                // メモは複数行入力できる TextEditor を使う
+                ZStack(alignment: .topLeading) {
+                    if zNote.isEmpty {
+                        Text("card.field.note")
+                            .foregroundStyle(.tertiary)
+                            .padding(.top, 8)
+                            .padding(.leading, 5)
+                    }
+                    TextEditor(text: $zNote)
+                        .frame(minHeight: 72)
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
                         .autocorrectionDisabled()
                 }
             }
