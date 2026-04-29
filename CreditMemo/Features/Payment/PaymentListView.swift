@@ -198,7 +198,6 @@ private struct PaymentRow: View {
         // 未選択決済を含む場合は「済み」へ遷移させない
         payment.isPaid || !payment.includesUnselectedCard
     }
-
     private var canTapToggle: Bool {
         canToggleToPaid && !isToggling
     }

@@ -35,6 +35,30 @@ enum RecordService {
         try commit(context)
     }
 
+    /// 指定年数より古い履歴を削除する
+    static func deleteRecords(olderThanYears years: Int, context: ModelContext) throws {
+        let calendar = Calendar.current
+        let now = Date()
+        guard let cutoff = calendar.date(byAdding: .year, value: -years, to: now) else {
+            return
+        }
+
+        let descriptor = FetchDescriptor<E3record>(
+            predicate: #Predicate<E3record> { $0.dateUse < cutoff }
+        )
+        let oldRecords = (try? context.fetch(descriptor)) ?? []
+        if oldRecords.isEmpty {
+            return
+        }
+
+        for record in oldRecords {
+            let snapshot = snapshot(for: record)
+            context.delete(record)
+            cleanupBilling(snapshot: snapshot, context: context)
+        }
+        try commit(context)
+    }
+
     /// 編集前の旧パーツだけを除去し、請求・支払の孤児データを掃除する
     static func removeParts(of record: E3record, context: ModelContext) {
         let snapshot = snapshot(for: record)

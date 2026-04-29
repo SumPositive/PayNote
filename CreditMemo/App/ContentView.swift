@@ -11,8 +11,12 @@ struct ContentView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(AppStorageKey.openAddOnActive) private var openAddOnActive = false
     @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .standard
+    @AppStorage(AppStorageKey.retentionPromptCompleted) private var retentionPromptCompleted = false
     @State private var selectedDestination: AppDestination?
     @State private var addRecordRefreshID = UUID()
+    @State private var showRetentionPrompt = false
+    @State private var retentionResultMessage = ""
+    @State private var showRetentionResult = false
     @ScaledMetric(relativeTo: .title) private var emptyIconSize: CGFloat = 64
     /// 特大モード用スタックパス
     @State private var stackPath: [AppDestination] = []
@@ -69,18 +73,31 @@ struct ContentView: View {
                     )
                 }
         }
-        .task {
-            SeedData.seedIfNeeded(context: modelContext)
-            // 起動時に1回だけ請求孤児を掃除して、旧データ不整合のクラッシュを抑える
-            RecordService.cleanupOrphanBilling(context: modelContext)
-            if modelContext.hasChanges {
-                try? modelContext.save()
-            }
-        }
+        .task { await runInitialMaintenanceIfNeeded() }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active, openAddOnActive else { return }
             addRecordRefreshID = UUID()
             stackPath = [.addRecord]
+        }
+        .alert(retentionPromptTitle, isPresented: $showRetentionPrompt) {
+            Button(retentionPromptDeleteButton, role: .destructive) {
+                Task { @MainActor in
+                    let ok = await deleteOldRecordsWithPrompt()
+                    if ok {
+                        retentionPromptCompleted = true
+                    }
+                }
+            }
+            Button(retentionPromptKeepButton, role: .cancel) {
+                retentionPromptCompleted = true
+            }
+        } message: {
+            Text(retentionPromptMessage)
+        }
+        .alert(retentionResultTitle, isPresented: $showRetentionResult) {
+            Button("button.ok", role: .cancel) {}
+        } message: {
+            Text(retentionResultMessage)
         }
     }
 
@@ -111,19 +128,86 @@ struct ContentView: View {
                 }
             }
         }
-        .task {
-            SeedData.seedIfNeeded(context: modelContext)
-            // 起動時に1回だけ請求孤児を掃除して、旧データ不整合のクラッシュを抑える
-            RecordService.cleanupOrphanBilling(context: modelContext)
-            if modelContext.hasChanges {
-                try? modelContext.save()
-            }
-        }
+        .task { await runInitialMaintenanceIfNeeded() }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active, openAddOnActive else { return }
             addRecordRefreshID = UUID()
             selectedDestination = .addRecord
         }
+        .alert(retentionPromptTitle, isPresented: $showRetentionPrompt) {
+            Button(retentionPromptDeleteButton, role: .destructive) {
+                Task { @MainActor in
+                    let ok = await deleteOldRecordsWithPrompt()
+                    if ok {
+                        retentionPromptCompleted = true
+                    }
+                }
+            }
+            Button(retentionPromptKeepButton, role: .cancel) {
+                retentionPromptCompleted = true
+            }
+        } message: {
+            Text(retentionPromptMessage)
+        }
+        .alert(retentionResultTitle, isPresented: $showRetentionResult) {
+            Button("button.ok", role: .cancel) {}
+        } message: {
+            Text(retentionResultMessage)
+        }
+    }
+
+    /// 起動時の軽量メンテナンスと履歴削除同意の表示を行う
+    private func runInitialMaintenanceIfNeeded() async {
+        SeedData.seedIfNeeded(context: modelContext)
+        // 起動時に請求孤児を掃除して、旧データ不整合のクラッシュを抑える
+        RecordService.cleanupOrphanBilling(context: modelContext)
+        if modelContext.hasChanges {
+            try? modelContext.save()
+        }
+
+        if retentionPromptCompleted == false {
+            await MainActor.run {
+                showRetentionPrompt = true
+            }
+        }
+    }
+
+    private var retentionPromptTitle: String {
+        NSLocalizedString("retention.prompt.title", comment: "")
+    }
+
+    private var retentionPromptMessage: String {
+        NSLocalizedString("retention.prompt.message", comment: "")
+    }
+
+    private var retentionPromptDeleteButton: String {
+        NSLocalizedString("retention.prompt.delete", comment: "")
+    }
+
+    private var retentionPromptKeepButton: String {
+        NSLocalizedString("retention.prompt.keep", comment: "")
+    }
+
+    /// 初回同意時: 3年超履歴を削除する（事前エキスポートをユーザーへ案内）
+    private func deleteOldRecordsWithPrompt() async -> Bool {
+        do {
+            try RecordService.deleteRecords(olderThanYears: 3, context: modelContext)
+            retentionResultMessage = retentionDoneMessage
+            showRetentionResult = true
+            return true
+        } catch {
+            retentionResultMessage = error.localizedDescription
+            showRetentionResult = true
+            return false
+        }
+    }
+
+    private var retentionResultTitle: String {
+        NSLocalizedString("retention.result.title", comment: "")
+    }
+
+    private var retentionDoneMessage: String {
+        NSLocalizedString("retention.result.done", comment: "")
     }
 }
 

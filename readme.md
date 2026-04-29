@@ -182,3 +182,9 @@ SwiftData には DB トリガやストアドプロシージャーはないため
 - SwiftUI
 - SwiftData
 - iOS 18 以降
+
+## ローカライズ運用ルール
+
+- ローカライズは **`CreditMemo/Resources/Localizable.xcstrings` に統一**します
+- 新しい文言はコードへ直接埋め込まず、必ずキー参照で追加します
+- `Localizable.strings` の新規追加は行わず、既存運用の `xcstrings` を使います

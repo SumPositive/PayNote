@@ -16,6 +16,7 @@ struct SettingsView: View {
     @State private var showImportPicker = false
     @State private var exportedURL: URL?
     @State private var showAboutSheet  = false
+    @State private var showPruneOldRecordsConfirm = false
     @State private var alertItem: SettingsAlertItem?
     @State private var isWorking = false
     @State private var progressMessage = ""
@@ -164,6 +165,13 @@ struct SettingsView: View {
                     Label(importButtonText, systemImage: "square.and.arrow.down")
                 }
                 .disabled(isWorking)
+
+                Button {
+                    showPruneOldRecordsConfirm = true
+                } label: {
+                    Label(pruneOldRecordsButtonText, systemImage: "trash")
+                }
+                .disabled(isWorking)
             }
 
             Section("settings.panel.support") {
@@ -234,6 +242,14 @@ struct SettingsView: View {
                 message: message,
                 dismissButton: .cancel(Text("button.ok"))
             )
+        }
+        .alert(pruneOldRecordsConfirmTitle, isPresented: $showPruneOldRecordsConfirm) {
+            Button(pruneOldRecordsConfirmDeleteText, role: .destructive) {
+                pruneOldRecords()
+            }
+            Button("button.cancel", role: .cancel) {}
+        } message: {
+            Text(pruneOldRecordsConfirmMessage)
         }
         .overlay {
             if isWorking {
@@ -396,6 +412,26 @@ struct SettingsView: View {
         return "Missing sections are ignored. Only included data will be imported."
     }
 
+    /// 3年超履歴削除ボタン文言
+    private var pruneOldRecordsButtonText: String {
+        NSLocalizedString("retention.settings.button", comment: "")
+    }
+
+    /// 3年超履歴削除確認タイトル
+    private var pruneOldRecordsConfirmTitle: String {
+        NSLocalizedString("retention.prompt.title", comment: "")
+    }
+
+    /// 3年超履歴削除確認文
+    private var pruneOldRecordsConfirmMessage: String {
+        NSLocalizedString("retention.prompt.message", comment: "")
+    }
+
+    /// 3年超履歴削除実行ボタン文言
+    private var pruneOldRecordsConfirmDeleteText: String {
+        NSLocalizedString("retention.prompt.delete", comment: "")
+    }
+
     /// 共通エラータイトル
     private var errorTitleText: String {
         if Locale.current.language.languageCode?.identifier == "ja" {
@@ -434,6 +470,45 @@ struct SettingsView: View {
         Invoice States: \(result.invoiceStateCount)
         Payment States: \(result.paymentStateCount)
         """
+    }
+
+    /// 3年超履歴削除を実行する
+    private func pruneOldRecords() {
+        Task { @MainActor in
+            isWorking = true
+            // 実行中の状態が伝わるように進行文言を更新する
+            progressMessage = pruneOldRecordsProgressText
+            progressHint = pruneOldRecordsProgressHintText
+            await Task.yield()
+            defer { isWorking = false }
+
+            do {
+                try RecordService.deleteRecords(olderThanYears: 3, context: context)
+                alertItem = .raw(title: pruneOldRecordsDoneTitle, message: pruneOldRecordsDoneMessage)
+            } catch {
+                alertItem = .raw(title: errorTitleText, message: error.localizedDescription)
+            }
+        }
+    }
+
+    /// 3年超履歴削除中の進行文言
+    private var pruneOldRecordsProgressText: String {
+        NSLocalizedString("retention.progress.cleaning", comment: "")
+    }
+
+    /// 3年超履歴削除中の補足文
+    private var pruneOldRecordsProgressHintText: String {
+        NSLocalizedString("retention.progress.hint", comment: "")
+    }
+
+    /// 3年超履歴削除完了タイトル
+    private var pruneOldRecordsDoneTitle: String {
+        NSLocalizedString("retention.result.doneTitle", comment: "")
+    }
+
+    /// 3年超履歴削除完了文
+    private var pruneOldRecordsDoneMessage: String {
+        NSLocalizedString("retention.result.done", comment: "")
     }
 }
 
