@@ -6,8 +6,6 @@ enum SeedData {
     struct CardPreset {
         var name: String
         var note: String = ""
-        var billingType: BillingType = .cardCycle
-        var offsetDays: Int16? = nil
         var closingDay: Int16
         var payDay: Int16
         var payMonth: Int16
@@ -43,11 +41,10 @@ enum SeedData {
                 zName: p.name,
                 zNote: p.note,
                 nRow: Int32(row),
+                // プリセットは常に正規形の値をそのまま保存する
                 nClosingDay: p.closingDay,
                 nPayDay: p.payDay,
-                nPayMonth: p.payMonth,
-                nBillingType: p.billingType.rawValue,
-                nOffsetDays: p.offsetDays
+                nPayMonth: p.payMonth
             )
             context.insert(card)
         }
@@ -113,12 +110,10 @@ enum SeedData {
             // N日後型プリセット: 住民税の分納など、支払日＝利用日として運用
             CardPreset(
                 name: "利用日払（0日後）",
-                note: "先々の支払日を利用日として登録します。利用日が引き落とし日として管理できます",
-                billingType: .afterDays,
-                offsetDays: 0,
-                closingDay: 20,
-                payDay: 27,
-                payMonth: 1
+                note: "先々の引き落とし日を利用日として登録できます。1回の引き落とし日が決まっている支払を管理できます",
+                closingDay: 0,
+                payDay: 0,
+                payMonth: 0
             ),
             // 締日/支払日型プリセット
             CardPreset(name: "VIEWカード", closingDay: 5, payDay: 4, payMonth: 1),
@@ -146,10 +141,10 @@ enum SeedData {
     private static func westernCardPresets() -> [CardPreset] {
         [
             // N日後型プリセット
-            CardPreset(name: "Same-Day Payment (0 Days)", billingType: .afterDays, offsetDays: 0, closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "Net 7", billingType: .afterDays, offsetDays: 7, closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "Net 14", billingType: .afterDays, offsetDays: 14, closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "Net 30", billingType: .afterDays, offsetDays: 30, closingDay: 27, payDay: 27, payMonth: 1),
+            CardPreset(name: "Same-Day Payment (0 Days)", closingDay: 0, payDay: 0, payMonth: 0),
+            CardPreset(name: "Net 7", closingDay: 0, payDay: 7, payMonth: 0),
+            CardPreset(name: "Net 14", closingDay: 0, payDay: 14, payMonth: 0),
+            CardPreset(name: "Net 30", closingDay: 0, payDay: 30, payMonth: 0),
             // 締日/支払日型プリセット
             CardPreset(name: "Visa", closingDay: 27, payDay: 27, payMonth: 1),
             CardPreset(name: "Mastercard", closingDay: 27, payDay: 27, payMonth: 1),

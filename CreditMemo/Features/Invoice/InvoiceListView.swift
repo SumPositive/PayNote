@@ -5,6 +5,7 @@ struct InvoiceListView: View {
     let payment: E7payment
 
     @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
     @State private var editRecord: E3record?
 
     private var includesUnselectedCard: Bool {
@@ -106,7 +107,12 @@ struct InvoiceListView: View {
         .scalableNavigationTitle("invoice.statement.title")
         .sheet(item: $editRecord) { record in
             NavigationStack {
-                RecordEditView(mode: .edit(record))
+                RecordEditView(mode: .edit(record)) { bankChanged in
+                    // 口座変更時だけ payment 所属が変わり得るため状況一覧へ戻す
+                    if bankChanged {
+                        dismiss()
+                    }
+                }
             }
         }
     }

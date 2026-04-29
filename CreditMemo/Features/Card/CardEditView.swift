@@ -16,11 +16,11 @@ struct CardEditView: View {
     @State private var previousBankSelection: BankSelection = .none
     @State private var showBankAddSheet = false
     @State private var bankCountBeforeAdd = 0
-    @State private var closingDaySelection: Int16? = 20
+    @State private var closingDaySelection: Int16 = 27
     @State private var payDay:     Int16 = 27
     @State private var payMonth:   Int16 = 1
-    @State private var billingType: BillingType = .cardCycle
-    @State private var offsetDays: Int16 = 27
+    @State private var usesAfterDays = false
+    @State private var daysLater: Int16 = 7
     @State private var showPresetDialog = false
     @State private var hasInitialized = false
     @State private var initialDraft: DraftState?
@@ -33,29 +33,26 @@ struct CardEditView: View {
         (Bundle.main.preferredLocalizations.first ?? "en") == "en"
     }
     private var effectiveClosingDay: Int16 {
-        if let closingDaySelection {
-            return closingDaySelection
-        }
-        return payDay
+        closingDaySelection
     }
-    private var effectiveOffsetDays: Int16 {
+    private var effectiveDaysLater: Int16 {
         // 0 は「当日」を許可する
-        if offsetDays < 0 {
+        if daysLater < 0 {
             return 0
         }
-        return offsetDays
+        return daysLater
     }
     private var hasChanges: Bool {
         guard let base = initialDraft else { return false }
         return currentDraft() != base
     }
-    private var billingTypeCardCycleText: LocalizedStringKey {
+    private var billingModeCycleText: LocalizedStringKey {
         isEnglishLocale ? "Closing/Payment Day" : "締日/支払日型"
     }
-    private var billingTypeAfterDaysText: LocalizedStringKey {
+    private var billingModeAfterDaysText: LocalizedStringKey {
         isEnglishLocale ? "N Days" : "N日後型"
     }
-    private var billingTypeTitleText: LocalizedStringKey {
+    private var billingModeTitleText: LocalizedStringKey {
         isEnglishLocale ? "Billing Type" : "請求方式"
     }
 
@@ -97,74 +94,50 @@ struct CardEditView: View {
 
             // 締日〜支払設定を1パネルにまとめる
             Section {
-                AdaptiveValueRow(titleKey: billingTypeTitleText) {
-                    Picker("", selection: $billingType) {
-                        Text(billingTypeCardCycleText).tag(BillingType.cardCycle)
-                        Text(billingTypeAfterDaysText).tag(BillingType.afterDays)
+                AdaptiveValueRow(titleKey: billingModeTitleText) {
+                    Picker("", selection: $usesAfterDays) {
+                        Text(billingModeCycleText).tag(false)
+                        Text(billingModeAfterDaysText).tag(true)
                     }
                     .pickerStyle(.menu)
                     .labelsHidden()
                 }
 
-                if billingType == .cardCycle {
-                    if !isEnglishLocale {
-                        AdaptiveValueRow(titleKey: "card.field.closingDay") {
-                            Picker("", selection: $closingDaySelection) {
-                                ForEach(Array(1...28), id: \.self) { d in
-                                    Text("\(d)").tag(Optional(Int16(d)))
-                                }
-                                Text("card.closingDay.end").tag(Optional(Int16(29)))
+                if !usesAfterDays {
+                    AdaptiveValueRow(titleKey: "card.field.closingDay") {
+                        Picker("", selection: $closingDaySelection) {
+                            ForEach(Array(1...28), id: \.self) { d in
+                                Text("\(d)").tag(Int16(d))
                             }
-                            .pickerStyle(.menu)
-                            .labelsHidden()
+                            Text("card.closingDay.end").tag(Int16(29))
                         }
-                        AdaptiveValueRow(titleKey: "card.field.payMonth") {
-                            Picker("", selection: $payMonth) {
-                                Text("card.payMonth.current").tag(Int16(0))
-                                Text("card.payMonth.next").tag(Int16(1))
-                                Text("card.payMonth.twoMonths").tag(Int16(2))
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                    }
+                    AdaptiveValueRow(titleKey: "card.field.payMonth") {
+                        Picker("", selection: $payMonth) {
+                            Text("card.payMonth.current").tag(Int16(0))
+                            Text("card.payMonth.next").tag(Int16(1))
+                            Text("card.payMonth.twoMonths").tag(Int16(2))
+                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                    }
+                    AdaptiveValueRow(titleKey: "card.field.payDay") {
+                        Picker("", selection: $payDay) {
+                            ForEach(Array(1...28), id: \.self) { d in
+                                Text("\(d)").tag(Int16(d))
                             }
-                            .pickerStyle(.menu)
-                            .labelsHidden()
+                            Text("card.closingDay.end").tag(Int16(29))
                         }
-                        AdaptiveValueRow(titleKey: "card.field.payDay") {
-                            Picker("", selection: $payDay) {
-                                ForEach(Array(1...28), id: \.self) { d in
-                                    Text("\(d)").tag(Int16(d))
-                                }
-                                Text("card.closingDay.end").tag(Int16(29))
-                            }
-                            .pickerStyle(.menu)
-                            .labelsHidden()
-                        }
-                    } else {
-                        AdaptiveValueRow(titleKey: "card.field.payDay") {
-                            Picker("", selection: $payDay) {
-                                ForEach(Array(1...28), id: \.self) { d in
-                                    Text("\(d)").tag(Int16(d))
-                                }
-                                Text("card.closingDay.end").tag(Int16(29))
-                            }
-                            .pickerStyle(.menu)
-                            .labelsHidden()
-                        }
-                        AdaptiveValueRow(titleKey: "card.field.closingDay") {
-                            Picker("", selection: $closingDaySelection) {
-                                Text("label.noSelection").tag(Optional<Int16>.none)
-                                ForEach(Array(1...28), id: \.self) { d in
-                                    Text("\(d)").tag(Optional(Int16(d)))
-                                }
-                                Text("card.closingDay.end").tag(Optional(Int16(29)))
-                            }
-                            .pickerStyle(.menu)
-                            .labelsHidden()
-                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
                     }
                 } else {
                     // N日後型は見出しを出さず、値選択のみ表示する
                     HStack(spacing: 0) {
                         Spacer(minLength: 0)
-                        Picker("", selection: $offsetDays) {
+                        Picker("", selection: $daysLater) {
                             ForEach(Array(0...120), id: \.self) { day in
                                 if day == 0 {
                                     Text(isEnglishLocale ? "0 Days (Use Date)" : "0日後（利用日払）").tag(Int16(day))
@@ -226,6 +199,11 @@ struct CardEditView: View {
         .onChange(of: bankSelection) { _, newValue in
             handleBankSelectionChange(newValue)
         }
+        .onChange(of: usesAfterDays) { _, newValue in
+            if newValue == false {
+                normalizeCycleFieldsIfNeeded()
+            }
+        }
         .sheet(isPresented: $showBankAddSheet, onDismiss: applyAddedBankIfNeeded) {
             NavigationStack { BankEditView(bank: nil) }
         }
@@ -244,23 +222,15 @@ struct CardEditView: View {
 
     private func loadFields() {
         guard let card else {
-            if isEnglishLocale {
-                // en の新規追加は締日を未設定扱いにする
-                closingDaySelection = nil
-                payMonth = 1
-            }
             return
         }
         zName        = card.zName
         zNote        = card.zNote
-        billingType  = card.billingType
-        offsetDays   = Int16(card.offsetDays ?? 0)
-        if isEnglishLocale && card.nClosingDay == card.nPayDay {
-            // en では「未設定(=支払日と同じ)」を表現する
-            closingDaySelection = nil
-        } else {
-            closingDaySelection = 0 < card.nClosingDay ? card.nClosingDay : 20
-        }
+        usesAfterDays = card.nClosingDay == 0
+        // N日後型は nPayDay をそのまま日数として読む
+        daysLater    = usesAfterDays ? card.nPayDay : 7
+        // 請求方式ごとの既定値に寄せる
+        closingDaySelection = usesAfterDays ? 0 : (0 < card.nClosingDay ? card.nClosingDay : 27)
         payDay       = 0 < card.nPayDay ? card.nPayDay : 27
         payMonth     = card.nPayMonth
         selectedBank = card.e8bank
@@ -271,37 +241,30 @@ struct CardEditView: View {
     private func save() {
         let name = zName.trimmingCharacters(in: .whitespaces)
         guard !name.isEmpty else { return }
-        let closingDay = billingType == .cardCycle ? effectiveClosingDay : Int16(0)
-        let offsetDaysToSave: Int16? = billingType == .afterDays ? effectiveOffsetDays : nil
-        let savingPayMonth: Int16 = isEnglishLocale ? 1 : payMonth
+        let closingDay = usesAfterDays ? Int16(0) : effectiveClosingDay
+        let savingPayDay: Int16 = usesAfterDays ? effectiveDaysLater : payDay
+        let savingPayMonth: Int16 = usesAfterDays ? 0 : payMonth
 
         if let card {
             card.zName       = name
             card.zNote       = zNote
-            card.nBillingType = billingType.rawValue
-            card.nOffsetDays = offsetDaysToSave
             card.nClosingDay = closingDay
-            card.nPayDay     = payDay
+            card.nPayDay     = savingPayDay
             card.nPayMonth   = savingPayMonth
             // ボーナス月は廃止し、常に未設定(0)で保存する
             card.nBonus1      = 0
             card.nBonus2      = 0
             card.e8bank       = selectedBank
             card.dateUpdate   = Date()
-            // 口座や請求条件の変更を既存明細へ反映する
-            for record in card.e3records {
-                RecordService.rebuildBilling(for: record, context: context)
-            }
-            RecordService.cleanupOrphanBilling(context: context)
+            // 決済手段マスタ変更は請求全体へ影響するため全件再構築する
+            RecordService.rebuildBilling(context: context)
         } else {
             // 新規追加は一覧先頭へ出すため、最小rowよりさらに小さい値を採用する
             let row = Int32((allCards.map { Int($0.nRow) }.min() ?? 1) - 1)
             let c = E1card(
                 zName: name, zNote: zNote, nRow: row,
-                nClosingDay: closingDay, nPayDay: payDay, nPayMonth: savingPayMonth,
+                nClosingDay: closingDay, nPayDay: savingPayDay, nPayMonth: savingPayMonth,
                 nBonus1: 0, nBonus2: 0,
-                nBillingType: billingType.rawValue,
-                nOffsetDays: offsetDaysToSave,
                 dateUpdate: Date()
             )
             c.e8bank = selectedBank
@@ -362,12 +325,27 @@ struct CardEditView: View {
         zName = preset.name
         // プリセットに説明メモがある場合はメモへ反映する
         zNote = preset.note
-        billingType = preset.billingType
-        // N日後型の既定は 0日後（利用日払い）
-        offsetDays = preset.offsetDays ?? 0
-        closingDaySelection = isEnglishLocale ? nil : preset.closingDay
+        // 締日=0 を N日後型として扱う
+        usesAfterDays = preset.closingDay == 0
+        // N日後型は payDay をそのまま N 日として使う
+        daysLater = usesAfterDays ? preset.payDay : 0
+        // プリセットは内部値どおりにそのまま反映する
+        closingDaySelection = usesAfterDays ? 0 : preset.closingDay
         payDay = preset.payDay
-        payMonth = isEnglishLocale ? 1 : preset.payMonth
+        payMonth = preset.payMonth
+    }
+
+    private func normalizeCycleFieldsIfNeeded() {
+        // 締日/支払日型へ戻した時だけ、0 のまま残る値を補正する
+        if closingDaySelection == 0 {
+            closingDaySelection = 27
+        }
+        if payMonth == 0 {
+            payMonth = 1
+        }
+        if payDay == 0 {
+            payDay = 27
+        }
     }
 
     // MARK: - Draft Diff
@@ -377,9 +355,9 @@ struct CardEditView: View {
         let zName: String
         let zNote: String
         let bankID: String?
-        let billingType: BillingType
-        let offsetDays: Int16
-        let closingDaySelection: Int16?
+        let usesAfterDays: Bool
+        let daysLater: Int16
+        let closingDaySelection: Int16
         let payDay: Int16
         let payMonth: Int16
     }
@@ -389,8 +367,8 @@ struct CardEditView: View {
             zName: zName,
             zNote: zNote,
             bankID: selectedBank?.id,
-            billingType: billingType,
-            offsetDays: offsetDays,
+            usesAfterDays: usesAfterDays,
+            daysLater: daysLater,
             closingDaySelection: closingDaySelection,
             payDay: payDay,
             payMonth: payMonth

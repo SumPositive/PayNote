@@ -98,12 +98,12 @@ private struct CardRow: View {
 
     /// 2行目カプセル文言を請求方式ごとに出し分ける
     private var scheduleBadgeText: String {
-        if card.billingType == .afterDays {
-            let offsetDays = card.offsetDays ?? 0
-            if offsetDays == 0 {
+        if card.nClosingDay == 0 {
+            let daysLater = Int(card.nPayDay)
+            if daysLater == 0 {
                 return NSLocalizedString("card.schedule.sameDay", comment: "")
             }
-            return String(format: NSLocalizedString("card.schedule.afterDays", comment: ""), offsetDays)
+            return String(format: NSLocalizedString("card.schedule.afterDays", comment: ""), daysLater)
         }
 
         // 締日/支払日型
@@ -136,7 +136,7 @@ private struct CardRow: View {
 
     /// 請求方式別のカプセル背景色
     private var scheduleBadgeBackgroundColor: Color {
-        if card.billingType == .afterDays {
+        if card.nClosingDay == 0 {
             return Color.cyan.opacity(0.16)
         }
         return Color.indigo.opacity(0.14)
@@ -144,7 +144,7 @@ private struct CardRow: View {
 
     /// 請求方式別のカプセル文字色
     private var scheduleBadgeForegroundColor: Color {
-        if card.billingType == .afterDays {
+        if card.nClosingDay == 0 {
             return Color.cyan.opacity(0.95)
         }
         return Color.indigo.opacity(0.95)

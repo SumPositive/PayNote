@@ -37,12 +37,10 @@ enum JSONImport {
         var payMonth: Int
         var bonus1: Int
         var bonus2: Int
-        var billingType: Int
-        var offsetDays: Int?
         var bankID: String?
 
         enum CodingKeys: String, CodingKey {
-            case id, name, note, row, closingDay, payDay, payMonth, bonus1, bonus2, billingType, offsetDays, bankID
+            case id, name, note, row, closingDay, payDay, payMonth, bonus1, bonus2, bankID
         }
 
         init(from decoder: Decoder) throws {
@@ -56,9 +54,6 @@ enum JSONImport {
             payMonth = try c.decodeIfPresent(Int.self, forKey: .payMonth) ?? 1
             bonus1 = try c.decodeIfPresent(Int.self, forKey: .bonus1) ?? 0
             bonus2 = try c.decodeIfPresent(Int.self, forKey: .bonus2) ?? 0
-            // 旧JSONは請求方式を持たないため cardCycle を既定にする
-            billingType = try c.decodeIfPresent(Int.self, forKey: .billingType) ?? Int(BillingType.cardCycle.rawValue)
-            offsetDays = try c.decodeIfPresent(Int.self, forKey: .offsetDays)
             bankID = try c.decodeIfPresent(String.self, forKey: .bankID)
         }
     }
@@ -260,17 +255,12 @@ enum JSONImport {
             card.zName = item.name
             card.zNote = item.note
             card.nRow = Int32(item.row)
+            // closingDay/payDay/payMonth の正規形だけを読む
             card.nClosingDay = Int16(item.closingDay)
             card.nPayDay = Int16(item.payDay)
             card.nPayMonth = Int16(item.payMonth)
             card.nBonus1 = Int16(item.bonus1)
             card.nBonus2 = Int16(item.bonus2)
-            card.nBillingType = Int16(item.billingType)
-            if let offset = item.offsetDays, 0 < offset {
-                card.nOffsetDays = Int16(offset)
-            } else {
-                card.nOffsetDays = nil
-            }
             card.e8bank = item.bankID.flatMap { bankByID[$0] }
         }
         return items.count

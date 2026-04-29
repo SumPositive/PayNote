@@ -215,15 +215,16 @@ struct MigratingFromCoreData {
 
         // E1card + E2invoice + E3record + E6part
         for c in dto.cards {
+            let isLegacyDebit = c.nClosingDay == 0
+            let migratedClosingDay: Int16 = isLegacyDebit ? 0 : c.nClosingDay
+            let migratedPayDay: Int16 = isLegacyDebit ? 0 : c.nPayDay
+            let migratedPayMonth: Int16 = isLegacyDebit ? 0 : c.nPayMonth
             let card = E1card(
                 zName: c.zName, zNote: c.zNote,
                 nRow: c.nRow,
-                nClosingDay: c.nClosingDay, nPayDay: c.nPayDay,
-                nPayMonth: c.nPayMonth,
+                nClosingDay: migratedClosingDay, nPayDay: migratedPayDay,
+                nPayMonth: migratedPayMonth,
                 nBonus1: c.nBonus1, nBonus2: c.nBonus2,
-                // 旧アプリ互換: 既存カードは cardCycle として移行する
-                nBillingType: BillingType.cardCycle.rawValue,
-                nOffsetDays: nil,
                 dateUpdate: c.dateUpdate,
                 sumPaid: c.sumPaid, sumUnpaid: c.sumUnpaid, sumNoCheck: c.sumNoCheck
             )

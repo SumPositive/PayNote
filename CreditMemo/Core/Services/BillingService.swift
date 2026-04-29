@@ -9,14 +9,12 @@ enum BillingService {
 
     /// 利用日とカード設定から n 番目の支払日を返す（partOffset=0 が 1 回目）
     static func billingDate(useDate: Date, card: E1card, partOffset: Int = 0) -> Date {
-        if card.isDebit {
-            return Calendar.current.startOfDay(for: useDate)
-        }
-        // 請求方式ごとに計算方法を切り替える
-        if card.billingType == .afterDays {
+        // nClosingDay=0 は N日後型として扱う
+        if card.nClosingDay == 0 {
             return billingDateAfterDays(
                 useDate: useDate,
-                offsetDays: card.offsetDays ?? Int(fallbackPayDay),
+                // N日後型は nPayDay をそのまま日数として使う
+                daysLater: Int(card.nPayDay),
                 partOffset: partOffset
             )
         }
@@ -70,13 +68,13 @@ enum BillingService {
     /// 都度 n 日後型の請求日計算
     private static func billingDateAfterDays(
         useDate: Date,
-        offsetDays: Int,
+        daysLater: Int,
         partOffset: Int
     ) -> Date {
         let cal = Calendar.current
         let baseDate = cal.startOfDay(for: useDate)
         let monthShifted = cal.date(byAdding: .month, value: partOffset, to: baseDate) ?? baseDate
-        let billed = cal.date(byAdding: .day, value: offsetDays, to: monthShifted) ?? monthShifted
+        let billed = cal.date(byAdding: .day, value: daysLater, to: monthShifted) ?? monthShifted
         return cal.startOfDay(for: billed)
     }
 

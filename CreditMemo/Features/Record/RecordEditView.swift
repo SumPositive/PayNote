@@ -22,7 +22,7 @@ extension RecordEditMode: Equatable {
 
 struct RecordEditView: View {
     let mode: RecordEditMode
-    var onSaved: (() -> Void)? = nil
+    var onSaved: ((Bool) -> Void)? = nil
 
     @Environment(\.modelContext)  private var context
     @Environment(\.dismiss)       private var dismiss
@@ -581,15 +581,19 @@ struct RecordEditView: View {
     private func save() {
         guard nAmount > 0 else { return }
         let usePoint = zName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let previousBankID = selectedCard?.e8bank?.id
+        let bankChanged = initialDraft?.bankID != selectedBankForCard?.id
         switch mode {
         case .addNew:
+            // 保存直前にだけマスタへ口座変更を反映する
+            selectedCard?.e8bank = selectedBankForCard
             let r = E3record(dateUse: dateUse, zName: usePoint, zNote: zNote,
                              nAmount: nAmount, nPayType: PayType.lumpSum.rawValue, nRepeat: nRepeat)
             r.e1card = selectedCard; r.e4shop = nil
             r.e5categories = selectedCategories; r.e5category = nil
             context.insert(r)
             try? RecordService.save(r, context: context)
-            applyCardBankChangeIfNeeded(savedRecord: r)
+            applyCardBankChangeIfNeeded(savedRecord: r, previousBankID: previousBankID)
             switch afterSaveAction {
             case .goBack:
                 dismiss()
@@ -599,27 +603,29 @@ struct RecordEditView: View {
                 showBanner()
                 DispatchQueue.main.async { showAmountPad = true }
             case .showHistory:
-                onSaved?()
+                onSaved?(bankChanged)
             }
         case .edit(let r):
+            // 保存直前にだけマスタへ口座変更を反映する
+            selectedCard?.e8bank = selectedBankForCard
             r.dateUse = dateUse; r.zName = usePoint; r.zNote = zNote
             r.nAmount = nAmount; r.nPayType = payType.rawValue; r.nRepeat = nRepeat
             r.e1card = selectedCard; r.e4shop = nil
             r.e5categories = selectedCategories; r.e5category = nil
             try? RecordService.save(r, context: context)
-            applyCardBankChangeIfNeeded(savedRecord: r)
+            applyCardBankChangeIfNeeded(savedRecord: r, previousBankID: previousBankID)
+            onSaved?(bankChanged)
             dismiss()
         }
     }
 
-    private func applyCardBankChangeIfNeeded(savedRecord: E3record) {
+    private func applyCardBankChangeIfNeeded(savedRecord: E3record, previousBankID: String?) {
         guard let card = selectedCard else { return }
         let currentBankID = card.e8bank?.id
         let selectedBankID = selectedBankForCard?.id
-        guard currentBankID != selectedBankID else { return }
+        guard previousBankID != currentBankID || currentBankID != selectedBankID else { return }
 
         // 決済手段マスタの口座変更は同カード配下の請求全体へ影響する
-        card.e8bank = selectedBankForCard
         for sibling in card.e3records where sibling.id != savedRecord.id {
             RecordService.rebuildBilling(for: sibling, context: context)
         }
