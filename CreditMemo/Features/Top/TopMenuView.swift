@@ -111,13 +111,11 @@ struct TopMenuView: View {
                 .tag(AppDestination.paymentList)
             }
 
-            // 詳細マスタは達人モードで表示する
-            if userLevel == .expert {
-                Section {
-                    row(.cardList, icon: "creditcard", color: .green, key: "top.cardList")
-                    row(.bankList, icon: "building.columns", color: .teal, key: "top.bankList")
-                    row(.categoryList, icon: "tag", color: .pink, key: "top.categoryList")
-                }
+            // マスタメニューは初心者/達人に関係なく常時表示する
+            Section {
+                row(.cardList, icon: "creditcard", color: .green, key: "top.cardList")
+                row(.bankList, icon: "building.columns", color: .teal, key: "top.bankList")
+                row(.categoryList, icon: "tag", color: .pink, key: "top.categoryList")
             }
 
             // アプリ
