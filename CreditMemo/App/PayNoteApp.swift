@@ -20,6 +20,8 @@ struct CreditMemoApp: App {
     @State private var legacyStoreURLs: [URL] = []
     @State private var shareItems: [Any] = []
     @State private var showShareSheet = false
+    @State private var didShareLegacyData = false
+    @State private var showThanksAlert = false
 
     init() {
         let schema = Schema([
@@ -84,33 +86,40 @@ struct CreditMemoApp: App {
                         Color.black.opacity(0.28)
                             .ignoresSafeArea()
                         VStack(spacing: 14) {
-                            Text("旧アプリのデータ読み出しに失敗しました。旧アプリのデータを送って頂ければ調査対応します。送信先: \(supportMailAddress)")
-                                .font(.body)
-                                .multilineTextAlignment(.center)
-                                .foregroundStyle(.primary)
-                            Button {
-                                shareLegacyStore()
-                            } label: {
-                                Text("旧データをメールで送る")
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            Button(role: .destructive) {
-                                // 旧データを破棄して、次回起動から新規運用へ切り替える
-                                MigratingFromCoreData.discardLegacyStores(legacyStoreURLs)
-                                MigratingFromCoreData.markMigrationCompleted()
-                                showMigrationFailure = false
-                                guard let container = sharedModelContainer else { return }
-                                SeedData.seedIfNeeded(context: container.mainContext)
-                                RecordService.cleanupOrphanBilling(context: container.mainContext)
-                                if container.mainContext.hasChanges {
-                                    try? container.mainContext.save()
+                            if didShareLegacyData {
+                                Text("送信ありがとうございました。このまま次のアップデートをお待ちください")
+                                    .font(.body)
+                                    .multilineTextAlignment(.center)
+                                    .foregroundStyle(.primary)
+                            } else {
+                                Text("旧アプリのデータ読み出しに失敗しました。旧アプリのデータを送って頂ければ調査対応します。送信先: \(supportMailAddress)")
+                                    .font(.body)
+                                    .multilineTextAlignment(.center)
+                                    .foregroundStyle(.primary)
+                                Button {
+                                    shareLegacyStore()
+                                } label: {
+                                    Text("旧データをメールで送る")
+                                        .frame(maxWidth: .infinity)
                                 }
-                            } label: {
-                                Text("旧データを破棄して新しく始める")
-                                    .frame(maxWidth: .infinity)
+                                .buttonStyle(.borderedProminent)
+                                Button(role: .destructive) {
+                                    // 旧データを破棄して、次回起動から新規運用へ切り替える
+                                    MigratingFromCoreData.discardLegacyStores(legacyStoreURLs)
+                                    MigratingFromCoreData.markMigrationCompleted()
+                                    showMigrationFailure = false
+                                    guard let container = sharedModelContainer else { return }
+                                    SeedData.seedIfNeeded(context: container.mainContext)
+                                    RecordService.cleanupOrphanBilling(context: container.mainContext)
+                                    if container.mainContext.hasChanges {
+                                        try? container.mainContext.save()
+                                    }
+                                } label: {
+                                    Text("旧データを破棄して新しく始める")
+                                        .frame(maxWidth: .infinity)
+                                }
+                                .buttonStyle(.bordered)
                             }
-                            .buttonStyle(.bordered)
                         }
                         .padding(20)
                         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
@@ -120,7 +129,16 @@ struct CreditMemoApp: App {
                 }
             }
             .sheet(isPresented: $showShareSheet) {
-                ActivityItemsSheet(items: shareItems)
+                ActivityItemsSheet(items: shareItems) { completed in
+                    // 共有が実行された時だけ「送信ありがとう」を表示する
+                    if completed {
+                        didShareLegacyData = true
+                        showThanksAlert = true
+                    }
+                }
+            }
+            .alert("送信ありがとうございました。このまま次のアップデートをお待ちください", isPresented: $showThanksAlert) {
+                Button("OK", role: .cancel) {}
             }
             .task {
                 guard didStartMigration == false else { return }
@@ -205,9 +223,14 @@ struct CreditMemoApp: App {
 
 private struct ActivityItemsSheet: UIViewControllerRepresentable {
     let items: [Any]
+    let onComplete: (Bool) -> Void
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        controller.completionWithItemsHandler = { _, completed, _, _ in
+            onComplete(completed)
+        }
+        return controller
     }
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
