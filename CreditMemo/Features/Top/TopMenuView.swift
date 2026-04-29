@@ -41,6 +41,15 @@ struct TopMenuView: View {
             }
     }
 
+    private var recentWindowLabel: String {
+        let windowText = paymentWindowLabel(max(1, min(paymentWindowDays, 30)))
+        let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
+        if isJapanese {
+            return "直近\(windowText)合計"
+        }
+        return "Recent \(windowText) Total"
+    }
+
     var body: some View {
         List(selection: $selectedDestination) {
             if userLevel == .beginner {
@@ -72,7 +81,7 @@ struct TopMenuView: View {
                                     .fixedSize(horizontal: true, vertical: false)
                                 Spacer(minLength: 8)
                                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                    Text("top.paymentList.recentTotal")
+                                    Text(recentWindowLabel)
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                         .lineLimit(1)
@@ -90,7 +99,7 @@ struct TopMenuView: View {
                                 Text("top.paymentList")
                                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                                     Spacer(minLength: 0)
-                                    Text("top.paymentList.recentTotal")
+                                    Text(recentWindowLabel)
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                         .lineLimit(1)
@@ -156,6 +165,14 @@ struct TopMenuView: View {
             }
         }
         .tag(dest)
+    }
+
+    private func paymentWindowLabel(_ days: Int) -> String {
+        let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
+        if days == 30 {
+            return isJapanese ? "1ヶ月" : "1 Month"
+        }
+        return isJapanese ? "\(days)日" : "\(days) Days"
     }
 }
 

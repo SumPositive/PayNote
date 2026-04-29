@@ -637,32 +637,38 @@ private struct PaymentUnpaidSummaries {
     static func localizedCurrentTitle(windowDays: Int) -> String {
         let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
         if windowDays == 30 {
-            return isJapanese ? "1ヶ月の引き落とし計" : "Current 1-Month Debit Total"
+            return isJapanese ? "1ヶ月の引き落とし合計" : "Current 1-Month Total"
         }
-        return isJapanese ? "\(windowDays)日間の引き落とし計" : "Current \(windowDays)-Day Debit Total"
+        return isJapanese ? "\(windowDays)日間の引き落とし合計" : "Current \(windowDays)-Day Total"
     }
 
     static func localizedNextTitle(windowDays: Int) -> String {
         let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
         if windowDays == 30 {
-            return isJapanese ? "次の1ヶ月の引き落とし計" : "Next 1-Month Debit Total"
+            return isJapanese ? "次の1ヶ月の引き落とし合計" : "Next 1-Month Total"
         }
-        return isJapanese ? "次の\(windowDays)日間の引き落とし計" : "Next \(windowDays)-Day Debit Total"
+        return isJapanese ? "次の\(windowDays)日間の引き落とし合計" : "Next \(windowDays)-Day Total"
     }
 
     static func localizedFutureTitle() -> String {
         let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
-        return isJapanese ? "将来の引き落とし計" : "Future Debit Total"
+        return isJapanese ? "将来の引き落とし合計" : "Future Total"
     }
 
-    static func localizedCurrentSummaryTitle() -> String {
+    static func localizedCurrentSummaryTitle(windowDays: Int) -> String {
         let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
-        return isJapanese ? "直近の引き落とし計" : "Current Debit Total"
+        if windowDays == 30 {
+            return isJapanese ? "直近1ヶ月合計" : "Recent 1-Month Total"
+        }
+        return isJapanese ? "直近\(windowDays)日合計" : "Recent \(windowDays)-Day Total"
     }
 
-    static func localizedNextSummaryTitle() -> String {
+    static func localizedNextSummaryTitle(windowDays: Int) -> String {
         let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
-        return isJapanese ? "次の引き落とし計" : "Next Debit Total"
+        if windowDays == 30 {
+            return isJapanese ? "次の1ヶ月合計" : "Next 1-Month Total"
+        }
+        return isJapanese ? "次の\(windowDays)日合計" : "Next \(windowDays)-Day Total"
     }
 }
 
@@ -687,7 +693,7 @@ private struct PaymentUnpaidGrouped {
         guard let firstAnchor else {
             return PaymentUnpaidGrouped(
                 sections: [
-                    Section(id: "current", footerTitle: PaymentUnpaidSummaries.localizedCurrentSummaryTitle(), items: [], totalAmount: .zero),
+                    Section(id: "current", footerTitle: PaymentUnpaidSummaries.localizedCurrentSummaryTitle(windowDays: windowDays), items: [], totalAmount: .zero),
                     Section(id: "next", footerTitle: PaymentUnpaidSummaries.localizedNextTitle(windowDays: windowDays), items: [], totalAmount: .zero),
                     Section(id: "future", footerTitle: PaymentUnpaidSummaries.localizedFutureTitle(), items: [], totalAmount: .zero),
                 ]
@@ -740,13 +746,13 @@ private struct PaymentUnpaidGrouped {
                 ),
                 Section(
                     id: "next",
-                    footerTitle: PaymentUnpaidSummaries.localizedNextSummaryTitle(),
+                    footerTitle: PaymentUnpaidSummaries.localizedNextSummaryTitle(windowDays: windowDays),
                     items: nextItems,
                     totalAmount: nextTotal
                 ),
                 Section(
                     id: "current",
-                    footerTitle: PaymentUnpaidSummaries.localizedCurrentSummaryTitle(),
+                    footerTitle: PaymentUnpaidSummaries.localizedCurrentSummaryTitle(windowDays: windowDays),
                     items: currentItems,
                     totalAmount: currentTotal
                 ),

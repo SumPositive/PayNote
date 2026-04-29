@@ -3053,13 +3053,13 @@
         "en": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Debit Summary Range"
+            "value": "Debit Total Range"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "引き落とし集計期間"
+            "value": "引き落とし合計期間"
           }
         }
       }
