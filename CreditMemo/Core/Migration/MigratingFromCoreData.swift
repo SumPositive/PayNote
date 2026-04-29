@@ -10,7 +10,12 @@ import CoreData
 /// - E7payment は「日付 + 口座」単位で再構築
 struct MigratingFromCoreData {
 
-    private let migrationFlagKey = "MigratingFromCoreData.migrated.v1"
+    private static let migrationFlagKey = "MigratingFromCoreData.migrated.v1"
+
+    enum Outcome {
+        case completed
+        case failed(legacyStoreURLs: [URL])
+    }
 
     enum Phase {
         case checkingExistingData
@@ -44,26 +49,20 @@ struct MigratingFromCoreData {
     func migrateIfNeeded(
         modelContainer: ModelContainer,
         onPhase: ((Phase) -> Void)? = nil
-    ) async {
+    ) async -> Outcome {
         let defaults = UserDefaults.standard
-        guard defaults.bool(forKey: migrationFlagKey) == false else { return }
+        guard defaults.bool(forKey: Self.migrationFlagKey) == false else { return .completed }
 
         let context = modelContainer.mainContext
         onPhase?(.checkingExistingData)
         await Task.yield()
 
-        // 既存データがあれば移行済みとみなす
-        if let count = try? context.fetchCount(FetchDescriptor<E1card>()), 0 < count {
-            defaults.set(true, forKey: migrationFlagKey)
-            return
-        }
-
         onPhase?(.searchingLegacyStore)
         await Task.yield()
         let candidates = candidateStoreURLs()
         guard !candidates.isEmpty else {
-            defaults.set(true, forKey: migrationFlagKey)
-            return
+            defaults.set(true, forKey: Self.migrationFlagKey)
+            return .completed
         }
 
         for storeURL in candidates {
@@ -88,14 +87,33 @@ struct MigratingFromCoreData {
                 await Task.yield()
                 renameOldStore(storeURL)
 
-                defaults.set(true, forKey: migrationFlagKey)
-                return
+                defaults.set(true, forKey: Self.migrationFlagKey)
+                return .completed
             } catch {
+                context.rollback()
                 debugPrint("CoreData migration failed for \(storeURL.lastPathComponent): \(error)")
             }
         }
         onPhase?(.finalizing)
-        defaults.set(true, forKey: migrationFlagKey)
+        return .failed(legacyStoreURLs: candidates)
+    }
+
+    /// 旧データを破棄して新規開始する時に、移行済みフラグを立てる
+    static func markMigrationCompleted() {
+        UserDefaults.standard.set(true, forKey: migrationFlagKey)
+    }
+
+    /// 旧SQLiteをすべてリネームして退避する（再移行防止）
+    static func discardLegacyStores(_ urls: [URL]) {
+        for url in urls {
+            let backupURL = url.deletingLastPathComponent().appendingPathComponent("\(url.deletingPathExtension().lastPathComponent)_discarded.sqlite")
+            try? FileManager.default.moveItem(at: url, to: backupURL)
+            for suffix in ["-shm", "-wal"] {
+                let src = URL(fileURLWithPath: url.path + suffix)
+                let dst = URL(fileURLWithPath: backupURL.path + suffix)
+                try? FileManager.default.moveItem(at: src, to: dst)
+            }
+        }
     }
 
     // MARK: - Store URL 候補

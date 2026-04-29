@@ -11,7 +11,6 @@ enum AppStorageKey {
     static let afterSaveAction   = "setting.afterSaveAction"
     static let openAddOnActive   = "setting.openAddOnActive"
     static let paymentWindowDays = "setting.paymentWindowDays"
-    static let retentionPromptCompleted = "setting.retentionPromptCompleted"
 }
 
 /// ユーザレベル
