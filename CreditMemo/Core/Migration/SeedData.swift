@@ -5,6 +5,7 @@ import SwiftData
 enum SeedData {
     struct CardPreset {
         var name: String
+        var note: String = ""
         var billingType: BillingType = .cardCycle
         var offsetDays: Int16? = nil
         var closingDay: Int16
@@ -40,6 +41,7 @@ enum SeedData {
         for (row, p) in cardPresets.enumerated() {
             let card = E1card(
                 zName: p.name,
+                zNote: p.note,
                 nRow: Int32(row),
                 nClosingDay: p.closingDay,
                 nPayDay: p.payDay,
@@ -108,12 +110,17 @@ enum SeedData {
     /// 日本向けの代表的な決済方法
     private static func japaneseCardPresets() -> [CardPreset] {
         [
-            // N日後型（当日）: 住民税の分納など、支払日を利用日に合わせる運用向け
-            CardPreset(name: "分割納税", billingType: .afterDays, offsetDays: 0, closingDay: 20, payDay: 27, payMonth: 1),
-            // N日後型プリセット
-            CardPreset(name: "国民年金（N日後）", billingType: .afterDays, offsetDays: 7, closingDay: 20, payDay: 27, payMonth: 1),
-            CardPreset(name: "国民健康保険（N日後）", billingType: .afterDays, offsetDays: 14, closingDay: 20, payDay: 27, payMonth: 1),
-            CardPreset(name: "住民税（N日後）", billingType: .afterDays, offsetDays: 30, closingDay: 20, payDay: 27, payMonth: 1),
+            // N日後型プリセット: 住民税の分納など、支払日＝利用日として運用
+            CardPreset(
+                name: "当日払（0日後）",
+                note: "先々の支払日を利用日として登録します。利用日が引き落とし日として管理できます",
+                billingType: .afterDays,
+                offsetDays: 0,
+                closingDay: 20,
+                payDay: 27,
+                payMonth: 1
+            ),
+            // 締日/支払日型プリセット
             CardPreset(name: "VIEWカード", closingDay: 5, payDay: 4, payMonth: 1),
             CardPreset(name: "PayPayカード", closingDay: 29, payDay: 27, payMonth: 1),
             CardPreset(name: "楽天カード", closingDay: 29, payDay: 27, payMonth: 1),
@@ -139,10 +146,11 @@ enum SeedData {
     private static func westernCardPresets() -> [CardPreset] {
         [
             // N日後型プリセット
-            CardPreset(name: "Installment Tax", billingType: .afterDays, offsetDays: 0, closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "Utility Bill (N Days)", billingType: .afterDays, offsetDays: 7, closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "School Fee (N Days)", billingType: .afterDays, offsetDays: 14, closingDay: 27, payDay: 27, payMonth: 1),
-            CardPreset(name: "Insurance Premium (N Days)", billingType: .afterDays, offsetDays: 30, closingDay: 27, payDay: 27, payMonth: 1),
+            CardPreset(name: "Same-Day Payment (0 Days)", billingType: .afterDays, offsetDays: 0, closingDay: 27, payDay: 27, payMonth: 1),
+            CardPreset(name: "Net 7", billingType: .afterDays, offsetDays: 7, closingDay: 27, payDay: 27, payMonth: 1),
+            CardPreset(name: "Net 14", billingType: .afterDays, offsetDays: 14, closingDay: 27, payDay: 27, payMonth: 1),
+            CardPreset(name: "Net 30", billingType: .afterDays, offsetDays: 30, closingDay: 27, payDay: 27, payMonth: 1),
+            // 締日/支払日型プリセット
             CardPreset(name: "Visa", closingDay: 27, payDay: 27, payMonth: 1),
             CardPreset(name: "Mastercard", closingDay: 27, payDay: 27, payMonth: 1),
             CardPreset(name: "American Express", closingDay: 27, payDay: 27, payMonth: 1),

@@ -352,6 +352,8 @@ struct CardEditView: View {
 
     private func applyPreset(_ preset: SeedData.CardPreset) {
         zName = preset.name
+        // プリセットに説明メモがある場合はメモへ反映する
+        zNote = preset.note
         billingType = preset.billingType
         offsetDays = preset.offsetDays ?? 27
         closingDaySelection = isEnglishLocale ? nil : preset.closingDay
