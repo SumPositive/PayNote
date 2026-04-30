@@ -47,6 +47,7 @@ struct RecordListView: View {
                 } label: {
                     RecordSummaryRow(record: record)
                 }
+                .buttonStyle(.plain)
             }
 
             if hasMoreRecords {
@@ -333,8 +334,8 @@ struct RecordSummaryRow: View {
                         .clipShape(Capsule())
                         .fixedSize(horizontal: true, vertical: false)
                     Text(cardNameText)
-                        .font(.subheadline)
-                        .foregroundStyle(.primary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -395,13 +396,13 @@ private struct RecordCategoryChip: View {
             if name.count < 9 {
                 Text(name)
                     .font(.caption2)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .fixedSize(horizontal: true, vertical: false)
             } else {
                 Text(name)
                     .font(.caption2)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .frame(maxWidth: 120, alignment: .leading)

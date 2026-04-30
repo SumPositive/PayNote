@@ -79,15 +79,22 @@ private struct CardRow: View {
                 Text(scheduleBadgeText)
                     .font(.caption2)
                     .foregroundStyle(scheduleBadgeForegroundColor)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .allowsTightening(true)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(scheduleBadgeBackgroundColor)
                     .clipShape(Capsule())
+                    // 請求方式カプセルは改行させず、内容を優先して保持する
+                    .fixedSize(horizontal: true, vertical: false)
                 Text(card.e8bank?.zName ?? NSLocalizedString("payment.bank.noSelection", comment: ""))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
+                    // 口座名だけを可変幅にして、末尾省略の対象にする
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.leading, 4)
             .frame(maxWidth: .infinity, alignment: .leading)
