@@ -157,6 +157,17 @@ enum AppDateFormat {
         monthDayFormatter.string(from: date)
     }
 
+    /// 単体表示: 曜日
+    static func weekdayText(_ date: Date) -> String {
+        if Locale.current.identifier.hasPrefix("ja") {
+            return jaWeekdayFormatter.string(from: date)
+        }
+        if Locale.current.identifier.hasPrefix("en") {
+            return enWeekdayFormatter.string(from: date)
+        }
+        return date.formatted(.dateTime.weekday(.abbreviated))
+    }
+
     /// 1行表示: 年 月/日(曜)
     static func singleLineText(_ date: Date) -> String {
         if Locale.current.identifier.hasPrefix("en") {
@@ -201,6 +212,18 @@ enum AppDateFormat {
         let formatter = DateFormatter()
         formatter.locale = .autoupdatingCurrent
         formatter.dateFormat = "M/d"
+        return formatter
+    }()
+    private static let jaWeekdayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ja_JP")
+        formatter.dateFormat = "E"
+        return formatter
+    }()
+    private static let enWeekdayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.dateFormat = "EEE"
         return formatter
     }()
     private static let jaMonthDayWeekdayFormatter: DateFormatter = {

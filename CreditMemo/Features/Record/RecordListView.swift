@@ -284,15 +284,19 @@ struct RecordSummaryRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 6) {
-            // 日付は2段表示で固定幅にして視認性をそろえる
+            // 日付は3段表示にして年・月日・曜日を分ける
             VStack(spacing: 0) {
-                Text(AppDateFormat.yearWeekdayText(record.dateUse))
-                    .font(.caption2)
+                Text(AppDateFormat.yearText(record.dateUse))
+                    .font(.system(size: 10, weight: .regular))
                     .foregroundStyle(Color(.secondaryLabel))
                     .lineLimit(1)
                 Text(AppDateFormat.monthDayText(record.dateUse))
                     .font(.subheadline)
                     .foregroundStyle(amountToneColor)
+                    .lineLimit(1)
+                Text(AppDateFormat.weekdayText(record.dateUse))
+                    .font(.system(size: 10, weight: .regular))
+                    .foregroundStyle(Color(.secondaryLabel))
                     .lineLimit(1)
             }
             .multilineTextAlignment(.center)
@@ -358,8 +362,8 @@ struct RecordSummaryRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         // 2行構成のため最小高さのみ指定して情報を欠けさせない
-        .frame(minHeight: 52, alignment: .center)
-        .padding(.vertical, 2)
+        .frame(minHeight: 48, alignment: .center)
+        .padding(.vertical, 1)
         .contentShape(Rectangle())
     }
 }
