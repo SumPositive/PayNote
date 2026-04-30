@@ -162,6 +162,12 @@ struct RecordEditView: View {
                     proxy.scrollTo(formTopAnchorID, anchor: .top)
                 }
             }
+            .simultaneousGesture(
+                TapGesture().onEnded {
+                    // フォーム外側の軽いタップでラベル入力のフォーカスを外す
+                    isUsePointFocused = false
+                }
+            )
         }
         .navigationTitle(isNew ? "record.edit.title.add" : "record.edit.title.edit")
         .navigationBarTitleDisplayMode(.inline)
@@ -394,29 +400,20 @@ struct RecordEditView: View {
         Section {
             // 利用点（自由入力 + 頻度候補）
             VStack(alignment: .leading, spacing: 8) {
-                ZStack(alignment: .topLeading) {
-                    // 入力前はプレースホルダーだけ表示する
-                    if zName.isEmpty {
-                        Text("record.field.usePoint")
-                            .foregroundStyle(.tertiary)
-                            .padding(.top, 8)
-                            .padding(.leading, 5)
+                // ラベルは1行入力にし、return でフォーカスを外せるようにする
+                TextField("record.field.usePoint", text: $zName)
+                    .focused($isUsePointFocused)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .onSubmit {
+                        isUsePointFocused = false
                     }
-                    // ラベルは改行を許可し、全文を表示する
-                    TextEditor(text: $zName)
-                        .focused($isUsePointFocused)
-                        .frame(height: editorHeight(for: zName, minHeight: 40, maxHeight: 120))
-                        .scrollContentBackground(.hidden)
-                        .background(Color.clear)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .onChange(of: zName) { _, newValue in
-                            // ラベルは最大100文字までに制限する
-                            if 100 < newValue.count {
-                                zName = String(newValue.prefix(100))
-                            }
+                    .onChange(of: zName) { _, newValue in
+                        // ラベルは最大100文字までに制限する
+                        if 100 < newValue.count {
+                            zName = String(newValue.prefix(100))
                         }
-                }
+                    }
 
                 if isUsePointFocused && !shownUsePointCandidates.isEmpty {
                     VStack(spacing: 0) {
