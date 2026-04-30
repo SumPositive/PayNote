@@ -237,6 +237,8 @@ struct RecordListView: View {
 /// 決済履歴とタグ編集で共用する明細セル
 struct RecordSummaryRow: View {
     let record: E3record
+    var amountOverride: Decimal? = nil
+    var showsStatus: Bool = true
 
     // 分割のどれか1つでも未払があれば未払表示にする
     private var isUnpaid: Bool {
@@ -249,9 +251,12 @@ struct RecordSummaryRow: View {
     private var statusKey: LocalizedStringKey {
         isUnpaid ? "payment.status.unpaidShort" : "payment.status.paidShort"
     }
+    private var displayAmount: Decimal {
+        amountOverride ?? record.nAmount
+    }
     // 金額と同じトーンで文字色を統一する
     private var amountToneColor: Color {
-        record.nAmount < 0 ? COLOR_AMOUNT_NEGATIVE : COLOR_AMOUNT_POSITIVE
+        displayAmount < 0 ? COLOR_AMOUNT_NEGATIVE : COLOR_AMOUNT_POSITIVE
     }
     // ステータスはカプセルだけ着色する
     private var statusCapsuleColor: Color {
@@ -322,24 +327,26 @@ struct RecordSummaryRow: View {
                 }
 
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(statusKey)
-                        .font(.caption)
-                        .foregroundStyle(statusTextColor)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                        .allowsTightening(true)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(statusCapsuleColor)
-                        .clipShape(Capsule())
-                        .fixedSize(horizontal: true, vertical: false)
+                    if showsStatus {
+                        Text(statusKey)
+                            .font(.caption)
+                            .foregroundStyle(statusTextColor)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .allowsTightening(true)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(statusCapsuleColor)
+                            .clipShape(Capsule())
+                            .fixedSize(horizontal: true, vertical: false)
+                    }
                     Text(cardNameText)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Text(record.nAmount.currencyString())
+                    Text(displayAmount.currencyString())
                         .font(.body.monospacedDigit())
                         .foregroundStyle(amountToneColor)
                         .lineLimit(1)
