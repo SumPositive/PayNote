@@ -45,16 +45,10 @@ struct InvoiceListView: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                         Spacer(minLength: 8)
-                        Text(payment.isPaid ? "payment.status.paidShort" : "payment.status.unpaidShort")
-                            .font(.subheadline.weight(.semibold))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 5)
-                            .background(payment.isPaid
-                                ? COLOR_PAID.opacity(0.2)
-                                : COLOR_UNPAID.opacity(0.2))
+                        Image(systemName: payment.isPaid ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
+                            .font(.title3.weight(.semibold))
                             .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
-                            .clipShape(Capsule())
-                            .lineLimit(1)
+                            .opacity(0.72)
                             .fixedSize(horizontal: true, vertical: false)
                     }
                     Text(statementTitleText)
@@ -151,12 +145,12 @@ private struct PartRow: View {
     var body: some View {
         if let record {
             // 引き落とし明細は履歴セルを流用し、状態カプセルだけ非表示にする
-            RecordSummaryRow(
-                record: record,
-                amountOverride: part.nAmount,
-                showsStatus: false
-            )
-        } else {
+                    RecordSummaryRow(
+                        record: record,
+                        amountOverride: part.nAmount,
+                        showsStatus: true
+                    )
+                } else {
             HStack {
                 Text("—")
                     .foregroundStyle(.secondary)

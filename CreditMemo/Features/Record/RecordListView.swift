@@ -248,19 +248,12 @@ struct RecordSummaryRow: View {
         }
         return record.e6parts.contains(where: { ($0.e2invoice?.isPaid ?? false) == false })
     }
-    private var statusKey: LocalizedStringKey {
-        isUnpaid ? "payment.status.unpaidShort" : "payment.status.paidShort"
-    }
     private var displayAmount: Decimal {
         amountOverride ?? record.nAmount
     }
     // 金額と同じトーンで文字色を統一する
     private var amountToneColor: Color {
         displayAmount < 0 ? COLOR_AMOUNT_NEGATIVE : COLOR_AMOUNT_POSITIVE
-    }
-    // ステータスはカプセルだけ着色する
-    private var statusCapsuleColor: Color {
-        (isUnpaid ? COLOR_UNPAID : COLOR_PAID).opacity(0.2)
     }
     private var statusTextColor: Color {
         isUnpaid ? COLOR_UNPAID : COLOR_PAID
@@ -332,16 +325,11 @@ struct RecordSummaryRow: View {
 
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     if showsStatus {
-                        Text(statusKey)
-                            .font(.caption)
+                        // 状態アイコンは控えめに表示する
+                        Image(systemName: isUnpaid ? "arrow.down.circle.fill" : "arrow.up.circle.fill")
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(statusTextColor)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                            .allowsTightening(true)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 2)
-                            .background(statusCapsuleColor)
-                            .clipShape(Capsule())
+                            .opacity(0.5)
                             .fixedSize(horizontal: true, vertical: false)
                     }
                     Text(cardNameText)
