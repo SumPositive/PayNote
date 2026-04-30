@@ -259,16 +259,21 @@ struct RecordSummaryRow: View {
     private var statusTextColor: Color {
         isUnpaid ? COLOR_UNPAID : COLOR_PAID
     }
-    private var hasMissingSelection: Bool {
-        // 決済手段未選択、または引き落とし口座未選択のときに未アイコンを出す
-        if record.e1card == nil {
-            return true
-        }
-        return record.e1card?.e8bank == nil
-    }
     private var recordLabelText: String {
         // 決済ラベルを優先し、旧データは利用店名へフォールバック
         record.zName.isEmpty ? (record.e4shop?.zName ?? "—") : record.zName
+    }
+    private var cardNameText: String {
+        record.e1card?.zName ?? NSLocalizedString("payment.card.noSelection", comment: "")
+    }
+    private var categoryNames: [String] {
+        if !record.e5categories.isEmpty {
+            return record.e5categories.map(\.zName)
+        }
+        if let singleCategory = record.e5category {
+            return [singleCategory.zName]
+        }
+        return []
     }
 
     var body: some View {
@@ -288,47 +293,214 @@ struct RecordSummaryRow: View {
             .fixedSize(horizontal: true, vertical: false)
 
             VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(recordLabelText)
-                        .font(.body)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .foregroundStyle(amountToneColor)
-                }
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        HStack(spacing: 6) {
-                        Text(statusKey)
-                            .font(.caption)
-                            .foregroundStyle(statusTextColor)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                            .allowsTightening(true)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 2)
-                            .background(statusCapsuleColor)
-                            .clipShape(Capsule())
-                        if hasMissingSelection {
-                            Image(systemName: "exclamationmark.circle.fill")
-                                .font(.caption)
-                                .foregroundStyle(COLOR_UNPAID)
-                        }
-                        }
-                        .layoutPriority(0)
-                        Spacer(minLength: 8)
-                        Text(record.nAmount.currencyString())
-                            .font(.body.monospacedDigit())
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .top, spacing: 8) {
+                        Text(recordLabelText)
+                            .font(.body)
                             .foregroundStyle(amountToneColor)
                             .lineLimit(1)
-                            .minimumScaleFactor(0.6)
-                            .allowsTightening(true)
-                            .fixedSize(horizontal: true, vertical: false)
-                            .layoutPriority(2)
+                            .truncationMode(.tail)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        if !categoryNames.isEmpty {
+                            RecordCategorySingleLineView(names: categoryNames)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(recordLabelText)
+                            .font(.body)
+                            .foregroundStyle(amountToneColor)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        if !categoryNames.isEmpty {
+                            RecordCategoryLineView(names: categoryNames)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                     }
                 }
+
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(statusKey)
+                        .font(.caption)
+                        .foregroundStyle(statusTextColor)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .allowsTightening(true)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(statusCapsuleColor)
+                        .clipShape(Capsule())
+                        .fixedSize(horizontal: true, vertical: false)
+                    Text(cardNameText)
+                        .font(.subheadline)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(record.nAmount.currencyString())
+                        .font(.body.monospacedDigit())
+                        .foregroundStyle(amountToneColor)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                        .allowsTightening(true)
+                        .fixedSize(horizontal: true, vertical: false)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
         // 2行構成のため最小高さのみ指定して情報を欠けさせない
         .frame(minHeight: 52, alignment: .center)
         .padding(.vertical, 2)
         .contentShape(Rectangle())
+    }
+}
+
+/// タグを1行で右寄せし、長いものだけ末尾省略する
+private struct RecordCategorySingleLineView: View {
+    let names: [String]
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(names, id: \.self) { name in
+                RecordCategoryChip(name: name)
+            }
+        }
+        .lineLimit(1)
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// タグは先頭から順に表示し、収まらない場合は改行する
+private struct RecordCategoryLineView: View {
+    let names: [String]
+
+    var body: some View {
+        TagFlowLayout(spacing: 4, lineSpacing: 4) {
+            ForEach(names, id: \.self) { name in
+                RecordCategoryChip(name: name)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// 短いタグは自然幅、長いタグだけ省略できる幅に制限する
+private struct RecordCategoryChip: View {
+    let name: String
+
+    var body: some View {
+        Group {
+            if name.count < 9 {
+                Text(name)
+                    .font(.caption2)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+            } else {
+                Text(name)
+                    .font(.caption2)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 120, alignment: .leading)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(Capsule())
+    }
+}
+
+/// タグを左から詰めて折り返す
+private struct TagFlowLayout: Layout {
+    let spacing: CGFloat
+    let lineSpacing: CGFloat
+
+    init(spacing: CGFloat, lineSpacing: CGFloat) {
+        self.spacing = spacing
+        self.lineSpacing = lineSpacing
+    }
+
+    func sizeThatFits(
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout ()
+    ) -> CGSize {
+        let maxWidth = proposal.width ?? 0
+        if maxWidth <= 0 {
+            let width = subviews
+                .map { $0.sizeThatFits(.unspecified).width }
+                .reduce(0, +)
+            let height = subviews
+                .map { $0.sizeThatFits(.unspecified).height }
+                .max() ?? 0
+            return CGSize(width: width, height: height)
+        }
+        let rows = makeRows(maxWidth: maxWidth, subviews: subviews)
+        let width = rows.map(\.width).max() ?? 0
+        let height = rows.reduce(CGFloat(0)) { partialResult, row in
+            partialResult + row.height
+        } + CGFloat(max(0, rows.count - 1)) * lineSpacing
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(
+        in bounds: CGRect,
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout ()
+    ) {
+        let rows = makeRows(maxWidth: bounds.width, subviews: subviews)
+        var currentY = bounds.minY
+
+        for row in rows {
+            var currentX = bounds.minX
+            for index in row.indexes {
+                let size = subviews[index].sizeThatFits(.unspecified)
+                subviews[index].place(
+                    at: CGPoint(x: currentX, y: currentY),
+                    proposal: ProposedViewSize(width: size.width, height: size.height)
+                )
+                currentX += size.width + spacing
+            }
+            currentY += row.height + lineSpacing
+        }
+    }
+
+    /// 幅に収まる単位で行を組む
+    private func makeRows(maxWidth: CGFloat, subviews: Subviews) -> [Row] {
+        var rows: [Row] = []
+        var currentIndexes: [Int] = []
+        var currentWidth: CGFloat = 0
+        var currentHeight: CGFloat = 0
+
+        for index in subviews.indices {
+            let size = subviews[index].sizeThatFits(.unspecified)
+            let nextWidth = currentIndexes.isEmpty ? size.width : currentWidth + spacing + size.width
+            if maxWidth < nextWidth && !currentIndexes.isEmpty {
+                rows.append(Row(indexes: currentIndexes, width: currentWidth, height: currentHeight))
+                currentIndexes = [index]
+                currentWidth = size.width
+                currentHeight = size.height
+            } else {
+                currentIndexes.append(index)
+                currentWidth = nextWidth
+                currentHeight = max(currentHeight, size.height)
+            }
+        }
+
+        if !currentIndexes.isEmpty {
+            rows.append(Row(indexes: currentIndexes, width: currentWidth, height: currentHeight))
+        }
+        return rows
+    }
+
+    private struct Row {
+        let indexes: [Int]
+        let width: CGFloat
+        let height: CGFloat
     }
 }
