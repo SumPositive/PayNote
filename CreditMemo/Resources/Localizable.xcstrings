@@ -2725,13 +2725,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add Another"
+            "value" : "Clear and Add Another"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "連続入力する"
+            "value" : "クリアして連続入力する"
           }
         }
       }
@@ -2766,6 +2766,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "決済履歴を表示する"
+          }
+        }
+      }
+    },
+    "settings.afterSave.sameDayCard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Date and Method"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同じ日と手段で連続する"
           }
         }
       }

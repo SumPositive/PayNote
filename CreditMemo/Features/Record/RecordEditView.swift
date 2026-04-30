@@ -624,7 +624,12 @@ struct RecordEditView: View {
             case .goBack:
                 dismiss()
             case .continuous:
-                resetForm()
+                resetForm(keepDateAndCard: false)
+                initialDraft = currentDraft()
+                showBanner()
+                DispatchQueue.main.async { showAmountPad = true }
+            case .sameDayCard:
+                resetForm(keepDateAndCard: true)
                 initialDraft = currentDraft()
                 showBanner()
                 DispatchQueue.main.async { showAmountPad = true }
@@ -668,11 +673,23 @@ struct RecordEditView: View {
         }
     }
 
-    private func resetForm() {
-        dateUse = Date(); zName = ""; zNote = ""; nAmount = 0
-        payType = .lumpSum; nRepeat = 0
-        // 連続入力時も決済手段は未選択へ戻す
-        selectedCard = nil; selectedBankForCard = nil; keepBankPickerRowVisible = false; selectedCategories = []
+    private func resetForm(keepDateAndCard: Bool) {
+        zName = ""
+        zNote = ""
+        nAmount = 0
+        payType = .lumpSum
+        nRepeat = 0
+        selectedCategories = []
+        if keepDateAndCard {
+            // 同じ日と決済手段だけ残し、残りは空に戻す
+            keepBankPickerRowVisible = selectedCard != nil && selectedBankForCard == nil
+            return
+        }
+        dateUse = Date()
+        // 通常の連続入力は決済手段も未選択へ戻す
+        selectedCard = nil
+        selectedBankForCard = nil
+        keepBankPickerRowVisible = false
     }
 
     private func showBanner() {

@@ -99,6 +99,7 @@ enum FontScale: String, CaseIterable, Identifiable {
 enum AfterSaveAction: String, CaseIterable, Identifiable {
     case goBack      = "goBack"
     case continuous  = "continuous"
+    case sameDayCard = "sameDayCard"
     case showHistory = "showHistory"
 
     var id: String { rawValue }
@@ -107,6 +108,7 @@ enum AfterSaveAction: String, CaseIterable, Identifiable {
         switch self {
         case .goBack:      "settings.afterSave.goBack"
         case .continuous:  "settings.afterSave.continuous"
+        case .sameDayCard: "settings.afterSave.sameDayCard"
         case .showHistory: "settings.afterSave.showHistory"
         }
     }
