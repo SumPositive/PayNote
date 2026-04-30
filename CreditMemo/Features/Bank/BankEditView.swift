@@ -7,6 +7,7 @@ struct BankEditView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss)      private var dismiss
     @Query(sort: \E8bank.nRow)   private var allBanks: [E8bank]
+    @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .standard
 
     @State private var zName = ""
     @State private var zNote = ""
@@ -48,7 +49,8 @@ struct BankEditView: View {
                             .padding(.leading, 5)
                     }
                     TextEditor(text: $zNote)
-                        .frame(minHeight: 72)
+                        .frame(height: editorHeight(for: zNote, minHeight: 40, maxHeight: 180))
+                        .scrollDisabled(true)
                         .scrollContentBackground(.hidden)
                         .background(Color.clear)
                         .autocorrectionDisabled()
@@ -126,5 +128,18 @@ struct BankEditView: View {
             zName: zName,
             zNote: zNote
         )
+    }
+
+    /// メモ量に応じて高さを広げ、内容が欠けないようにする
+    private func editorHeight(
+        for text: String,
+        minHeight: CGFloat,
+        maxHeight: CGFloat
+    ) -> CGFloat {
+        let explicitLines = max(1, text.components(separatedBy: "\n").count)
+        let wrappedLines = max(1, text.count / 18 + 1)
+        let lineCount = max(explicitLines, wrappedLines)
+        let estimated = (CGFloat(lineCount) * 24 + 24) * fontScale.uiScale
+        return min(maxHeight * fontScale.uiScale, max(minHeight * fontScale.uiScale, estimated))
     }
 }

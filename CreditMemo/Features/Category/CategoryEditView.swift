@@ -8,6 +8,7 @@ struct CategoryEditView: View {
     @Environment(\.dismiss)      private var dismiss
     @Query private var categories: [E5category]
     @Query(sort: \E3record.dateUse, order: .reverse) private var records: [E3record]
+    @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .standard
 
     @State private var zName = ""
     @State private var zNote = ""
@@ -57,8 +58,21 @@ struct CategoryEditView: View {
                 }
             }
             Section {
-                TextField("label.note", text: $zNote)
-                    .autocorrectionDisabled()
+                // メモは複数行入力にし、内容が欠けない高さへ広げる
+                ZStack(alignment: .topLeading) {
+                    if zNote.isEmpty {
+                        Text("label.note")
+                            .foregroundStyle(.tertiary)
+                            .padding(.top, 8)
+                            .padding(.leading, 5)
+                    }
+                    TextEditor(text: $zNote)
+                        .frame(height: editorHeight(for: zNote, minHeight: 40, maxHeight: 180))
+                        .scrollDisabled(true)
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
+                        .autocorrectionDisabled()
+                }
             }
             if !isNew {
                 Section("record.list.title") {
@@ -168,5 +182,18 @@ struct CategoryEditView: View {
             }
             return record.e5category?.id == category.id
         }
+    }
+
+    /// メモ量に応じて高さを広げ、内容が欠けないようにする
+    private func editorHeight(
+        for text: String,
+        minHeight: CGFloat,
+        maxHeight: CGFloat
+    ) -> CGFloat {
+        let explicitLines = max(1, text.components(separatedBy: "\n").count)
+        let wrappedLines = max(1, text.count / 18 + 1)
+        let lineCount = max(explicitLines, wrappedLines)
+        let estimated = (CGFloat(lineCount) * 24 + 24) * fontScale.uiScale
+        return min(maxHeight * fontScale.uiScale, max(minHeight * fontScale.uiScale, estimated))
     }
 }
