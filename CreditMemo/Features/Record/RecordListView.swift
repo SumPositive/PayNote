@@ -13,8 +13,6 @@ struct RecordListView: View {
     @State private var hasMoreRecords = true
     @State private var isLoadingRecords = false
     @State private var editTarget: E3record?
-    @State private var deleteTarget: E3record?
-    @State private var showDeleteAlert = false
 
     private let pageSize = 100
     private var allFilterText: String {
@@ -49,22 +47,6 @@ struct RecordListView: View {
                 } label: {
                     RecordSummaryRow(record: record)
                 }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button(role: .destructive) {
-                        deleteTarget   = record
-                        showDeleteAlert = true
-                    } label: {
-                        Label("button.delete", systemImage: "trash")
-                    }
-                }
-                .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                    Button {
-                        editTarget = record
-                    } label: {
-                        Label("button.edit", systemImage: "pencil")
-                    }
-                    .tint(.blue)
-                }
             }
 
             if hasMoreRecords {
@@ -92,18 +74,6 @@ struct RecordListView: View {
             NavigationStack {
                 RecordEditView(mode: .edit(record))
             }
-        }
-        .alert("alert.deleteConfirm.title", isPresented: $showDeleteAlert) {
-            Button("button.delete", role: .destructive) {
-                if let r = deleteTarget {
-                    try? RecordService.delete(r, context: context)
-                    // 削除反映後は先頭ページから再読込する
-                    resetAndLoadRecords()
-                }
-            }
-            Button("button.cancel", role: .cancel) {}
-        } message: {
-            Text("alert.deleteConfirm.message")
         }
         .onAppear {
             if records.isEmpty {

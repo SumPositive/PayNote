@@ -51,6 +51,7 @@ struct RecordEditView: View {
     @State private var showBankPicker     = false
     @State private var showCategoryPicker = false
     @State private var showRepeatPicker   = false
+    @State private var showDeleteAlert    = false
     @State private var savedBanner        = false
     @State private var hasInitialized     = false
     @State private var initialDraft: DraftState?
@@ -154,6 +155,7 @@ struct RecordEditView: View {
                 requiredSection
                 optionalSection
                 similarSection
+                deleteSection
             }
             .onChange(of: scrollToTopRequest) { _, _ in
                 withAnimation(.easeInOut(duration: 0.22)) {
@@ -308,6 +310,14 @@ struct RecordEditView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
                     .padding(.top, 8)
             }
+        }
+        .alert("alert.deleteConfirm.title", isPresented: $showDeleteAlert) {
+            Button("button.delete", role: .destructive) {
+                deleteCurrentRecord()
+            }
+            Button("button.cancel", role: .cancel) {}
+        } message: {
+            Text("alert.deleteConfirm.message")
         }
         .animation(.spring(duration: 0.3), value: savedBanner)
         // 自動時はシステム設定をそのまま使い、手動時のみ固定サイズを適用する
@@ -548,6 +558,22 @@ struct RecordEditView: View {
         }
     }
 
+    @ViewBuilder private var deleteSection: some View {
+        if !isNew {
+            Section {
+                Button(role: .destructive) {
+                    showDeleteAlert = true
+                } label: {
+                    HStack {
+                        Spacer()
+                        Text("record.delete.action")
+                        Spacer()
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - Load / Save
 
     private func loadFields() {
@@ -617,6 +643,13 @@ struct RecordEditView: View {
             onSaved?(bankChanged)
             dismiss()
         }
+    }
+
+    private func deleteCurrentRecord() {
+        guard case .edit(let record) = mode else { return }
+        try? RecordService.delete(record, context: context)
+        onSaved?(false)
+        dismiss()
     }
 
     private func applyCardBankChangeIfNeeded(savedRecord: E3record, previousBankID: String?) {

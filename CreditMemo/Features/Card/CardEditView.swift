@@ -24,6 +24,9 @@ struct CardEditView: View {
     @State private var showPresetDialog = false
     @State private var hasInitialized = false
     @State private var initialDraft: DraftState?
+    @State private var isRebuildingBilling = false
+    @State private var rebuildCompletedCount = 0
+    @State private var rebuildTargetCount = 0
     @FocusState private var focusName: Bool
 
     private var isNew:   Bool { card == nil }
@@ -176,11 +179,14 @@ struct CardEditView: View {
             ToolbarItem(placement: .navigationBarLeading) {
                 if isNew || hasChanges {
                     Button("button.cancel") { dismiss() }
+                        .disabled(isRebuildingBilling)
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("button.save") { save() }
-                    .disabled(!isValid)
+                Button("button.save") {
+                    Task { await save() }
+                }
+                    .disabled(!isValid || isRebuildingBilling)
                     .fontWeight(hasChanges ? .semibold : .regular)
                     .foregroundStyle(hasChanges ? .blue : .secondary)
             }
@@ -216,6 +222,35 @@ struct CardEditView: View {
             }
             Button("button.cancel", role: .cancel) {}
         }
+        .overlay {
+            if isRebuildingBilling {
+                ZStack {
+                    Color.black.opacity(0.22)
+                        .ignoresSafeArea()
+                    VStack(spacing: 10) {
+                        ProgressView(value: progressValue)
+                            .progressViewStyle(.linear)
+                        Text("card.rebuild.progress")
+                            .font(.subheadline.weight(.semibold))
+                            .multilineTextAlignment(.center)
+                        Text("card.rebuild.progress.hint")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                        if 0 < rebuildTargetCount {
+                            Text("\(rebuildCompletedCount) / \(rebuildTargetCount)")
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 18)
+                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+                    .padding(.horizontal, 24)
+                }
+                .allowsHitTesting(true)
+            }
+        }
     }
 
     // MARK: - Helpers
@@ -238,7 +273,14 @@ struct CardEditView: View {
         previousBankSelection = bankSelection
     }
 
-    private func save() {
+    private var progressValue: Double {
+        if rebuildTargetCount <= 0 {
+            return 0
+        }
+        return Double(rebuildCompletedCount) / Double(rebuildTargetCount)
+    }
+
+    private func save() async {
         let name = zName.trimmingCharacters(in: .whitespaces)
         guard !name.isEmpty else { return }
         let closingDay = usesAfterDays ? Int16(0) : effectiveClosingDay
@@ -246,6 +288,11 @@ struct CardEditView: View {
         let savingPayMonth: Int16 = usesAfterDays ? 0 : payMonth
 
         if let card {
+            let needsBillingRebuild =
+                card.e8bank?.id != selectedBank?.id ||
+                card.nClosingDay != closingDay ||
+                card.nPayDay != savingPayDay ||
+                card.nPayMonth != savingPayMonth
             card.zName       = name
             card.zNote       = zNote
             card.nClosingDay = closingDay
@@ -256,8 +303,9 @@ struct CardEditView: View {
             card.nBonus2      = 0
             card.e8bank       = selectedBank
             card.dateUpdate   = Date()
-            // 決済手段マスタ変更は請求全体へ影響するため全件再構築する
-            RecordService.rebuildBilling(context: context)
+            if needsBillingRebuild {
+                await rebuildBillingForCard(card)
+            }
         } else {
             // 新規追加は一覧先頭へ出すため、最小rowよりさらに小さい値を採用する
             let row = Int32((allCards.map { Int($0.nRow) }.min() ?? 1) - 1)
@@ -274,6 +322,49 @@ struct CardEditView: View {
             try? context.save()
         }
         dismiss()
+    }
+
+    private func rebuildBillingForCard(_ card: E1card) async {
+        // 請求日に影響する変更だけ、その決済手段配下の履歴へ限定して再構築する
+        let records = card.e3records.sorted { $0.dateUse < $1.dateUse }
+        let batchSize = 50
+        isRebuildingBilling = true
+        rebuildCompletedCount = 0
+        rebuildTargetCount = records.count
+
+        var batch: [E3record] = []
+        for record in records {
+            batch.append(record)
+            if batchSize <= batch.count {
+                rebuildBillingBatch(batch)
+                rebuildCompletedCount += batch.count
+                batch.removeAll(keepingCapacity: true)
+                // 描画更新を挟み、フリーズ感を減らす
+                await Task.yield()
+            }
+        }
+        if !batch.isEmpty {
+            rebuildBillingBatch(batch)
+            rebuildCompletedCount += batch.count
+        }
+        // ぶら下がり請求/支払だけ最後に掃除する
+        RecordService.cleanupOrphanBilling(context: context)
+        if context.hasChanges {
+            try? context.save()
+        }
+        isRebuildingBilling = false
+        rebuildCompletedCount = 0
+        rebuildTargetCount = 0
+    }
+
+    private func rebuildBillingBatch(_ records: [E3record]) {
+        // バッチ単位で保存し、長時間ブロックを抑える
+        for record in records {
+            RecordService.rebuildBilling(for: record, context: context)
+        }
+        if context.hasChanges {
+            try? context.save()
+        }
     }
 
     // MARK: - Bank Picker

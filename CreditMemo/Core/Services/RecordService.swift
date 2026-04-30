@@ -30,6 +30,8 @@ enum RecordService {
 
     static func delete(_ record: E3record, context: ModelContext) throws {
         let snapshot = snapshot(for: record)
+        // 請求/支払の孤児掃除が効くよう、先に part を明示的に外す
+        removeExistingParts(of: record, context: context)
         context.delete(record)
         cleanupBilling(snapshot: snapshot, context: context)
         try commit(context)
@@ -53,6 +55,8 @@ enum RecordService {
 
         for record in oldRecords {
             let snapshot = snapshot(for: record)
+            // 保存前でも invoice/payment の空判定ができるよう、part を先に外す
+            removeExistingParts(of: record, context: context)
             context.delete(record)
             cleanupBilling(snapshot: snapshot, context: context)
         }
