@@ -5,7 +5,6 @@ struct PaymentListView: View {
     @Environment(\.modelContext) private var context
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
     @AppStorage(AppStorageKey.paymentWindowDays) private var paymentWindowDays = 7
-    @State private var didInitialScroll = false
     @State private var upcomingUnpaidPayments: [E7payment] = []
     @State private var overdueUnpaidPayments: [E7payment] = []
     @State private var overdueUnpaidCount = 0
@@ -17,6 +16,7 @@ struct PaymentListView: View {
     private let paymentMoveAnimation = Animation.easeInOut(duration: 0.55)
     private let pageSize = 100
     private let overduePageSize = 100
+    private let paymentBoundaryAnchorID = "payment-boundary-anchor"
     private let paidFirstRowAnchorID = "payment-paid-first-row-anchor"
 
     private var hasMorePaid: Bool {
@@ -35,82 +35,89 @@ struct PaymentListView: View {
         !upcomingUnpaidPayments.isEmpty || 0 < overdueUnpaidCount || !paidPayments.isEmpty
     }
 
+    private var scrollPositionKey: String {
+        "\(unpaidFilter.rawValue)-\(selectedUnpaidPayments.count)-\(paidPayments.count)"
+    }
+
     var body: some View {
         Group {
             if !hasAnyPayments {
                 ContentUnavailableView("label.empty", systemImage: "calendar.badge.clock")
             } else {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            if userLevel == .beginner {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text("payment.beginner.title")
-                                        .font(.subheadline.weight(.semibold))
-                                    // 文とアイコン付き操作文を分け、改行位置を自然にする
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("payment.beginner.line1")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                        HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                            PaymentStatusPill(isPaid: false)
-                                                .scaleEffect(0.52)
-                                            Text("payment.beginner.line2")
-                                                .font(.caption)
-                                                .foregroundStyle(.secondary)
-                                                .fixedSize(horizontal: false, vertical: true)
-                                        }
-                                    }
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("payment.beginner.line3")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                        HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                            PaymentStatusPill(isPaid: true)
-                                                .scaleEffect(0.52)
-                                            Text("payment.beginner.line4")
-                                                .font(.caption)
-                                                .foregroundStyle(.secondary)
-                                                .fixedSize(horizontal: false, vertical: true)
-                                        }
-                                    }
-                                }
+                VStack(spacing: 0) {
+                    if hasOverdueUnpaid {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("payment.overdue.warning")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(COLOR_UNPAID)
+                            Picker("payment.overdue.filter", selection: $unpaidFilter) {
+                                Text("payment.overdue.upcoming").tag(PaymentUnpaidFilter.upcoming)
+                                Text("payment.overdue.past").tag(PaymentUnpaidFilter.overdue)
                             }
-                            if hasOverdueUnpaid {
-                                VStack(alignment: .leading, spacing: 10) {
-                                    Text("payment.overdue.warning")
-                                        .font(.subheadline.weight(.semibold))
-                                        .foregroundStyle(COLOR_UNPAID)
-                                    Picker("payment.overdue.filter", selection: $unpaidFilter) {
-                                        Text("payment.overdue.upcoming").tag(PaymentUnpaidFilter.upcoming)
-                                        Text("payment.overdue.past").tag(PaymentUnpaidFilter.overdue)
-                                    }
-                                    .pickerStyle(.segmented)
-                                }
-                            }
-                            PaymentCombinedCard(
-                                unpaidPayments: selectedUnpaidPayments,
-                                paidPayments: paidPayments,
-                                unpaidFilter: unpaidFilter,
-                                onToggle: togglePaid,
-                                togglingPaymentIDs: togglingPaymentIDs,
-                                hasMorePaid: hasMorePaid,
-                                onLoadMorePaid: loadMorePaidIfNeeded,
-                                paidFirstRowAnchorID: paidFirstRowAnchorID,
-                                windowDays: paymentWindowDays
-                            )
+                            .pickerStyle(.segmented)
                         }
                         .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
+                        .padding(.top, 10)
+                        .padding(.bottom, 6)
                     }
-                    .onAppear {
-                        scrollToPaidTopIfNeeded(proxy: proxy)
-                    }
-                    .onChange(of: unpaidFilter) { _, _ in
-                        didInitialScroll = false
-                        scrollToPaidTopIfNeeded(proxy: proxy)
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            LazyVStack(spacing: 16) {
+                                if userLevel == .beginner {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text("payment.beginner.title")
+                                            .font(.subheadline.weight(.semibold))
+                                        // 文とアイコン付き操作文を分け、改行位置を自然にする
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("payment.beginner.line1")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                                PaymentStatusPill(isPaid: false)
+                                                    .scaleEffect(0.52)
+                                                Text("payment.beginner.line2")
+                                                    .font(.caption)
+                                                    .foregroundStyle(.secondary)
+                                                    .fixedSize(horizontal: false, vertical: true)
+                                            }
+                                        }
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("payment.beginner.line3")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                                PaymentStatusPill(isPaid: true)
+                                                    .scaleEffect(0.52)
+                                                Text("payment.beginner.line4")
+                                                    .font(.caption)
+                                                    .foregroundStyle(.secondary)
+                                                    .fixedSize(horizontal: false, vertical: true)
+                                            }
+                                        }
+                                    }
+                                }
+                                PaymentCombinedCard(
+                                    unpaidPayments: selectedUnpaidPayments,
+                                    paidPayments: paidPayments,
+                                    unpaidFilter: unpaidFilter,
+                                    onToggle: togglePaid,
+                                    togglingPaymentIDs: togglingPaymentIDs,
+                                    hasMorePaid: hasMorePaid,
+                                    onLoadMorePaid: loadMorePaidIfNeeded,
+                                    boundaryAnchorID: paymentBoundaryAnchorID,
+                                    paidFirstRowAnchorID: paidFirstRowAnchorID,
+                                    windowDays: paymentWindowDays
+                                )
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                        }
+                        .id(unpaidFilter)
+                        .task(id: scrollPositionKey) {
+                            await scrollToInitialPosition(proxy: proxy)
+                        }
                     }
                 }
             }
@@ -123,7 +130,6 @@ struct PaymentListView: View {
 
     /// 未払は「今後」と「過去」で分け、済みはページ単位で読む
     private func loadInitialPayments() {
-        didInitialScroll = false
         upcomingUnpaidPayments = fetchUpcomingUnpaidPayments()
         overdueUnpaidCount = fetchOverdueUnpaidCount()
         overdueUnpaidPayments = fetchOverdueUnpaidPayments(limit: overduePageSize)
@@ -134,21 +140,13 @@ struct PaymentListView: View {
         paidPayments = fetchPaidPayments(offset: 0, limit: pageSize)
     }
 
-    private func scrollToPaidTopIfNeeded(proxy: ScrollViewProxy) {
-        if didInitialScroll {
-            return
-        }
-        // 未払が少ない場合は、初期スクロールしなくても済み先頭が見える
-        if selectedUnpaidPayments.count <= 4 {
-            didInitialScroll = true
-            return
-        }
-        DispatchQueue.main.async {
+    private func scrollToInitialPosition(proxy: ScrollViewProxy) async {
+        // レイアウト確定後に境界を中央へ寄せる
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        await MainActor.run {
             withAnimation(.easeInOut(duration: 0.2)) {
-                // 済みの先頭（データなしを含む）が必ず見える位置へ寄せる
-                proxy.scrollTo(paidFirstRowAnchorID, anchor: .bottom)
+                proxy.scrollTo(paymentBoundaryAnchorID, anchor: .center)
             }
-            didInitialScroll = true
         }
     }
 
@@ -246,7 +244,8 @@ struct PaymentListView: View {
             sortBy: [SortDescriptor(\E7payment.date, order: .reverse)]
         )
         descriptor.fetchLimit = limit
-        return (try? context.fetch(descriptor)) ?? []
+        let fetched = (try? context.fetch(descriptor)) ?? []
+        return fetched.reversed()
     }
 
     /// 済み件数だけ先に取り、ページングの終端判定に使う
@@ -414,6 +413,7 @@ private struct PaymentCombinedCard: View {
     let togglingPaymentIDs: Set<String>
     let hasMorePaid: Bool
     let onLoadMorePaid: () -> Void
+    let boundaryAnchorID: String
     let paidFirstRowAnchorID: String
     let windowDays: Int
     @State private var boundaryMidY: CGFloat = 0
@@ -482,6 +482,10 @@ private struct PaymentCombinedCard: View {
 
             // 境目を太線で区切り、上下にラベルを置いて文脈を維持する
             PaymentBoundaryMarker()
+            // 動的な見た目と切り離した透明アンカーでスクロール位置を安定させる
+            Color.clear
+                .frame(height: 1)
+                .id(boundaryAnchorID)
 
             if !paidPayments.isEmpty {
                 ForEach(indexedPaidPayments, id: \.element.id) { index, payment in
