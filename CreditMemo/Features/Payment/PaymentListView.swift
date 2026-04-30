@@ -2,35 +2,37 @@ import SwiftUI
 import SwiftData
 
 struct PaymentListView: View {
-    @Query(sort: \E7payment.date, order: .reverse) private var allPayments: [E7payment]
     @Environment(\.modelContext) private var context
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
     @AppStorage(AppStorageKey.paymentWindowDays) private var paymentWindowDays = 7
     @State private var didInitialScroll = false
-    @State private var paidVisibleCount = 0
+    @State private var upcomingUnpaidPayments: [E7payment] = []
+    @State private var overdueUnpaidPayments: [E7payment] = []
+    @State private var overdueUnpaidCount = 0
+    @State private var paidPayments: [E7payment] = []
+    @State private var allPaidCount = 0
+    @State private var isLoadingMorePaid = false
+    @State private var unpaidFilter: PaymentUnpaidFilter = .upcoming
     @State private var togglingPaymentIDs: Set<String> = []
     private let paymentMoveAnimation = Animation.easeInOut(duration: 0.55)
     private let pageSize = 100
+    private let overduePageSize = 100
     private let paidFirstRowAnchorID = "payment-paid-first-row-anchor"
 
-    private var unpaidPayments: [E7payment] {
-        allPayments.filter { !$0.isPaid }
-    }
-
-    private var allPaidPayments: [E7payment] {
-        allPayments.filter(\.isPaid)
-    }
-
-    private var paidPayments: [E7payment] {
-        Array(allPaidPayments.prefix(paidVisibleCount))
-    }
-
     private var hasMorePaid: Bool {
-        paidVisibleCount < allPaidPayments.count
+        paidPayments.count < allPaidCount
+    }
+
+    private var hasOverdueUnpaid: Bool {
+        0 < overdueUnpaidCount
+    }
+
+    private var selectedUnpaidPayments: [E7payment] {
+        unpaidFilter == .upcoming ? upcomingUnpaidPayments : overdueUnpaidPayments
     }
 
     private var hasAnyPayments: Bool {
-        !allPayments.isEmpty
+        !upcomingUnpaidPayments.isEmpty || 0 < overdueUnpaidCount || !paidPayments.isEmpty
     }
 
     var body: some View {
@@ -76,9 +78,22 @@ struct PaymentListView: View {
                                     }
                                 }
                             }
+                            if hasOverdueUnpaid {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    Text("payment.overdue.warning")
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(COLOR_UNPAID)
+                                    Picker("payment.overdue.filter", selection: $unpaidFilter) {
+                                        Text("payment.overdue.upcoming").tag(PaymentUnpaidFilter.upcoming)
+                                        Text("payment.overdue.past").tag(PaymentUnpaidFilter.overdue)
+                                    }
+                                    .pickerStyle(.segmented)
+                                }
+                            }
                             PaymentCombinedCard(
-                                unpaidPayments: unpaidPayments,
+                                unpaidPayments: selectedUnpaidPayments,
                                 paidPayments: paidPayments,
+                                unpaidFilter: unpaidFilter,
                                 onToggle: togglePaid,
                                 togglingPaymentIDs: togglingPaymentIDs,
                                 hasMorePaid: hasMorePaid,
@@ -91,38 +106,32 @@ struct PaymentListView: View {
                         .padding(.vertical, 10)
                     }
                     .onAppear {
-                        selfHealIfDuplicatedPaymentsExist()
-                        if paidVisibleCount == 0 {
-                            resetAndLoadPaid()
-                        }
+                        scrollToPaidTopIfNeeded(proxy: proxy)
+                    }
+                    .onChange(of: unpaidFilter) { _, _ in
+                        didInitialScroll = false
                         scrollToPaidTopIfNeeded(proxy: proxy)
                     }
                 }
             }
         }
         .scalableNavigationTitle("payment.list.title")
-        .onChange(of: allPayments.map(\.id)) { _, _ in
-            // 表示集合が変わったら、済み側の表示件数だけ整える
-            resetAndLoadPaid()
+        .onAppear {
+            loadInitialPayments()
         }
     }
 
-    /// 支払集計に重複キーが残っている場合のみ再構築して自動修復する
-    private func selfHealIfDuplicatedPaymentsExist() {
-        var seen: Set<String> = []
-        for payment in allPayments {
-            let day = Calendar.current.startOfDay(for: payment.date)
-            let dayKey = Int(day.timeIntervalSince1970)
-            let bankKey = payment.e8bank?.id ?? "__no_bank__"
-            let stateKey = payment.isPaid ? "paid" : "unpaid"
-            let key = "\(bankKey)#\(dayKey)#\(stateKey)"
-            if seen.contains(key) {
-                RecordService.rebuildBilling(context: context)
-                resetAndLoadPaid()
-                return
-            }
-            seen.insert(key)
+    /// 未払は「今後」と「過去」で分け、済みはページ単位で読む
+    private func loadInitialPayments() {
+        didInitialScroll = false
+        upcomingUnpaidPayments = fetchUpcomingUnpaidPayments()
+        overdueUnpaidCount = fetchOverdueUnpaidCount()
+        overdueUnpaidPayments = fetchOverdueUnpaidPayments(limit: overduePageSize)
+        if overdueUnpaidCount <= 0 {
+            unpaidFilter = .upcoming
         }
+        allPaidCount = fetchPaidCount()
+        paidPayments = fetchPaidPayments(offset: 0, limit: pageSize)
     }
 
     private func scrollToPaidTopIfNeeded(proxy: ScrollViewProxy) {
@@ -130,7 +139,7 @@ struct PaymentListView: View {
             return
         }
         // 未払が少ない場合は、初期スクロールしなくても済み先頭が見える
-        if unpaidPayments.count <= 4 {
+        if selectedUnpaidPayments.count <= 4 {
             didInitialScroll = true
             return
         }
@@ -171,21 +180,102 @@ struct PaymentListView: View {
                 isPaid: isPaid,
                 context: context
             )
-            // 済みセクションは表示件数だけ持っているため、変更後に件数を整える
-            resetAndLoadPaid()
+            // 更新後は一覧を読み直して境界付近を正しく保つ
+            reloadPaymentsKeepingPaidPage()
         }
     }
 
-    private func resetAndLoadPaid() {
-        paidVisibleCount = min(pageSize, allPaidPayments.count)
+    /// 現在の済み表示件数を保ったまま再読込する
+    private func reloadPaymentsKeepingPaidPage() {
+        let currentPaidCount = paidPayments.count
+        upcomingUnpaidPayments = fetchUpcomingUnpaidPayments()
+        overdueUnpaidCount = fetchOverdueUnpaidCount()
+        overdueUnpaidPayments = fetchOverdueUnpaidPayments(limit: overduePageSize)
+        if overdueUnpaidCount <= 0 {
+            unpaidFilter = .upcoming
+        }
+        allPaidCount = fetchPaidCount()
+        let nextLimit = max(pageSize, currentPaidCount)
+        paidPayments = fetchPaidPayments(offset: 0, limit: nextLimit)
     }
 
     private func loadMorePaidIfNeeded() {
         if !hasMorePaid {
             return
         }
-        paidVisibleCount = min(paidVisibleCount + pageSize, allPaidPayments.count)
+        if isLoadingMorePaid {
+            return
+        }
+        isLoadingMorePaid = true
+        let nextPage = fetchPaidPayments(offset: paidPayments.count, limit: pageSize)
+        paidPayments.append(contentsOf: nextPage)
+        isLoadingMorePaid = false
     }
+
+    /// 当日以降の未払は通常表示の対象として全件読む
+    private func fetchUpcomingUnpaidPayments() -> [E7payment] {
+        let today = Calendar.current.startOfDay(for: Date())
+        let predicate = #Predicate<E7payment> { payment in
+            payment.e8paid == nil && today <= payment.date
+        }
+        let descriptor = FetchDescriptor<E7payment>(
+            predicate: predicate,
+            sortBy: [SortDescriptor(\E7payment.date, order: .reverse)]
+        )
+        return (try? context.fetch(descriptor)) ?? []
+    }
+
+    /// 前日以前の未払件数だけを先に取る
+    private func fetchOverdueUnpaidCount() -> Int {
+        let today = Calendar.current.startOfDay(for: Date())
+        let predicate = #Predicate<E7payment> { payment in
+            payment.e8paid == nil && payment.date < today
+        }
+        let descriptor = FetchDescriptor<E7payment>(predicate: predicate)
+        return (try? context.fetchCount(descriptor)) ?? 0
+    }
+
+    /// 前日以前の未払は最大件数だけ表示する
+    private func fetchOverdueUnpaidPayments(limit: Int) -> [E7payment] {
+        let today = Calendar.current.startOfDay(for: Date())
+        let predicate = #Predicate<E7payment> { payment in
+            payment.e8paid == nil && payment.date < today
+        }
+        var descriptor = FetchDescriptor<E7payment>(
+            predicate: predicate,
+            sortBy: [SortDescriptor(\E7payment.date, order: .reverse)]
+        )
+        descriptor.fetchLimit = limit
+        return (try? context.fetch(descriptor)) ?? []
+    }
+
+    /// 済み件数だけ先に取り、ページングの終端判定に使う
+    private func fetchPaidCount() -> Int {
+        let predicate = #Predicate<E7payment> { payment in
+            payment.e8paid != nil
+        }
+        let descriptor = FetchDescriptor<E7payment>(predicate: predicate)
+        return (try? context.fetchCount(descriptor)) ?? 0
+    }
+
+    /// 済みは必要件数だけ読む
+    private func fetchPaidPayments(offset: Int, limit: Int) -> [E7payment] {
+        let predicate = #Predicate<E7payment> { payment in
+            payment.e8paid != nil
+        }
+        var descriptor = FetchDescriptor<E7payment>(
+            predicate: predicate,
+            sortBy: [SortDescriptor(\E7payment.date, order: .reverse)]
+        )
+        descriptor.fetchOffset = offset
+        descriptor.fetchLimit = limit
+        return (try? context.fetch(descriptor)) ?? []
+    }
+}
+
+private enum PaymentUnpaidFilter: String {
+    case upcoming
+    case overdue
 }
 
 // MARK: - Row
@@ -319,6 +409,7 @@ private extension E7payment {
 private struct PaymentCombinedCard: View {
     let unpaidPayments: [E7payment]
     let paidPayments: [E7payment]
+    let unpaidFilter: PaymentUnpaidFilter
     let onToggle: (E7payment) -> Void
     let togglingPaymentIDs: Set<String>
     let hasMorePaid: Bool
@@ -343,15 +434,38 @@ private struct PaymentCombinedCard: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            let indexedSections = Array(unpaidGrouped.sections.enumerated())
-            ForEach(indexedSections, id: \.element.id) { sectionIndex, section in
-                if 0 < sectionIndex {
-                    PaymentSectionSeparator()
+            if unpaidFilter == .upcoming {
+                let indexedSections = Array(unpaidGrouped.sections.enumerated())
+                ForEach(indexedSections, id: \.element.id) { sectionIndex, section in
+                    if 0 < sectionIndex {
+                        PaymentSectionSeparator()
+                    }
+                    if section.items.isEmpty {
+                        PaymentEmptyRow()
+                    } else {
+                        let indexedItems = Array(section.items.enumerated())
+                        ForEach(indexedItems, id: \.element.id) { index, payment in
+                            PaymentNavigationRow(
+                                payment: payment,
+                                rowID: payment.id,
+                                isToggling: togglingPaymentIDs.contains(payment.id),
+                                onToggle: onToggle
+                            )
+                            if index + 1 < section.items.count {
+                                PaymentRowDivider()
+                            }
+                        }
+                    }
+                    PaymentPeriodFooter(
+                        title: section.footerTitle,
+                        amount: section.totalAmount
+                    )
                 }
-                if section.items.isEmpty {
+            } else {
+                if unpaidPayments.isEmpty {
                     PaymentEmptyRow()
                 } else {
-                    let indexedItems = Array(section.items.enumerated())
+                    let indexedItems = Array(unpaidPayments.enumerated())
                     ForEach(indexedItems, id: \.element.id) { index, payment in
                         PaymentNavigationRow(
                             payment: payment,
@@ -359,15 +473,11 @@ private struct PaymentCombinedCard: View {
                             isToggling: togglingPaymentIDs.contains(payment.id),
                             onToggle: onToggle
                         )
-                        if index + 1 < section.items.count {
+                        if index + 1 < unpaidPayments.count {
                             PaymentRowDivider()
                         }
                     }
                 }
-                PaymentPeriodFooter(
-                    title: section.footerTitle,
-                    amount: section.totalAmount
-                )
             }
 
             // 境目を太線で区切り、上下にラベルを置いて文脈を維持する

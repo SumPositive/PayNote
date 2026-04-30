@@ -1501,6 +1501,74 @@
         }
       }
     },
+    "payment.overdue.filter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpaid Filter"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未払フィルタ"
+          }
+        }
+      }
+    },
+    "payment.overdue.past": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Past Due"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "過ぎた未払"
+          }
+        }
+      }
+    },
+    "payment.overdue.upcoming": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upcoming"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今後の未払"
+          }
+        }
+      }
+    },
+    "payment.overdue.warning": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are unpaid debits past their debit date."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "引き落とし日を過ぎた未払があります"
+          }
+        }
+      }
+    },
     "payment.footer.paid.trailing": {
       "extractionState": "manual",
       "localizations": {

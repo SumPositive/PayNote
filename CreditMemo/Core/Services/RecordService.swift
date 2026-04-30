@@ -462,7 +462,10 @@ enum RecordService {
         let day  = Calendar.current.startOfDay(for: date)
         let desc = FetchDescriptor<E7payment>(predicate: #Predicate { $0.date == day })
         let payments = (try? context.fetch(desc)) ?? []
-        if let ex = payments.first(where: { $0.e8bank?.id == bank?.id && $0.isPaid == isPaid }) {
+        if let ex = payments.first(where: {
+            // invoice 集計の見かけ状態でなく、所属先そのものを見る
+            $0.e8bank?.id == bank?.id && (($0.e8paid != nil) == isPaid)
+        }) {
             return ex
         }
         let p = E7payment(date: day)
@@ -569,6 +572,8 @@ enum RecordService {
             context: context
         )
         invoice.e7payment = newPayment
+        // 再利用された payment でも paid/unpaid 所属を正に戻す
+        setPaymentBank(newPayment, bank: bank, isPaid: bank == nil ? false : toPaid)
         recalculatePayment(newPayment)
         if let oldPayment, oldPayment.id != newPayment.id {
             recalculatePayment(oldPayment)
