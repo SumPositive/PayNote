@@ -274,7 +274,6 @@ struct RecordEditView: View {
         .sheet(isPresented: $showCategoryPicker) {
             CategoryMultiPickerSheet(
                 title: "record.field.category",
-                items: categories.sorted { $0.zName.localizedStandardCompare($1.zName) == .orderedAscending },
                 selectedCategories: $selectedCategories
             )
         }
@@ -1104,14 +1103,18 @@ private struct PickerSheet<T: Identifiable>: View where T.ID: Equatable {
 
 private struct CategoryMultiPickerSheet: View {
     let title: LocalizedStringKey
-    let items: [E5category]
     @Binding var selectedCategories: [E5category]
 
     @Environment(\.dismiss) private var dismiss
+    @Query private var allCategories: [E5category]
     @State private var showAdd = false
     @State private var displayOrder: [E5category] = []
     @State private var itemIDsBeforeAdd: [String] = []
     private let maxSelection = 10
+
+    private var items: [E5category] {
+        allCategories.sorted { $0.zName.localizedStandardCompare($1.zName) == .orderedAscending }
+    }
 
     var body: some View {
         NavigationStack {
@@ -1153,19 +1156,20 @@ private struct CategoryMultiPickerSheet: View {
                 let newItems = items.filter { !itemIDsBeforeAdd.contains($0.id) }
                 for item in newItems where !selectedCategories.contains(where: { $0.id == item.id }) {
                     selectedCategories.append(item)
-                    displayOrder.append(item)
                 }
+                // 追加直後は新規タグを最上段へ寄せ、同時に選択状態を反映する
+                rebuildDisplayOrder(prioritizedIDs: newItems.map(\.id))
             }) {
                 NavigationStack { CategoryEditView() }
             }
         }
         .presentationDetents([.medium, .large])
         .onAppear {
-            // 選択済みを先頭に、残りはアルファベット順
-            let selectedIDs = Set(selectedCategories.map(\.id))
-            let selected   = items.filter {  selectedIDs.contains($0.id) }
-            let unselected = items.filter { !selectedIDs.contains($0.id) }
-            displayOrder = selected + unselected
+            rebuildDisplayOrder()
+        }
+        .onChange(of: items.map(\.id)) { _, _ in
+            // 追加後や一覧更新後も、選択状態に合わせて表示順を組み直す
+            rebuildDisplayOrder()
         }
     }
 
@@ -1179,6 +1183,17 @@ private struct CategoryMultiPickerSheet: View {
             }
             selectedCategories.append(item)
         }
+        rebuildDisplayOrder()
+    }
+
+    private func rebuildDisplayOrder(prioritizedIDs: [String] = []) {
+        let prioritizedIDSet = Set(prioritizedIDs)
+        let selectedIDs = Set(selectedCategories.map(\.id))
+        let prioritized = items.filter { prioritizedIDSet.contains($0.id) }
+        let selected = items.filter { !prioritizedIDSet.contains($0.id) && selectedIDs.contains($0.id) }
+        let unselected = items.filter { !prioritizedIDSet.contains($0.id) && !selectedIDs.contains($0.id) }
+        // 新規追加分を最上段、その次に選択済み、その後に未選択を並べる
+        displayOrder = prioritized + selected + unselected
     }
 }
 

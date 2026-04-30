@@ -1137,6 +1137,23 @@
         }
       }
     },
+    "category.field.name.duplicate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This tag already exists."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このタグ名は既にあります"
+          }
+        }
+      }
+    },
     "category.list.title" : {
       "extractionState" : "manual",
       "localizations" : {

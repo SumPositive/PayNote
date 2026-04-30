@@ -6,6 +6,7 @@ struct CategoryEditView: View {
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss)      private var dismiss
+    @Query private var categories: [E5category]
     @Query(sort: \E3record.dateUse, order: .reverse) private var records: [E3record]
 
     @State private var zName = ""
@@ -18,7 +19,25 @@ struct CategoryEditView: View {
     @State private var linkedRecordsCache: [E3record] = []
 
     private var isNew:   Bool { category == nil }
-    private var isValid: Bool { !zName.trimmingCharacters(in: .whitespaces).isEmpty }
+    private var trimmedName: String {
+        zName.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    private var hasDuplicateName: Bool {
+        let normalizedInput = trimmedName.folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: .current)
+        if normalizedInput.isEmpty {
+            return false
+        }
+        return categories.contains { item in
+            if item.id == category?.id {
+                return false
+            }
+            let normalizedExisting = item.zName
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: .current)
+            return normalizedExisting == normalizedInput
+        }
+    }
+    private var isValid: Bool { !trimmedName.isEmpty && !hasDuplicateName }
     private var hasChanges: Bool {
         guard let initialDraft else { return false }
         return currentDraft() != initialDraft
@@ -31,6 +50,11 @@ struct CategoryEditView: View {
                 TextField("category.field.name", text: $zName)
                     .autocorrectionDisabled()
                     .focused($focusName)
+                if hasDuplicateName {
+                    Text("category.field.name.duplicate")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
             }
             Section {
                 TextField("label.note", text: $zNote)
@@ -101,8 +125,8 @@ struct CategoryEditView: View {
     }
 
     private func save() {
-        let name = zName.trimmingCharacters(in: .whitespaces)
-        guard !name.isEmpty else { return }
+        let name = trimmedName
+        guard !name.isEmpty && !hasDuplicateName else { return }
         if let category {
             category.zName    = name
             category.zNote    = zNote
@@ -112,6 +136,8 @@ struct CategoryEditView: View {
             let c = E5category(zName: name, zNote: zNote, sortDate: Date(), sortName: name)
             context.insert(c)
         }
+        // 新規追加直後に一覧側へ確実に反映させる
+        try? context.save()
         dismiss()
     }
 
