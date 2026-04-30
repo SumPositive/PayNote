@@ -1757,13 +1757,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "There are unpaid debits past their debit date."
+            "value" : "There are unpaid debits past their debit date. Please review and mark them paid."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "引き落とし日を過ぎた未払があります"
+            "value" : "引き落とし日を過ぎた未払があります。確認して済みへ移動してください"
           }
         }
       }
