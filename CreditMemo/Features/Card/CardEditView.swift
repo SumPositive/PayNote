@@ -7,6 +7,7 @@ struct CardEditView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss)      private var dismiss
     @Query(sort: \E1card.nRow)   private var allCards: [E1card]
+    @Query private var cards: [E1card]
     @Query(sort: \E8bank.nRow)   private var banks: [E8bank]
 
     @State private var zName       = ""
@@ -30,7 +31,31 @@ struct CardEditView: View {
     @FocusState private var focusName: Bool
 
     private var isNew:   Bool { card == nil }
-    private var isValid: Bool { !zName.trimmingCharacters(in: .whitespaces).isEmpty }
+    private var trimmedName: String {
+        zName.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    private var hasDuplicateName: Bool {
+        let normalizedInput = trimmedName.folding(
+            options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
+            locale: .current
+        )
+        if normalizedInput.isEmpty {
+            return false
+        }
+        return cards.contains { item in
+            if item.id == card?.id {
+                return false
+            }
+            let normalizedExisting = item.zName
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .folding(
+                    options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
+                    locale: .current
+                )
+            return normalizedExisting == normalizedInput
+        }
+    }
+    private var isValid: Bool { !trimmedName.isEmpty && !hasDuplicateName }
     private var presetTemplates: [SeedData.CardPreset] { SeedData.presetsForCurrentLocale() }
     private var isEnglishLocale: Bool {
         (Bundle.main.preferredLocalizations.first ?? "en") == "en"
@@ -79,6 +104,12 @@ struct CardEditView: View {
                     .autocorrectionDisabled()
                     .focused($focusName)
                     .multilineTextAlignment(.leading)
+
+                if hasDuplicateName {
+                    Text("card.field.name.duplicate")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
 
                 AdaptiveValueRow(titleKey: "card.field.bank") {
                     Picker("", selection: $bankSelection) {
@@ -281,8 +312,8 @@ struct CardEditView: View {
     }
 
     private func save() async {
-        let name = zName.trimmingCharacters(in: .whitespaces)
-        guard !name.isEmpty else { return }
+        let name = trimmedName
+        guard !name.isEmpty && !hasDuplicateName else { return }
         let closingDay = usesAfterDays ? Int16(0) : effectiveClosingDay
         let savingPayDay: Int16 = usesAfterDays ? effectiveDaysLater : payDay
         let savingPayMonth: Int16 = usesAfterDays ? 0 : payMonth

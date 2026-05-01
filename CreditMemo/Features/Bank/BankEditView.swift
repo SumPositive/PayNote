@@ -7,6 +7,7 @@ struct BankEditView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss)      private var dismiss
     @Query(sort: \E8bank.nRow)   private var allBanks: [E8bank]
+    @Query private var banks: [E8bank]
     @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .standard
 
     @State private var zName = ""
@@ -17,7 +18,31 @@ struct BankEditView: View {
     @State private var showPresetDialog = false
 
     private var isNew:   Bool { bank == nil }
-    private var isValid: Bool { !zName.trimmingCharacters(in: .whitespaces).isEmpty }
+    private var trimmedName: String {
+        zName.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    private var hasDuplicateName: Bool {
+        let normalizedInput = trimmedName.folding(
+            options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
+            locale: .current
+        )
+        if normalizedInput.isEmpty {
+            return false
+        }
+        return banks.contains { item in
+            if item.id == bank?.id {
+                return false
+            }
+            let normalizedExisting = item.zName
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .folding(
+                    options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
+                    locale: .current
+                )
+            return normalizedExisting == normalizedInput
+        }
+    }
+    private var isValid: Bool { !trimmedName.isEmpty && !hasDuplicateName }
     private var presetTemplates: [SeedData.BankPreset] { SeedData.bankPresetsForCurrentLocale() }
     private var hasChanges: Bool {
         guard let initialDraft else { return false }
@@ -30,6 +55,12 @@ struct BankEditView: View {
                 TextField("bank.field.name", text: $zName)
                     .autocorrectionDisabled()
                     .focused($focusName)
+
+                if hasDuplicateName {
+                    Text("bank.field.name.duplicate")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
 
                 if isNew {
                     // 口座名をプリセットから引用できるようにする
@@ -102,8 +133,8 @@ struct BankEditView: View {
     }
 
     private func save() {
-        let name = zName.trimmingCharacters(in: .whitespaces)
-        guard !name.isEmpty else { return }
+        let name = trimmedName
+        guard !name.isEmpty && !hasDuplicateName else { return }
         if let bank {
             bank.zName = name
             bank.zNote = zNote
