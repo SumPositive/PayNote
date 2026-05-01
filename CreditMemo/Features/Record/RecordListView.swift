@@ -31,9 +31,13 @@ struct RecordListView: View {
             if userLevel == .beginner {
                 Section {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("record.list.beginner.title")
-                            .font(.subheadline.weight(.semibold))
-                        Text("record.list.beginner.guide")
+                        (
+                            Text("record.list.beginner.guide.leading")
+                            + Text(" ")
+                            + Text(Image(systemName: "line.3.horizontal.decrease"))
+                            + Text(" ")
+                            + Text("record.list.beginner.guide.trailing")
+                        )
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -124,7 +128,9 @@ struct RecordListView: View {
             }
         } label: {
             HStack(spacing: 4) {
-                Image(systemName: "creditcard")
+                // 絞り込みアイコンは細く控えめに見せる
+                Image(systemName: "line.3.horizontal.decrease")
+                    .font(.subheadline.weight(.light))
                 if filterIncomplete {
                     Text("record.filter.incomplete")
                         .font(.subheadline)
