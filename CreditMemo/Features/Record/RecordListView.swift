@@ -269,6 +269,9 @@ struct RecordSummaryRow: View {
     private var statusTextColor: Color {
         isUnpaid ? COLOR_UNPAID : COLOR_PAID
     }
+    private var showsRepeatIcon: Bool {
+        0 < record.nRepeat
+    }
     private var recordLabelText: String {
         // 決済ラベルを優先し、旧データは利用店名へフォールバック
         record.zName.isEmpty ? (record.e4shop?.zName ?? "—") : record.zName
@@ -334,14 +337,22 @@ struct RecordSummaryRow: View {
                     }
                 }
 
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
                     if showsStatus {
                         // 状態アイコンは控えめに表示する
                         Image(systemName: isUnpaid ? "arrow.down.circle.fill" : "arrow.up.circle.fill")
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(statusTextColor)
                             .opacity(0.5)
                             .fixedSize(horizontal: true, vertical: false)
+                        if showsRepeatIcon {
+                            // 未払時だけ、繰り返し予定の印を右へ添える
+                            Image(systemName: "repeat")
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundStyle(.secondary)
+                                .opacity(0.65)
+                                .fixedSize(horizontal: true, vertical: false)
+                        }
                     }
                     Text(cardNameText)
                         .font(.caption)

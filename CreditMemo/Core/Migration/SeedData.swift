@@ -109,8 +109,8 @@ enum SeedData {
         [
             // N日後型プリセット: 住民税の分納など、支払日＝利用日として運用
             CardPreset(
-                name: "利用日払（0日後）",
-                note: "先々の引き落とし日を利用日として登録できます。1回の引き落とし日が決まっている支払を管理できます",
+                name: "当日払",
+                note: "例えば家賃の決済に使用します。引き落とし日を利用日として登録します。繰り返しを「翌月」にすれば自動的に次の決済が作成されます。",
                 closingDay: 0,
                 payDay: 0,
                 payMonth: 0
@@ -141,7 +141,7 @@ enum SeedData {
     private static func westernCardPresets() -> [CardPreset] {
         [
             // N日後型プリセット
-            CardPreset(name: "Same-Day Payment (0 Days)", closingDay: 0, payDay: 0, payMonth: 0),
+            CardPreset(name: "Same-Day Payment", closingDay: 0, payDay: 0, payMonth: 0),
             CardPreset(name: "Net 7", closingDay: 0, payDay: 7, payMonth: 0),
             CardPreset(name: "Net 14", closingDay: 0, payDay: 14, payMonth: 0),
             CardPreset(name: "Net 30", closingDay: 0, payDay: 30, payMonth: 0),
@@ -190,6 +190,8 @@ enum SeedData {
         [
             CategoryPreset(name: "チャージ"),
             CategoryPreset(name: "ETC"),
+            CategoryPreset(name: "注意"),
+            CategoryPreset(name: "重要"),
         ]
     }
 
@@ -198,6 +200,8 @@ enum SeedData {
         [
             CategoryPreset(name: "Top-up"),
             CategoryPreset(name: "Toll"),
+            CategoryPreset(name: "Caution"),
+            CategoryPreset(name: "Important"),
         ]
     }
 }

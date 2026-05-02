@@ -492,7 +492,17 @@ struct RecordEditView: View {
                         // 繰り返しは同じ行のメニューピッカーで選択する
                         Picker("record.field.repeat", selection: $nRepeat) {
                             ForEach(repeatOptions, id: \.value) { option in
-                                Text(LocalizedStringKey(option.label)).tag(option.value)
+                                if option.value == 0 {
+                                    Text(LocalizedStringKey(option.label))
+                                        .tag(option.value)
+                                } else {
+                                    // 繰り返しありの選択肢だけアイコンを付ける
+                                    Label(
+                                        title: { Text(LocalizedStringKey(option.label)) },
+                                        icon: { Image(systemName: "repeat") }
+                                    )
+                                    .tag(option.value)
+                                }
                             }
                         }
                         .pickerStyle(.menu)
