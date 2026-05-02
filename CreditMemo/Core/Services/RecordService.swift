@@ -516,6 +516,11 @@ enum RecordService {
                 if canonical.e7payment == nil {
                     canonical.e7payment = invoice.e7payment
                 }
+                // payment 側の配列から手動除去してから nil 代入する
+                // （recalculateTouchedBilling と同じパターンで逆参照の自動更新を補完）
+                if let oldPayment = invoice.e7payment {
+                    oldPayment.e2invoices.removeAll { $0.id == invoice.id }
+                }
                 clearInvoiceState(invoice)
                 invoice.e7payment = nil
                 context.delete(invoice)
@@ -531,10 +536,14 @@ enum RecordService {
         for payment in payments {
             let key = paymentKey(bankID: payment.e8bank?.id, date: payment.date, isPaid: payment.isPaid)
             if let canonical = canonicalByKey[key] {
+                // ループ中に payment.e2invoices が変化しないよう先にコピーを取る
+                let invoicesToMove = Array(payment.e2invoices)
                 // 同一支払へ invoice を集約する
-                for invoice in payment.e2invoices {
+                for invoice in invoicesToMove {
                     invoice.e7payment = canonical
                 }
+                // cascade 削除で移動済み invoice が巻き込まれないよう配列を明示的に空にする
+                payment.e2invoices.removeAll()
                 clearPaymentState(payment)
                 context.delete(payment)
             } else {
