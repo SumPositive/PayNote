@@ -75,13 +75,10 @@ struct RecordEditView: View {
         return currentDraft() != initialDraft
     }
     private var shouldShowBankPickerRow: Bool {
-        // 編集時は常に表示し、新規時はいったん表示したら保存/終了まで維持する
         if selectedCard == nil {
             return false
         }
-        if !isNew {
-            return true
-        }
+        // 新規・編集とも、いったん表示したら保存/終了まで維持する
         return selectedBankForCard == nil || keepBankPickerRowVisible
     }
     // 済みレコードはコア項目（金額・利用日・決済手段）を固定する
