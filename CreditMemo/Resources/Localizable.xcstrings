@@ -1491,7 +1491,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Discard Legacy Data and Start Fresh"
+            "value" : "Start Fresh"
           }
         },
         "ja" : {
@@ -1509,7 +1509,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Couldn't read legacy app data. Please send it for investigation. Send to: %@"
+            "value" : "Couldn't read old app data. Please send it to: %@"
           }
         },
         "ja" : {
@@ -1527,7 +1527,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Send Legacy Data by Email"
+            "value" : "Send Old Data"
           }
         },
         "ja" : {
@@ -1542,8 +1542,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Thanks for sending. Please wait for the next update."
+            "state" : "translated",
+            "value" : "Thanks. Please wait for the next update."
           }
         },
         "ja" : {
@@ -1593,8 +1593,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "mark it as paid."
+            "state" : "translated",
+            "value" : "mark as paid."
           }
         },
         "ja" : {
@@ -1610,7 +1610,7 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "If needed,"
           }
         },
@@ -1627,8 +1627,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "move it back to unpaid."
+            "state" : "translated",
+            "value" : "move back to unpaid."
           }
         },
         "ja" : {
@@ -2326,8 +2326,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Main label shown in lists. Add a short clue like shop or purpose. You can change it anytime or pick from suggestions below."
+            "state" : "translated",
+            "value" : "This label shows in lists. Add a short clue like a shop or purpose. You can change it later or pick one below."
           }
         },
         "ja" : {
@@ -2360,8 +2360,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pick multiple tags. You can edit or add tags later. Tags unlock tag-based lists and summaries."
+            "state" : "translated",
+            "value" : "You can pick more than one tag. You can change or add tags later. Tags make tag lists and totals available."
           }
         },
         "ja" : {
@@ -2377,8 +2377,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "You can fix saved payments here. Switch the filter to Incomplete to show only payments saved with missing info."
+            "state" : "translated",
+            "value" : "You can fix saved payments here. Switch the filter to Incomplete to show only payments with missing info."
           }
         },
         "ja" : {
@@ -2394,7 +2394,7 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "You can fix saved payments here."
           }
         },
@@ -2411,8 +2411,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Filter to Incomplete to show only payments saved with missing info."
+            "state" : "translated",
+            "value" : "Set the filter to Incomplete to show only payments with missing info."
           }
         },
         "ja" : {
@@ -2445,7 +2445,7 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "History"
           }
         },
@@ -2581,8 +2581,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Auto-copied when PAID."
+            "state" : "translated",
+            "value" : "Adds the next one when paid."
           }
         },
         "ja" : {
@@ -2700,8 +2700,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Delete payment records older than 3 years?\nThis action cannot be undone. Please export all data first."
+            "state" : "translated",
+            "value" : "Delete payment records older than 3 years?\nThis can't be undone. We recommend exporting all data first."
           }
         },
         "ja" : {
@@ -2734,7 +2734,7 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Deleted payment records older than 3 years."
           }
         },
@@ -2819,7 +2819,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "After Saving New Payment"
+            "value" : "After New Payment"
           }
         },
         "ja" : {
@@ -2836,7 +2836,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Clear and Add Another"
+            "value" : "Clear and Continue"
           }
         },
         "ja" : {
@@ -2870,7 +2870,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keep Date and Method"
+            "value" : "Keep Date & Method"
           }
         },
         "ja" : {
@@ -2988,8 +2988,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ad support feature is coming soon."
+            "state" : "translated",
+            "value" : "Ad support is coming soon."
           }
         },
         "ja" : {
@@ -3022,8 +3022,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tip feature is coming soon."
+            "state" : "translated",
+            "value" : "Tips are coming soon."
           }
         },
         "ja" : {
@@ -3192,8 +3192,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Share all records and master data as a JSON file. Use it as a backup too."
+            "state" : "translated",
+            "value" : "Share all records and master data as a JSON file. It's also handy for backups."
           }
         },
         "ja" : {
@@ -3209,8 +3209,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Auto follows iOS Accessibility > Display & Text Size for easier reading."
+            "state" : "translated",
+            "value" : "Auto follows your iOS text size settings."
           }
         },
         "ja" : {
@@ -3227,7 +3227,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Import an exported JSON file. Reading the same file again updates it without duplicates."
+            "value" : "Import an exported JSON file. Importing the same file again updates it without duplicates."
           }
         },
         "ja" : {
@@ -3244,7 +3244,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Too much data may slow things down. 15 years should be fine, but about 3 years fits this app better."
+            "value" : "Too much data may slow things down. Even 15 years should work, but about 3 years fits this app better."
           }
         },
         "ja" : {
@@ -3260,8 +3260,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Beginner shows more help. Expert hides most tips. Switch to Expert when you feel comfortable."
+            "state" : "translated",
+            "value" : "Beginner shows more help. Expert hides most tips. Switch to Expert when you're comfortable."
           }
         },
         "ja" : {
@@ -3329,7 +3329,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Compact Backup"
+            "value" : "Compact"
           }
         },
         "ja" : {
@@ -3346,7 +3346,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Formatted View"
+            "value" : "Pretty"
           }
         },
         "ja" : {
@@ -3363,7 +3363,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "JSON Format"
+            "value" : "JSON Style"
           }
         },
         "ja" : {
@@ -3481,8 +3481,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Debit Total Range"
+            "state" : "translated",
+            "value" : "Debit Range"
           }
         },
         "ja" : {
