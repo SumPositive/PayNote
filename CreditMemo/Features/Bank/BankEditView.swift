@@ -8,7 +8,7 @@ struct BankEditView: View {
     @Environment(\.dismiss)      private var dismiss
     @Query(sort: \E8bank.nRow)   private var allBanks: [E8bank]
     @Query private var banks: [E8bank]
-    @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .standard
+    @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .system
 
     @State private var zName = ""
     @State private var zNote = ""

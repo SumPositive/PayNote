@@ -8,7 +8,7 @@ struct CategoryEditView: View {
     @Environment(\.dismiss)      private var dismiss
     @Query private var categories: [E5category]
     @Query(sort: \E3record.dateUse, order: .reverse) private var records: [E3record]
-    @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .standard
+    @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .system
 
     @State private var zName = ""
     @State private var zNote = ""

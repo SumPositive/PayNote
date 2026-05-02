@@ -9,7 +9,7 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(AppStorageKey.openAddOnActive) private var openAddOnActive = false
-    @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .standard
+    @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .system
     @State private var selectedDestination: AppDestination?
     @State private var addRecordRefreshID = UUID()
     @ScaledMetric(relativeTo: .title) private var emptyIconSize: CGFloat = 64

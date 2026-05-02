@@ -10,7 +10,7 @@ struct NumericKeypadSheet: View {
     let onCommit: (Decimal) -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .standard
+    @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .system
     @State private var digits: String = ""
 
     private var isEmpty: Bool { digits.isEmpty }

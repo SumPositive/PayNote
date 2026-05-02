@@ -33,7 +33,7 @@ struct RecordEditView: View {
 
     @AppStorage(AppStorageKey.afterSaveAction)   private var afterSaveAction: AfterSaveAction = .goBack
     @AppStorage(AppStorageKey.userLevel)         private var userLevel: UserLevel = .beginner
-    @AppStorage(AppStorageKey.fontScale)         private var fontScale: FontScale = .standard
+    @AppStorage(AppStorageKey.fontScale)         private var fontScale: FontScale = .system
 
     @State private var dateUse:    Date     = Date()
     @State private var zName:      String   = ""

@@ -2830,6 +2830,40 @@
         }
       }
     },
+    "settings.afterSave.continuous" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear and Add Another"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クリアして連続入力する"
+          }
+        }
+      }
+    },
+    "settings.afterSave.goBack" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go Back"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前画面に戻る"
+          }
+        }
+      }
+    },
     "settings.afterSave.sameDayCard" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2843,6 +2877,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "同じ日と手段で連続する"
+          }
+        }
+      }
+    },
+    "settings.afterSave.showHistory" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show History"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "決済履歴を表示する"
           }
         }
       }
