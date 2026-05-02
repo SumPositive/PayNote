@@ -47,6 +47,7 @@ struct RecordEditView: View {
 
     @State private var showAmountPad      = false
     @State private var showDatePicker     = false
+    @State private var draftDateUse       = Date()
     @State private var showCardPicker     = false
     @State private var showBankPicker     = false
     @State private var showCategoryPicker = false
@@ -231,18 +232,25 @@ struct RecordEditView: View {
             NavigationStack {
                 Form {
                     DatePicker("record.field.date",
-                               selection: $dateUse,
+                               selection: $draftDateUse,
                                in: APP_MIN_DATE...APP_MAX_DATE,
                                displayedComponents: .date)
                         .datePickerStyle(.graphical)
+                        .onChange(of: draftDateUse) { oldValue, newValue in
+                            let calendar = Calendar.current
+                            let oldDay = calendar.component(.day, from: oldValue)
+                            let newDay = calendar.component(.day, from: newValue)
+
+                            dateUse = newValue
+
+                            // 月送りで同じ日付番号へ移っただけなら閉じない
+                            if oldDay != newDay {
+                                showDatePicker = false
+                            }
+                        }
                 }
                 .navigationTitle("record.field.date")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("button.done") { showDatePicker = false }
-                    }
-                }
             }
             // カレンダーが欠けない最小寄りの固定高さで表示する
             .presentationDetents([.height(540)])
@@ -326,7 +334,11 @@ struct RecordEditView: View {
             .disabled(isCoreFieldsLocked)
 
             // 利用日はセル全体のタップで選択画面を開く
-            Button { showDatePicker = true } label: {
+            Button {
+                // シート表示前に現在値を同期する
+                draftDateUse = dateUse
+                showDatePicker = true
+            } label: {
                 twoLineValueRow(
                     titleKey: "record.field.date",
                     valueText: AppDateFormat.singleLineText(dateUse),
@@ -565,10 +577,12 @@ struct RecordEditView: View {
             keepBankPickerRowVisible = false
             // 新規作成は一括払いのみを許可する
             payType = .lumpSum
+            draftDateUse = dateUse
             return
         }
         guard case .edit(let r) = mode else { return }
         dateUse            = r.dateUse
+        draftDateUse       = r.dateUse
         zName              = r.zName.isEmpty ? (r.e4shop?.zName ?? "") : r.zName
         zNote              = r.zNote
         nAmount            = r.nAmount
