@@ -318,6 +318,8 @@ struct RecordEditView: View {
         }
         .alert("alert.deleteConfirm.title", isPresented: $showDeleteAlert) {
             Button("button.delete", role: .destructive) {
+                // 削除確認から実処理へ進んだことをログへ残す
+                appLog(.debug, "削除確認が確定されました")
                 deleteCurrentRecord()
             }
             Button("button.cancel", role: .cancel) {}
@@ -557,15 +559,19 @@ struct RecordEditView: View {
     @ViewBuilder private var deleteSection: some View {
         if !isNew {
             Section {
-                Button(role: .destructive) {
+                Button {
+                    appLog(.debug, "削除ボタンがタップされました")
                     showDeleteAlert = true
                 } label: {
                     HStack {
                         Spacer()
                         Text("record.delete.action")
+                            .foregroundStyle(.red)
                         Spacer()
                     }
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -614,7 +620,12 @@ struct RecordEditView: View {
             r.e1card = selectedCard; r.e4shop = nil
             r.e5categories = selectedCategories; r.e5category = nil
             context.insert(r)
-            try? RecordService.save(r, context: context)
+            do {
+                try RecordService.save(r, context: context)
+            } catch {
+                appLog(.error, "新規保存に失敗しました: \(error)")
+                return
+            }
             applyCardBankChangeIfNeeded(savedRecord: r, previousBankID: previousBankID)
             switch afterSaveAction {
             case .goBack:
@@ -639,7 +650,12 @@ struct RecordEditView: View {
             r.nAmount = nAmount; r.nPayType = payType.rawValue; r.nRepeat = nRepeat
             r.e1card = selectedCard; r.e4shop = nil
             r.e5categories = selectedCategories; r.e5category = nil
-            try? RecordService.save(r, context: context)
+            do {
+                try RecordService.save(r, context: context)
+            } catch {
+                appLog(.error, "編集保存に失敗しました: \(error)")
+                return
+            }
             applyCardBankChangeIfNeeded(savedRecord: r, previousBankID: previousBankID)
             onSaved?(bankChanged)
             dismiss()
@@ -648,7 +664,15 @@ struct RecordEditView: View {
 
     private func deleteCurrentRecord() {
         guard case .edit(let record) = mode else { return }
-        try? RecordService.delete(record, context: context)
+        appLog(.debug, "削除処理を開始します id=\(record.id)")
+        // 削除失敗を握りつぶさず、成功時だけ画面遷移を進める
+        do {
+            try RecordService.delete(record, context: context)
+            appLog(.info, "削除処理が完了しました id=\(record.id)")
+        } catch {
+            appLog(.error, "削除処理に失敗しました id=\(record.id) error=\(error)")
+            return
+        }
         onSaved?(false)
         dismiss()
     }
@@ -665,7 +689,11 @@ struct RecordEditView: View {
         }
         RecordService.cleanupOrphanBilling(context: context)
         if context.hasChanges {
-            try? context.save()
+            do {
+                try context.save()
+            } catch {
+                appLog(.error, "口座変更後の再保存に失敗しました: \(error)")
+            }
         }
     }
 
