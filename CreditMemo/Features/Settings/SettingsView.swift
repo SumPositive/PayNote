@@ -129,16 +129,18 @@ struct SettingsView: View {
                     }
                     .disabled(isWorking)
 
-                    HStack(spacing: 8) {
-                        Spacer(minLength: 40)
-                        Text("settings.exportFormat.title")
-                            .font(.subheadline)
-                        Picker("settings.exportFormat.title", selection: $exportFormatRaw) {
-                            ForEach(JSONExport.OutputStyle.allCases) { style in
-                                Text(LocalizedStringKey(style.localizedKey)).tag(style.rawValue)
+                    if userLevel != .beginner {
+                        HStack(spacing: 8) {
+                            Spacer(minLength: 40)
+                            Text("settings.exportFormat.title")
+                                .font(.subheadline)
+                            Picker("settings.exportFormat.title", selection: $exportFormatRaw) {
+                                ForEach(JSONExport.OutputStyle.allCases) { style in
+                                    Text(LocalizedStringKey(style.localizedKey)).tag(style.rawValue)
+                                }
                             }
+                            .pickerStyle(.segmented)
                         }
-                        .pickerStyle(.segmented)
                     }
 
                     if userLevel == .beginner {
