@@ -116,26 +116,53 @@ struct SettingsView: View {
             }
 
             Section("settings.panel.share") {
-                Button {
-                    exportJSON()
-                } label: {
-                    Label("settings.jsonExport.all", systemImage: "square.and.arrow.up")
-                }
-                .disabled(isWorking)
+                VStack(alignment: .leading, spacing: 8) {
+                    Button {
+                        exportJSON()
+                    } label: {
+                        Label("settings.jsonExport.all", systemImage: "square.and.arrow.up")
+                    }
+                    .disabled(isWorking)
 
-                Button {
-                    showImportPicker = true
-                } label: {
-                    Label(importButtonText, systemImage: "square.and.arrow.down")
+                    if userLevel == .beginner {
+                        Text("settings.help.export")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
-                .disabled(isWorking)
 
-                Button {
-                    showPruneOldRecordsConfirm = true
-                } label: {
-                    Label(pruneOldRecordsButtonText, systemImage: "trash")
+                VStack(alignment: .leading, spacing: 8) {
+                    Button {
+                        showImportPicker = true
+                    } label: {
+                        Label(importButtonText, systemImage: "square.and.arrow.down")
+                    }
+                    .disabled(isWorking)
+
+                    if userLevel == .beginner {
+                        Text("settings.help.import")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
-                .disabled(isWorking)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Button {
+                        showPruneOldRecordsConfirm = true
+                    } label: {
+                        Label(pruneOldRecordsButtonText, systemImage: "trash")
+                    }
+                    .disabled(isWorking)
+
+                    if userLevel == .beginner {
+                        Text("settings.help.retention")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
             }
 
             Section("settings.panel.support") {

@@ -2025,7 +2025,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "まずは金額を入れて保存してください。決済手段、ラベル、タグはあとから直せます。"
+            "value" : "まずは金額を入れて保存してください。決済手段、ラベルはあとから直せます。"
           }
         }
       }
@@ -2343,14 +2343,14 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Use for monthly/yearly recurring payments. When marked paid, the next one is auto-created."
+            "state" : "translated",
+            "value" : "When this payment is marked paid, a new payment is added automatically for the next month or the selected interval."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "毎月・毎年など定期的な決済に使います。引き落とし済みにすると、次回分を自動で作成します。"
+            "value" : "この決済が引き落とし済みになった時、利用日を翌月などの指定日にした新しい決済を自動追加します。"
           }
         }
       }
@@ -3187,6 +3187,23 @@
         }
       }
     },
+    "settings.help.export" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Share all records and master data as a JSON file. Use it as a backup too."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "入力された全データをファイル(JSON)で共有できます。バックアップのためにも活用してください。"
+          }
+        }
+      }
+    },
     "settings.help.fontScale" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3200,6 +3217,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "自動にすれば、システム設定した文字サイズの拡大などが反映されます"
+          }
+        }
+      }
+    },
+    "settings.help.import" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import an exported JSON file. Reading the same file again updates it without duplicates."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エキスポートしたファイル(JSON)を読み込みます。同じファイルを読み込んでも重複せずに上書きします。"
+          }
+        }
+      }
+    },
+    "settings.help.retention" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too much data may slow things down. 15 years should be fine, but about 3 years fits this app better."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "データが溜まりすぎると動作が遅くなる可能性があります。想定では15年でも大丈夫ですが、このアプリの目的では3年くらいが適切であると考えています。適時整理して3年分くらいでご利用ください。"
           }
         }
       }

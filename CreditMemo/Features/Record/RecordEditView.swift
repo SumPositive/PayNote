@@ -415,61 +415,63 @@ struct RecordEditView: View {
                 }
             }
 
-            // 分類タグ（複数選択）
-            VStack(alignment: .leading, spacing: 6) {
-                Button { showCategoryPicker = true } label: {
-                    ViewThatFits(in: .horizontal) {
-                        // 1行版: タイトルと値が収まる場合
-                        HStack(spacing: 8) {
-                            Text("record.field.category")
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                                .fixedSize(horizontal: true, vertical: false)
-                            Spacer(minLength: 8)
-                            Text(categoryValueText)
-                                // 未選択も含めてタグ値はアクセントカラーで見せる
-                                .foregroundColor(.accentColor)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                                .fixedSize(horizontal: true, vertical: false)
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
-                                .fixedSize(horizontal: true, vertical: false)
-                        }
-
-                        // 2行版: 値は全文を右寄せで表示する
-                        VStack(alignment: .leading, spacing: 2) {
-                            HStack(spacing: 0) {
+            if userLevel != .beginner {
+                // 分類タグ（複数選択）
+                VStack(alignment: .leading, spacing: 6) {
+                    Button { showCategoryPicker = true } label: {
+                        ViewThatFits(in: .horizontal) {
+                            // 1行版: タイトルと値が収まる場合
+                            HStack(spacing: 8) {
                                 Text("record.field.category")
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)
                                     .truncationMode(.tail)
-                                Spacer(minLength: 8)
-                            }
-                            HStack(alignment: .top, spacing: 6) {
+                                    .fixedSize(horizontal: true, vertical: false)
                                 Spacer(minLength: 8)
                                 Text(categoryValueText)
                                     // 未選択も含めてタグ値はアクセントカラーで見せる
                                     .foregroundColor(.accentColor)
-                                    .multilineTextAlignment(.trailing)
-                                    .lineLimit(nil)
-                                    .fixedSize(horizontal: false, vertical: true)
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                                    .fixedSize(horizontal: true, vertical: false)
                                 Image(systemName: "chevron.right")
                                     .font(.caption)
                                     .foregroundStyle(.tertiary)
-                                    .padding(.top, 2)
+                                    .fixedSize(horizontal: true, vertical: false)
+                            }
+
+                            // 2行版: 値は全文を右寄せで表示する
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 0) {
+                                    Text("record.field.category")
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                        .truncationMode(.tail)
+                                    Spacer(minLength: 8)
+                                }
+                                HStack(alignment: .top, spacing: 6) {
+                                    Spacer(minLength: 8)
+                                    Text(categoryValueText)
+                                        // 未選択も含めてタグ値はアクセントカラーで見せる
+                                        .foregroundColor(.accentColor)
+                                        .multilineTextAlignment(.trailing)
+                                        .lineLimit(nil)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundStyle(.tertiary)
+                                        .padding(.top, 2)
+                                }
                             }
                         }
+                        .contentShape(Rectangle())
                     }
-                    .contentShape(Rectangle())
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
 
             // 繰り返し
-            if payType == .lumpSum {
+            if payType == .lumpSum && userLevel != .beginner {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 8) {
                         Text("record.field.repeat")

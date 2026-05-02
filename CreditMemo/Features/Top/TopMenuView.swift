@@ -124,7 +124,9 @@ struct TopMenuView: View {
             Section {
                 row(.cardList, icon: "creditcard", color: .green, key: "top.cardList")
                 row(.bankList, icon: "building.columns", color: .teal, key: "top.bankList")
-                row(.categoryList, icon: "tag", color: .pink, key: "top.categoryList")
+                if userLevel != .beginner {
+                    row(.categoryList, icon: "tag", color: .pink, key: "top.categoryList")
+                }
             }
 
             // アプリ
