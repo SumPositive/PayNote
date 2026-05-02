@@ -735,3 +735,6 @@ JSON形式の前に50ptスペースを入れて右寄せにしたい
 インポート時に closingDay == 0 -> payMonth = 0 を強制したい
 JSON形式の行は、初心者モードでは非表示
 
+GitLocal/azukid.com/docs/jp/sumpo/Packlin　を参考にして、クレメモの取扱説明を、
+GitLocal/azukid.com/docs/jp/sumpo/CreditMemo に作って。/en/ も同時に作って
+
