@@ -20,6 +20,9 @@ struct RecordListView: View {
     @State private var hasMoreRecords = true
     @State private var isLoadingRecords = false
     @State private var editTarget: E3record?
+    /// filterIncomplete / "すべて" の全件ソート済みキャッシュ。
+    /// ページング時に毎回再ソートしないよう、recordPage == 0 のときだけ再構築する。
+    @State private var sortedCache: [E3record] = []
 
     private let pageSize = 100
     private var allFilterText: String {
@@ -154,6 +157,7 @@ struct RecordListView: View {
         recordPage = 0
         hasMoreRecords = true
         records = []
+        sortedCache = []
         loadMoreRecordsIfNeeded()
     }
 
@@ -167,29 +171,31 @@ struct RecordListView: View {
         var descriptor: FetchDescriptor<E3record>
         if filterIncomplete {
             // 情報不足フィルタは「決済手段→決済ラベル→タグ」の優先順が必要なため、
-            // ここだけ全件取得後に優先度で並べ替えてからページングする
-            descriptor = FetchDescriptor<E3record>(
-                sortBy: [SortDescriptor(\E3record.dateUse, order: .reverse)]
-            )
-            let allRecords = (try? context.fetch(descriptor)) ?? []
-            let ranked = allRecords.compactMap { record -> (priority: Int, record: E3record)? in
-                guard let priority = incompletePriority(for: record) else { return nil }
-                return (priority, record)
-            }
-            .sorted { lhs, rhs in
-                if lhs.priority == rhs.priority {
-                    return sortDate(of: rhs.record) < sortDate(of: lhs.record)
+            // 全件取得後に優先度で並べ替える。再ソートを避けるため recordPage == 0 のときのみ再構築。
+            if recordPage == 0 {
+                descriptor = FetchDescriptor<E3record>(
+                    sortBy: [SortDescriptor(\E3record.dateUse, order: .reverse)]
+                )
+                let allRecords = (try? context.fetch(descriptor)) ?? []
+                sortedCache = allRecords.compactMap { record -> (priority: Int, record: E3record)? in
+                    guard let priority = incompletePriority(for: record) else { return nil }
+                    return (priority, record)
                 }
-                return lhs.priority < rhs.priority
+                .sorted { lhs, rhs in
+                    if lhs.priority == rhs.priority {
+                        return sortDate(of: rhs.record) < sortDate(of: lhs.record)
+                    }
+                    return lhs.priority < rhs.priority
+                }
+                .map(\.record)
             }
-
             let start = recordPage * pageSize
-            let end = min(start + pageSize, ranked.count)
+            let end = min(start + pageSize, sortedCache.count)
             if start < end {
-                records.append(contentsOf: ranked[start..<end].map(\.record))
+                records.append(contentsOf: sortedCache[start..<end])
             }
             recordPage += 1
-            hasMoreRecords = end < ranked.count
+            hasMoreRecords = end < sortedCache.count
             return
         } else if let filterCardID = filterCard?.id {
             descriptor = FetchDescriptor<E3record>(
@@ -197,19 +203,23 @@ struct RecordListView: View {
                 sortBy: [SortDescriptor(\E3record.dateUse, order: .reverse)]
             )
         } else {
-            // 「すべて」は利用日ではなく直近入力順で表示する
-            descriptor = FetchDescriptor<E3record>()
-            let allRecords = (try? context.fetch(descriptor)) ?? []
-            let sorted = allRecords.sorted { lhs, rhs in
-                sortDate(of: rhs) < sortDate(of: lhs)
+            // 「すべて」は利用日ではなく直近入力順で表示する。
+            // SwiftData は dateUpdate での直接ソートができないため全件取得後にソート。
+            // 再ソートを避けるため recordPage == 0 のときのみ再構築。
+            if recordPage == 0 {
+                descriptor = FetchDescriptor<E3record>()
+                let allRecords = (try? context.fetch(descriptor)) ?? []
+                sortedCache = allRecords.sorted { lhs, rhs in
+                    sortDate(of: rhs) < sortDate(of: lhs)
+                }
             }
             let start = recordPage * pageSize
-            let end = min(start + pageSize, sorted.count)
+            let end = min(start + pageSize, sortedCache.count)
             if start < end {
-                records.append(contentsOf: sorted[start..<end])
+                records.append(contentsOf: sortedCache[start..<end])
             }
             recordPage += 1
-            hasMoreRecords = end < sorted.count
+            hasMoreRecords = end < sortedCache.count
             return
         }
         descriptor.fetchOffset = recordPage * pageSize
