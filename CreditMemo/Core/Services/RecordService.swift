@@ -654,6 +654,9 @@ enum RecordService {
 
     private static func updateShopStats(_ shop: E4shop?, amount: Decimal, date: Date) {
         guard let shop else { return }
+        // 並び順用の重みとして単純加算する
+        // 正確な累計ではないため、編集差分や削除では減算しない
+        // 将来は順序を保ったままリセットする機能を追加する
         shop.sortDate    = date
         shop.sortCount  += 1
         shop.sortAmount += amount
@@ -662,6 +665,9 @@ enum RecordService {
 
     private static func updateCategoryStats(_ cat: E5tag?, amount: Decimal, date: Date) {
         guard let cat else { return }
+        // 並び順用の重みとして単純加算する
+        // 正確な累計ではないため、編集差分や削除では減算しない
+        // 将来は順序を保ったままリセットする機能を追加する
         cat.sortDate    = date
         cat.sortCount  += 1
         cat.sortAmount += amount

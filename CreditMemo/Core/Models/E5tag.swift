@@ -2,6 +2,10 @@ import Foundation
 import SwiftData
 
 /// タグ（分類）
+///
+/// sortAmount / sortCount は正確な累計値ではなく、並び順の重みとして使う。
+/// 保存や繰り返し追加のたびに単純加算し、編集差分や削除では減算しない。
+/// 値が十分大きくなった将来は、順序を保ったままリセットする機能を追加する前提。
 @Model
 final class E5tag {
     @Attribute(.unique) var id: String

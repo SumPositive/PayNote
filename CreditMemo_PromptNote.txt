@@ -726,3 +726,5 @@ Picker(.menu) の選択値表示を、アクセントカラーにしたい
 
 設定の文字サイズのデフォルトを自動にする
 
+E5categories を E5tags に変更したい、同様にフィールド名も　e5tags に
+JSONインポート時には　tagIDs に categoryIDs も読み込めるようにしたい
