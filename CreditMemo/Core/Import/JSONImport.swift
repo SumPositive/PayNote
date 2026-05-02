@@ -13,6 +13,7 @@ enum JSONImport {
         var exportDate: Date?
         var banks: [BankData]?
         var cards: [CardData]?
+        // 旧JSON互換: 利用店配列は読み込めても現行アプリでは使用しない
         var shops: [ShopData]?
         var tags: [TagData]?
         var categories: [CategoryData]?  // 旧JSON互換キー
@@ -88,6 +89,7 @@ enum JSONImport {
         var payType: Int
         var repeatMonths: Int
         var cardID: String?
+        // 旧JSON互換: 利用店IDは受け取れるが現行アプリでは無視する
         var shopID: String?
         var categoryID: String?    // 旧JSON互換
         var categoryIDs: [String]? // 旧JSON互換
@@ -145,7 +147,6 @@ enum JSONImport {
     struct Result {
         var bankCount: Int
         var cardCount: Int
-        var shopCount: Int
         var tagCount: Int
         var recordCount: Int
         var invoiceStateCount: Int
@@ -169,13 +170,11 @@ enum JSONImport {
 
         let banks = (try? context.fetch(FetchDescriptor<E8bank>())) ?? []
         let cards = (try? context.fetch(FetchDescriptor<E1card>())) ?? []
-        let shops = (try? context.fetch(FetchDescriptor<E4shop>())) ?? []
         let categories = (try? context.fetch(FetchDescriptor<E5tag>())) ?? []
         let records = (try? context.fetch(FetchDescriptor<E3record>())) ?? []
 
         var bankByID = Dictionary(uniqueKeysWithValues: banks.map { ($0.id, $0) })
         var cardByID = Dictionary(uniqueKeysWithValues: cards.map { ($0.id, $0) })
-        var shopByID = Dictionary(uniqueKeysWithValues: shops.map { ($0.id, $0) })
         var tagByID = Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0) })
         var recordByID = Dictionary(uniqueKeysWithValues: records.map { ($0.id, $0) })
 
@@ -183,7 +182,6 @@ enum JSONImport {
         await Task.yield()
         let importedBankCount = importBanks(payload.banks ?? [], bankByID: &bankByID, context: context)
         let importedCardCount = importCards(payload.cards ?? [], cardByID: &cardByID, bankByID: bankByID, context: context)
-        let importedShopCount = importShops(payload.shops ?? [], shopByID: &shopByID, context: context)
         // tags（新）または categories（旧JSON互換）のどちらかを読み込む
         let importedTagCount = importTags(
             payload.tags ?? payload.categories?.map { TagData(id: $0.id, name: $0.name, note: $0.note) } ?? [],
@@ -196,7 +194,6 @@ enum JSONImport {
             payload.records ?? [],
             recordByID: &recordByID,
             cardByID: cardByID,
-            shopByID: shopByID,
             tagByID: tagByID,
             context: context
         )
@@ -223,7 +220,6 @@ enum JSONImport {
         return Result(
             bankCount: importedBankCount,
             cardCount: importedCardCount,
-            shopCount: importedShopCount,
             tagCount: importedTagCount,
             recordCount: importedRecordCount,
             invoiceStateCount: appliedInvoiceStateCount,
@@ -279,26 +275,6 @@ enum JSONImport {
         return items.count
     }
 
-    private static func importShops(
-        _ items: [ShopData],
-        shopByID: inout [String: E4shop],
-        context: ModelContext
-    ) -> Int {
-        for item in items {
-            let shop = shopByID[item.id] ?? {
-                let value = E4shop(id: item.id)
-                context.insert(value)
-                shopByID[item.id] = value
-                return value
-            }()
-            // 利用店マスタの基本項目を上書きする
-            shop.zName = item.name
-            shop.zNote = item.note
-            shop.sortName = item.name
-        }
-        return items.count
-    }
-
     private static func importTags(
         _ items: [TagData],
         tagByID: inout [String: E5tag],
@@ -323,7 +299,6 @@ enum JSONImport {
         _ items: [RecordData],
         recordByID: inout [String: E3record],
         cardByID: [String: E1card],
-        shopByID: [String: E4shop],
         tagByID: [String: E5tag],
         context: ModelContext
     ) -> Int {
@@ -345,7 +320,6 @@ enum JSONImport {
             record.nPayType = Int16(item.payType)
             record.nRepeat = Int16(item.repeatMonths)
             record.e1card = item.cardID.flatMap { cardByID[$0] }
-            record.e4shop = item.shopID.flatMap { shopByID[$0] }
 
             // tagIDs（新）→ categoryIDs（旧互換）→ categoryID（最旧互換）の順で読む
             let resolvedIDs = item.tagIDs ?? item.categoryIDs ?? item.categoryID.map { [$0] } ?? []

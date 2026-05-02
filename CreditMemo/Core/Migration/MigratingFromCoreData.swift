@@ -259,8 +259,6 @@ struct MigratingFromCoreData {
                     mergedCategories.append(categoryFromLegacyShop)
                 }
 
-                // 新仕様では利用店マスタを使わないため、e4shop は未設定にする
-                record.e4shop = nil
                 // 新構造では e5tags に集約する
                 record.e5tags = mergedCategories
                 record.e1card = card

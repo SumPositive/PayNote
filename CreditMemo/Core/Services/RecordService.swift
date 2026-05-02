@@ -20,7 +20,6 @@ enum RecordService {
         // 新規/修正の入力順を更新日時で保持する
         record.dateUpdate = Date()
         rebuildBilling(for: record, context: context)
-        updateShopStats(record.e4shop, amount: record.nAmount, date: record.dateUse)
         let cats = record.e5tags
         for cat in cats { updateCategoryStats(cat, amount: record.nAmount, date: record.dateUse) }
         try commit(context)
@@ -189,12 +188,10 @@ enum RecordService {
             nAnnual:  source.nAnnual
         )
         next.e1card        = source.e1card
-        next.e4shop        = source.e4shop
         next.e5tags  = source.e5tags
         context.insert(next)
         // 繰り返し生成も同じ保存単位に含める
         rebuildBilling(for: next, context: context)
-        updateShopStats(next.e4shop, amount: next.nAmount, date: next.dateUse)
         let cats = next.e5tags
         for cat in cats {
             updateCategoryStats(cat, amount: next.nAmount, date: next.dateUse)
@@ -650,17 +647,6 @@ enum RecordService {
             }
         }
         return records
-    }
-
-    private static func updateShopStats(_ shop: E4shop?, amount: Decimal, date: Date) {
-        guard let shop else { return }
-        // 並び順用の重みとして単純加算する
-        // 正確な累計ではないため、編集差分や削除では減算しない
-        // 将来は順序を保ったままリセットする機能を追加する
-        shop.sortDate    = date
-        shop.sortCount  += 1
-        shop.sortAmount += amount
-        shop.sortName    = shop.zName
     }
 
     private static func updateCategoryStats(_ cat: E5tag?, amount: Decimal, date: Date) {

@@ -8,7 +8,6 @@ enum JSONExport {
         var exportDate: Date
         var banks: [BankData]
         var cards: [CardData]
-        var shops: [ShopData]
         var tags: [TagData]
         var records: [RecordData]
         var invoices: [InvoiceData]
@@ -25,10 +24,6 @@ enum JSONExport {
         var bankID: String?
     }
 
-    struct ShopData: Codable {
-        var id, name, note: String
-    }
-
     struct TagData: Codable {
         var id, name, note: String
     }
@@ -39,7 +34,7 @@ enum JSONExport {
         var dateUpdate: Date?
         var name, note, amount: String
         var payType, repeatMonths: Int
-        var cardID, shopID, categoryID: String?  // categoryID: 旧JSON互換（インポート時のみ使用）
+        var cardID, categoryID: String?  // categoryID: 旧JSON互換（インポート時のみ使用）
         var tagIDs: [String]
     }
 
@@ -63,7 +58,6 @@ enum JSONExport {
     enum Phase {
         case readingBanks
         case readingCards
-        case readingShops
         case readingCategories
         case readingRecords
         case encoding
@@ -76,8 +70,6 @@ enum JSONExport {
                 return isJapanese ? "口座データを読み込み中…" : "Reading accounts..."
             case .readingCards:
                 return isJapanese ? "決済手段を読み込み中…" : "Reading payment methods..."
-            case .readingShops:
-                return isJapanese ? "店舗データを読み込み中…" : "Reading shops..."
             case .readingCategories:
                 return isJapanese ? "タグデータを読み込み中…" : "Reading tags..."
             case .readingRecords:
@@ -99,9 +91,6 @@ enum JSONExport {
         onPhase?(.readingCards)
         await Task.yield()
         let cards      = (try? context.fetch(FetchDescriptor<E1card>(sortBy: [SortDescriptor(\E1card.nRow)]))) ?? []
-        onPhase?(.readingShops)
-        await Task.yield()
-        let shops      = (try? context.fetch(FetchDescriptor<E4shop>())) ?? []
         onPhase?(.readingCategories)
         await Task.yield()
         let tags       = (try? context.fetch(FetchDescriptor<E5tag>())) ?? []
@@ -126,7 +115,6 @@ enum JSONExport {
                 bankID: c.e8bank?.id
             )
         }
-        let shopData     = shops.map      { ShopData(id: $0.id, name: $0.zName, note: $0.zNote) }
         let tagData      = tags.map       { TagData(id: $0.id, name: $0.zName, note: $0.zNote) }
         let recordData   = records.map    { r in
             RecordData(
@@ -139,7 +127,6 @@ enum JSONExport {
                 payType: Int(r.nPayType),
                 repeatMonths: Int(r.nRepeat),
                 cardID: r.e1card?.id,
-                shopID: r.e4shop?.id,
                 categoryID: nil,
                 tagIDs: r.e5tags.map(\.id)
             )
@@ -160,7 +147,6 @@ enum JSONExport {
             exportDate: Date(),
             banks: bankData,
             cards: cardData,
-            shops: shopData,
             tags: tagData,
             records: recordData,
             invoices: invoiceData,

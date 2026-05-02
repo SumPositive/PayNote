@@ -30,7 +30,6 @@ final class E3record {
     var sumNoCheck: Int16  // 未チェック分割数（集計値）
 
     var e1card: E1card?
-    var e4shop: E4shop?
     var e5tags: [E5tag] = []
     @Relationship(deleteRule: .cascade) var e6parts: [E6part]
 

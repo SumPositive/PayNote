@@ -593,7 +593,7 @@ struct RecordEditView: View {
         guard case .edit(let r) = mode else { return }
         dateUse            = r.dateUse
         draftDateUse       = r.dateUse
-        zName              = r.zName.isEmpty ? (r.e4shop?.zName ?? "") : r.zName
+        zName              = r.zName
         zNote              = r.zNote
         nAmount            = r.nAmount
         payType            = r.payType
@@ -615,7 +615,7 @@ struct RecordEditView: View {
             selectedCard?.e8bank = selectedBankForCard
             let r = E3record(dateUse: dateUse, zName: usePoint, zNote: zNote,
                              nAmount: nAmount, nPayType: PayType.lumpSum.rawValue, nRepeat: nRepeat)
-            r.e1card = selectedCard; r.e4shop = nil
+            r.e1card = selectedCard
             r.e5tags = selectedCategories
             context.insert(r)
             do {
@@ -648,7 +648,7 @@ struct RecordEditView: View {
             selectedCard?.e8bank = selectedBankForCard
             r.dateUse = dateUse; r.zName = usePoint; r.zNote = zNote
             r.nAmount = nAmount; r.nPayType = payType.rawValue; r.nRepeat = nRepeat
-            r.e1card = selectedCard; r.e4shop = nil
+            r.e1card = selectedCard
             r.e5tags = selectedCategories
             do {
                 try RecordService.save(r, context: context)

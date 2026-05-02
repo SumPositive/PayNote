@@ -55,9 +55,7 @@ struct SplitPayListView: View {
                 Text("splitPay.footer")
             }
         }
-        .scalableNavigationTitle(verbatim: record.zName.isEmpty
-            ? (record.e4shop?.zName ?? "—")
-            : record.zName)
+        .scalableNavigationTitle(verbatim: record.zName.isEmpty ? "—" : record.zName)
         .navigationBarBackButtonHidden(hasChanges)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {

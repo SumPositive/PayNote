@@ -283,8 +283,8 @@ struct RecordSummaryRow: View {
         0 < record.nRepeat
     }
     private var recordLabelText: String {
-        // 決済ラベルを優先し、旧データは利用店名へフォールバック
-        record.zName.isEmpty ? (record.e4shop?.zName ?? "—") : record.zName
+        // 現行仕様ではラベル未入力時だけダッシュを表示する
+        record.zName.isEmpty ? "—" : record.zName
     }
     private var cardNameText: String {
         record.e1card?.zName ?? NSLocalizedString("payment.card.noSelection", comment: "")
