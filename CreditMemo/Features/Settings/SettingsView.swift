@@ -96,7 +96,10 @@ struct SettingsView: View {
                 HStack(spacing: 8) {
                     Text("settings.paymentWindow")
                         .font(.subheadline)
-                        .fixedSize(horizontal: false, vertical: true)
+                        // 見出しはできるだけ1行を優先する
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                        .layoutPriority(1)
                     Picker("settings.paymentWindow", selection: $paymentWindowDays) {
                         ForEach(Array(1...20), id: \.self) { day in
                             Text(windowLabel(day)).tag(day)
@@ -105,6 +108,8 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.menu)
                     .labelsHidden()
+                    // 選択値は必要幅だけ使い、見出しを圧迫しない
+                    .fixedSize()
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .tint(.accentColor)
                 }
