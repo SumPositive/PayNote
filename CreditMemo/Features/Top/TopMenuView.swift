@@ -70,7 +70,7 @@ struct TopMenuView: View {
             Section {
                 NavigationLink(value: AppDestination.paymentList) {
                     HStack {
-                        Image(systemName: "calendar.badge.clock")
+                        Image(systemName: "list.clipboard")
                             .foregroundStyle(.orange)
                             .frame(width: 28)
                         // タイトルと直近計が1行に収まらない場合は2行目に表示する
