@@ -2,6 +2,13 @@ import SwiftUI
 import SwiftData
 
 struct RecordListView: View {
+    /// フィルターの選択状態を1つの値で扱う
+    private enum FilterOption: Hashable {
+        case all
+        case incomplete
+        case card(String)
+    }
+
     @Query(sort: \E1card.nRow)                       private var cards: [E1card]
     @Environment(\.modelContext) private var context
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
@@ -25,6 +32,33 @@ struct RecordListView: View {
     private var filtered: [E3record] {
         records
     }
+    private var selectedFilterOption: Binding<FilterOption> {
+        Binding(
+            get: {
+                if filterIncomplete {
+                    return .incomplete
+                }
+                if let filterCard {
+                    return .card(filterCard.id)
+                }
+                return .all
+            },
+            set: { newValue in
+                // Pickerの選択値から既存の状態へ戻す
+                switch newValue {
+                case .all:
+                    filterCard = nil
+                    filterIncomplete = false
+                case .incomplete:
+                    filterCard = nil
+                    filterIncomplete = true
+                case .card(let id):
+                    filterCard = cards.first { $0.id == id }
+                    filterIncomplete = false
+                }
+            }
+        )
+    }
 
     var body: some View {
         List {
@@ -45,6 +79,17 @@ struct RecordListView: View {
                     .padding(.vertical, 4)
                 }
             }
+            Section {
+                HStack {
+                    Image(systemName: "line.3.horizontal.decrease")
+                        .font(.subheadline.weight(.light))
+                        .foregroundStyle(.secondary)
+                    Spacer(minLength: 12)
+                    cardFilterPicker
+                }
+                .padding(.vertical, 0)
+            }
+            .listRowInsets(EdgeInsets(top: 2, leading: 16, bottom: 2, trailing: 16))
             ForEach(filtered) { record in
                 Button {
                     editTarget = record
@@ -67,11 +112,6 @@ struct RecordListView: View {
             }
         }
         .scalableNavigationTitle("record.list.title")
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                cardFilterPicker
-            }
-        }
         .sheet(item: $editTarget, onDismiss: {
             // 編集反映後は先頭ページから再読込する
             resetAndLoadRecords()
@@ -95,54 +135,19 @@ struct RecordListView: View {
 
     @ViewBuilder
     private var cardFilterPicker: some View {
-        Menu {
-                Button {
-                    filterCard = nil
-                    filterIncomplete = false
-                } label: {
-                HStack {
-                    Text(allFilterText)
-                    if filterCard == nil && !filterIncomplete { Image(systemName: "checkmark") }
-                }
-            }
-                Button {
-                    filterCard = nil
-                    filterIncomplete = true
-                } label: {
-                HStack {
-                    Text("record.filter.incomplete")
-                    if filterIncomplete { Image(systemName: "checkmark") }
-                }
-            }
-            Divider()
+        Picker(selection: selectedFilterOption) {
+            Text(allFilterText)
+                .tag(FilterOption.all)
+            Text("record.filter.incomplete")
+                .tag(FilterOption.incomplete)
             ForEach(cards) { c in
-                Button {
-                    filterCard = c
-                    filterIncomplete = false
-                } label: {
-                    HStack {
-                        Text(c.zName)
-                        if !filterIncomplete && filterCard?.id == c.id { Image(systemName: "checkmark") }
-                    }
-                }
+                Text(c.zName)
+                    .tag(FilterOption.card(c.id))
             }
         } label: {
-            HStack(spacing: 4) {
-                // 絞り込みアイコンは細く控えめに見せる
-                Image(systemName: "line.3.horizontal.decrease")
-                    .font(.subheadline.weight(.light))
-                if filterIncomplete {
-                    Text("record.filter.incomplete")
-                        .font(.subheadline)
-                } else if let filterCard {
-                    Text(filterCard.zName)
-                        .font(.subheadline)
-                } else {
-                    Text(allFilterText)
-                        .font(.subheadline)
-                }
-            }
+            EmptyView()
         }
+        .pickerStyle(.menu)
     }
 
     private func resetAndLoadRecords() {
