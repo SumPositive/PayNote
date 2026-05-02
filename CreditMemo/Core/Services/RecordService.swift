@@ -29,11 +29,7 @@ enum RecordService {
     // MARK: - Delete
 
     static func delete(_ record: E3record, context: ModelContext) throws {
-        let snapshot = snapshot(for: record)
-        // 請求/支払の孤児掃除が効くよう、先に part を明示的に外す
-        removeExistingParts(of: record, context: context)
-        context.delete(record)
-        cleanupBilling(snapshot: snapshot, context: context)
+        deleteWithoutCommit(record, context: context)
         try commit(context)
     }
 
@@ -54,11 +50,7 @@ enum RecordService {
         }
 
         for record in oldRecords {
-            let snapshot = snapshot(for: record)
-            // 保存前でも invoice/payment の空判定ができるよう、part を先に外す
-            removeExistingParts(of: record, context: context)
-            context.delete(record)
-            cleanupBilling(snapshot: snapshot, context: context)
+            deleteWithoutCommit(record, context: context)
         }
         try commit(context)
     }
@@ -128,14 +120,18 @@ enum RecordService {
         isPaid: Bool,
         context: ModelContext
     ) throws {
+        let records = uniqueRecords(in: invoices)
         for invoice in invoices {
             moveInvoice(invoice, toPaid: isPaid, context: context)
-            if isPaid {
-                for part in invoice.e6parts {
-                    if let record = part.e3record {
-                        _ = insertRepeatRecordIfNeeded(from: record, context: context)
-                    }
-                }
+        }
+
+        if isPaid {
+            for record in records {
+                _ = insertRepeatRecordIfNeeded(from: record, context: context)
+            }
+        } else {
+            for record in records {
+                deleteRepeatRecordIfNeeded(from: record, context: context)
             }
         }
 
@@ -154,12 +150,15 @@ enum RecordService {
         isPaid: Bool,
         context: ModelContext
     ) throws {
+        let records = uniqueRecords(in: [invoice])
         moveInvoice(invoice, toPaid: isPaid, context: context)
         if isPaid {
-            for part in invoice.e6parts {
-                if let record = part.e3record {
-                    _ = insertRepeatRecordIfNeeded(from: record, context: context)
-                }
+            for record in records {
+                _ = insertRepeatRecordIfNeeded(from: record, context: context)
+            }
+        } else {
+            for record in records {
+                deleteRepeatRecordIfNeeded(from: record, context: context)
             }
         }
         if let card = invoice.e1card {
@@ -205,6 +204,26 @@ enum RecordService {
             updateCategoryStats(cat, amount: next.nAmount, date: next.dateUse)
         }
         return next
+    }
+
+    /// 済みから未払へ戻した時、条件一致する自動追加候補を消す
+    private static func deleteRepeatRecordIfNeeded(from source: E3record, context: ModelContext) {
+        guard 0 < source.nRepeat else { return }
+        guard let targetDate = Calendar.current.date(
+            byAdding: .month, value: Int(source.nRepeat), to: source.dateUse
+        ) else { return }
+
+        let descriptor = FetchDescriptor<E3record>(
+            predicate: #Predicate<E3record> { $0.dateUse == targetDate }
+        )
+        let candidates = (try? context.fetch(descriptor)) ?? []
+        guard let generated = candidates.first(where: { candidate in
+            candidate.id != source.id &&
+            candidate.nAmount == source.nAmount &&
+            candidate.nRepeat == source.nRepeat &&
+            candidate.e1card?.id == source.e1card?.id
+        }) else { return }
+        deleteWithoutCommit(generated, context: context)
     }
 
     // MARK: - Rebuild
@@ -592,6 +611,32 @@ enum RecordService {
         if context.hasChanges {
             try context.save()
         }
+    }
+
+    /// 同一操作の中で使う、保存を伴わない削除
+    private static func deleteWithoutCommit(_ record: E3record, context: ModelContext) {
+        let snapshot = snapshot(for: record)
+        // 請求/支払の孤児掃除が効くよう、先に part を明示的に外す
+        removeExistingParts(of: record, context: context)
+        context.delete(record)
+        cleanupBilling(snapshot: snapshot, context: context)
+    }
+
+    /// 請求配下の元レコードを重複なく集める
+    private static func uniqueRecords(in invoices: [E2invoice]) -> [E3record] {
+        var seen: Set<String> = []
+        var records: [E3record] = []
+        for invoice in invoices {
+            for part in invoice.e6parts {
+                guard let record = part.e3record else { continue }
+                if seen.contains(record.id) {
+                    continue
+                }
+                seen.insert(record.id)
+                records.append(record)
+            }
+        }
+        return records
     }
 
     private static func updateShopStats(_ shop: E4shop?, amount: Decimal, date: Date) {
