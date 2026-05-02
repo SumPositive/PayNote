@@ -338,7 +338,7 @@ struct RecordEditView: View {
             Section {
                 BeginnerRecordHelpBlock(
                     // 新規と編集で見出しを切り替える
-                    titleKey: isNew ? "record.beginner.title" : "record.beginner.title.edit",
+                    titleKey: isNew ? "record.beginner.title" : nil,
                     messageKey: isNew ? "record.beginner.guide" : "record.beginner.guide.edit"
                 )
             }
@@ -986,13 +986,16 @@ private struct ConditionalDynamicTypeModifier: ViewModifier {
 }
 
 private struct BeginnerRecordHelpBlock: View {
-    let titleKey: LocalizedStringKey
+    let titleKey: LocalizedStringKey?
     let messageKey: LocalizedStringKey
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(titleKey)
-                .font(.subheadline.weight(.semibold))
+            // 見出しがある場合だけ表示する
+            if let titleKey {
+                Text(titleKey)
+                    .font(.subheadline.weight(.semibold))
+            }
             Text(messageKey)
                 .font(.caption)
                 .foregroundStyle(.secondary)
