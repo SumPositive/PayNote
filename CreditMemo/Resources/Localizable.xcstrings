@@ -1713,7 +1713,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Debits"
+            "value" : "Debit Status"
           }
         },
         "ja" : {
@@ -2445,14 +2445,14 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Payment History"
+            "state" : "needs_review",
+            "value" : "History"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "決済履歴"
+            "value" : "履歴"
           }
         }
       }
@@ -2877,23 +2877,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "同じ日と手段で連続する"
-          }
-        }
-      }
-    },
-    "settings.afterSave.showHistory" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show History"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "決済履歴を表示する"
           }
         }
       }
@@ -4110,14 +4093,14 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "History"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "決済履歴"
+            "value" : "履歴"
           }
         }
       }

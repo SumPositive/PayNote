@@ -940,23 +940,32 @@ struct RecordEditView: View {
 
     /// 類似候補を現在のフォームへ反映する
     private func applySimilarRecord(_ record: E3record) {
-        // 金額・ラベル・メモ・決済手段・タグ・繰り返しをコピーする
-        nAmount = record.nAmount
-        zName = record.zName
-        zNote = record.zNote
-        selectedCard = record.e1card
-        nRepeat = record.nRepeat
+        // 金額と日付は常に維持し、未入力の項目だけ候補から補う
+        if zName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            zName = record.zName
+        }
+        if zNote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            zNote = record.zNote
+        }
+        if selectedCard == nil {
+            selectedCard = record.e1card
+        }
+        if nRepeat == 0 {
+            nRepeat = record.nRepeat
+        }
 
-        // 参照切れを避けるため、現在コンテキストのカテゴリへ張り替える
-        let mappedCategories = record.e5categories.compactMap { cachedCategoryByID[$0.id] }
-        if mappedCategories.isEmpty {
-            if let single = record.e5category, let mapped = cachedCategoryByID[single.id] {
-                selectedCategories = [mapped]
+        if selectedCategories.isEmpty {
+            // 参照切れを避けるため、現在コンテキストのカテゴリへ張り替える
+            let mappedCategories = record.e5categories.compactMap { cachedCategoryByID[$0.id] }
+            if mappedCategories.isEmpty {
+                if let single = record.e5category, let mapped = cachedCategoryByID[single.id] {
+                    selectedCategories = [mapped]
+                } else {
+                    selectedCategories = []
+                }
             } else {
-                selectedCategories = []
+                selectedCategories = mappedCategories
             }
-        } else {
-            selectedCategories = mappedCategories
         }
 
         isUsePointFocused = false
