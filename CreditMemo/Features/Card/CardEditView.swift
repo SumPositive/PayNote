@@ -28,6 +28,7 @@ struct CardEditView: View {
     @State private var isRebuildingBilling = false
     @State private var rebuildCompletedCount = 0
     @State private var rebuildTargetCount = 0
+    @State private var rebuildError: String?
     @FocusState private var focusName: Bool
 
     private var isNew:   Bool { card == nil }
@@ -282,6 +283,14 @@ struct CardEditView: View {
                 .allowsHitTesting(true)
             }
         }
+        .alert("error.title", isPresented: Binding(
+            get: { rebuildError != nil },
+            set: { if !$0 { rebuildError = nil } }
+        )) {
+            Button("button.ok", role: .cancel) {}
+        } message: {
+            Text(rebuildError ?? "")
+        }
     }
 
     // MARK: - Helpers
@@ -355,6 +364,7 @@ struct CardEditView: View {
         dismiss()
     }
 
+    @MainActor
     private func rebuildBillingForCard(_ card: E1card) async {
         // 請求日に影響する変更だけ、その決済手段配下の履歴へ限定して再構築する
         let records = card.e3records.sorted { $0.dateUse < $1.dateUse }
@@ -367,7 +377,17 @@ struct CardEditView: View {
         for record in records {
             batch.append(record)
             if batchSize <= batch.count {
-                rebuildBillingBatch(batch)
+                do {
+                    try rebuildBillingBatch(batch)
+                } catch {
+                    // バッチ保存失敗: context を巻き戻してリビルドを中断する
+                    context.rollback()
+                    isRebuildingBilling = false
+                    rebuildCompletedCount = 0
+                    rebuildTargetCount = 0
+                    rebuildError = error.localizedDescription
+                    return
+                }
                 rebuildCompletedCount += batch.count
                 batch.removeAll(keepingCapacity: true)
                 // 描画更新を挟み、フリーズ感を減らす
@@ -375,7 +395,16 @@ struct CardEditView: View {
             }
         }
         if !batch.isEmpty {
-            rebuildBillingBatch(batch)
+            do {
+                try rebuildBillingBatch(batch)
+            } catch {
+                context.rollback()
+                isRebuildingBilling = false
+                rebuildCompletedCount = 0
+                rebuildTargetCount = 0
+                rebuildError = error.localizedDescription
+                return
+            }
             rebuildCompletedCount += batch.count
         }
         // ぶら下がり請求/支払だけ最後に掃除する
@@ -388,13 +417,13 @@ struct CardEditView: View {
         rebuildTargetCount = 0
     }
 
-    private func rebuildBillingBatch(_ records: [E3record]) {
+    private func rebuildBillingBatch(_ records: [E3record]) throws {
         // バッチ単位で保存し、長時間ブロックを抑える
         for record in records {
             RecordService.rebuildBilling(for: record, context: context)
         }
         if context.hasChanges {
-            try? context.save()
+            try context.save()
         }
     }
 

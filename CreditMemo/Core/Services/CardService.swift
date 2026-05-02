@@ -20,12 +20,8 @@ enum CardService {
 
         // 参照先が消えたあとの孤児データを整理する
         RecordService.cleanupOrphanBilling(context: context)
-        // まず履歴側の nullify を確定させる
-        if context.hasChanges {
-            try context.save()
-        }
 
-        // 履歴側の参照が確定したあとで決済手段本体を削除する
+        // 決済手段本体を削除する（履歴側の変更とまとめて1回で保存）
         context.delete(card)
 
         if context.hasChanges {
