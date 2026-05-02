@@ -53,7 +53,7 @@ enum BillingService {
         let dc  = cal.dateComponents([.year, .month, .day], from: useDate)
         let useDay   = dc.day   ?? 1
         let useMonth = dc.month ?? 1
-        let useYear  = dc.year  ?? 2024
+        let useYear  = dc.year  ?? cal.component(.year, from: useDate)
 
         let closingDayValue: Int = closingDay == 29
             ? daysInMonth(year: useYear, month: useMonth)
@@ -98,8 +98,12 @@ enum BillingService {
         case .lumpSum:
             return [record.nAmount]
         case .twoPayments:
-            let half      = (record.nAmount / 2).roundedAmount()
-            let remainder = record.nAmount - half
+            // まず合計を通貨精度へ正規化する（インポート値など精度超過を防ぐ）
+            // 丸めは .plain（0.5 を絶対値方向へ切り上げる商業丸め）で統一する
+            let total     = record.nAmount.roundedAmount()
+            let half      = (total / 2).roundedAmount()
+            // remainder は合計から half を引くことで必ず total と一致させる
+            let remainder = total - half
             return [half, remainder]
         }
     }
