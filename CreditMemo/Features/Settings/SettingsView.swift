@@ -9,6 +9,7 @@ struct SettingsView: View {
     @AppStorage(AppStorageKey.afterSaveAction)   private var afterSaveAction: AfterSaveAction = .goBack
     @AppStorage(AppStorageKey.openAddOnActive)   private var openAddOnActive = false
     @AppStorage(AppStorageKey.paymentWindowDays) private var paymentWindowDays = 7
+    @AppStorage(AppStorageKey.exportFormat)      private var exportFormatRaw = JSONExport.OutputStyle.compact.rawValue
 
     @Environment(\.modelContext) private var context
 
@@ -21,6 +22,10 @@ struct SettingsView: View {
     @State private var isWorking = false
     @State private var progressMessage = ""
     @State private var progressHint = ""
+
+    private var exportFormat: JSONExport.OutputStyle {
+        JSONExport.OutputStyle(rawValue: exportFormatRaw) ?? .compact
+    }
 
     var body: some View {
         List {
@@ -118,11 +123,23 @@ struct SettingsView: View {
             Section("settings.panel.share") {
                 VStack(alignment: .leading, spacing: 8) {
                     Button {
-                        exportJSON()
+                        exportJSON(style: exportFormat)
                     } label: {
                         Label("settings.jsonExport.all", systemImage: "square.and.arrow.up")
                     }
                     .disabled(isWorking)
+
+                    HStack(spacing: 8) {
+                        Spacer(minLength: 40)
+                        Text("settings.exportFormat.title")
+                            .font(.subheadline)
+                        Picker("settings.exportFormat.title", selection: $exportFormatRaw) {
+                            ForEach(JSONExport.OutputStyle.allCases) { style in
+                                Text(LocalizedStringKey(style.localizedKey)).tag(style.rawValue)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
 
                     if userLevel == .beginner {
                         Text("settings.help.export")
@@ -299,7 +316,7 @@ struct SettingsView: View {
         }
     }
 
-    private func exportJSON() {
+    private func exportJSON(style: JSONExport.OutputStyle) {
         Task { @MainActor in
             isWorking = true
             progressMessage = exportPreparingText
@@ -309,7 +326,7 @@ struct SettingsView: View {
             defer { isWorking = false }
 
             do {
-                let data = try await JSONExport.exportData(context: context) { phase in
+                let data = try await JSONExport.exportData(context: context, style: style) { phase in
                     // 工程の説明文を逐次切り替える
                     progressMessage = phase.message(locale: Locale.current)
                 }

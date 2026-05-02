@@ -3,6 +3,33 @@ import SwiftData
 
 @MainActor
 enum JSONExport {
+    /// JSON の出力形式
+    enum OutputStyle: String, CaseIterable, Identifiable {
+        case compact
+        case pretty
+
+        var id: String { rawValue }
+
+        /// 設定画面で使う文言キー
+        var localizedKey: String {
+            switch self {
+            case .compact:
+                return "settings.exportFormat.compact"
+            case .pretty:
+                return "settings.exportFormat.pretty"
+            }
+        }
+
+        /// JSONEncoder 用の出力設定
+        var formatting: JSONEncoder.OutputFormatting {
+            switch self {
+            case .compact:
+                return [.sortedKeys]
+            case .pretty:
+                return [.prettyPrinted, .sortedKeys]
+            }
+        }
+    }
 
     struct ExportData: Codable {
         var exportDate: Date
@@ -82,6 +109,7 @@ enum JSONExport {
 
     static func exportData(
         context: ModelContext,
+        style: OutputStyle = .compact,
         onPhase: ((Phase) -> Void)? = nil
     ) async throws -> Data {
         // 画面へ進行表示を出せるように、工程ごとに通知する
@@ -154,7 +182,8 @@ enum JSONExport {
         )
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        encoder.outputFormatting     = [.prettyPrinted, .sortedKeys]
+        // 形式選択に応じて最小JSON/整形JSONを切り替える
+        encoder.outputFormatting     = style.formatting
         onPhase?(.encoding)
         await Task.yield()
         return try encoder.encode(data)
