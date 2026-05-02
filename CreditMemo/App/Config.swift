@@ -7,9 +7,9 @@ import Foundation
 func helpDocURL() -> URL {
     let lang = Locale.current.language.languageCode?.identifier ?? "en"
     if lang == "ja" {
-        return URL(string: "https://docs.azukid.com/jp/sumpo/PayNote/PayNote.html")!
+        return URL(string: "https://docs.azukid.com/jp/sumpo/CreditMemo/creditmemo.html")!
     }
-    return URL(string: "https://docs.azukid.com/en/sumpo/PayNote/PayNote.html")!
+    return URL(string: "https://docs.azukid.com/en/sumpo/CreditMemo/creditmemo.html")!
 }
 
 // MARK: - 入力制約
