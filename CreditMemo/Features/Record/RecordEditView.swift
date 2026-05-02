@@ -627,6 +627,8 @@ struct RecordEditView: View {
                 try RecordService.save(r, context: context)
             } catch {
                 appLog(.error, "新規保存に失敗しました: \(error)")
+                // context に乗った未保存の変更（insert・請求再構築・口座変更）を破棄する
+                context.rollback()
                 return
             }
             applyCardBankChangeIfNeeded(savedRecord: r, previousBankID: previousBankID)
@@ -657,6 +659,8 @@ struct RecordEditView: View {
                 try RecordService.save(r, context: context)
             } catch {
                 appLog(.error, "編集保存に失敗しました: \(error)")
+                // context に乗った未保存の変更（フィールド更新・請求再構築・口座変更）を破棄する
+                context.rollback()
                 return
             }
             applyCardBankChangeIfNeeded(savedRecord: r, previousBankID: previousBankID)
