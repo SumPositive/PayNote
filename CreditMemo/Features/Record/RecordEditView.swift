@@ -50,7 +50,6 @@ struct RecordEditView: View {
     @State private var showCardPicker     = false
     @State private var showBankPicker     = false
     @State private var showCategoryPicker = false
-    @State private var showRepeatPicker   = false
     @State private var showDeleteAlert    = false
     @State private var savedBanner        = false
     @State private var hasInitialized     = false
@@ -277,38 +276,6 @@ struct RecordEditView: View {
                 selectedCategories: $selectedCategories
             )
         }
-        .sheet(isPresented: $showRepeatPicker) {
-            NavigationStack {
-                List {
-                    ForEach(repeatOptions, id: \.value) { option in
-                        Button {
-                            nRepeat = option.value
-                            showRepeatPicker = false
-                        } label: {
-                            HStack {
-                                Text(LocalizedStringKey(option.label))
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                                if nRepeat == option.value {
-                                    Image(systemName: "checkmark")
-                                        .foregroundStyle(.blue)
-                                }
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .navigationTitle("record.field.repeat")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("button.cancel") { showRepeatPicker = false }
-                    }
-                }
-            }
-            .presentationDetents([.medium, .large])
-        }
         .overlay(alignment: .top) {
             if savedBanner {
                 SavedBanner()
@@ -501,13 +468,20 @@ struct RecordEditView: View {
             // 繰り返し
             if payType == .lumpSum {
                 VStack(alignment: .leading, spacing: 6) {
-                    Button { showRepeatPicker = true } label: {
-                        twoLineValueRow(
-                            titleKey: "record.field.repeat",
-                            valueText: repeatLabelText
-                        )
+                    HStack(spacing: 8) {
+                        Text("record.field.repeat")
+                            .foregroundStyle(.secondary)
+                        Spacer(minLength: 8)
+                        // 繰り返しは同じ行のメニューピッカーで選択する
+                        Picker("record.field.repeat", selection: $nRepeat) {
+                            ForEach(repeatOptions, id: \.value) { option in
+                                Text(LocalizedStringKey(option.label)).tag(option.value)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                        .tint(.accentColor)
                     }
-                    .buttonStyle(.plain)
                 }
             }
 

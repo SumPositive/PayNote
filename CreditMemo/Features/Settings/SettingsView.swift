@@ -82,72 +82,31 @@ struct SettingsView: View {
                     Text("settings.afterSave")
                         .font(.subheadline)
                         .fixedSize(horizontal: false, vertical: true)
-                    Menu {
+                    Picker("settings.afterSave", selection: $afterSaveAction) {
                         ForEach(AfterSaveAction.allCases) { action in
-                            Button {
-                                afterSaveAction = action
-                            } label: {
-                                if afterSaveAction == action {
-                                    Label(LocalizedStringKey(action.localizedKey), systemImage: "checkmark")
-                                } else {
-                                    Text(LocalizedStringKey(action.localizedKey))
-                                }
-                            }
-                        }
-                    } label: {
-                        // 値は欠けないことを優先し、複数行で右寄せ表示する
-                        HStack(spacing: 4) {
-                            Spacer(minLength: 0)
-                            Text(LocalizedStringKey(afterSaveAction.localizedKey))
-                                .font(.subheadline)
-                                .multilineTextAlignment(.trailing)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Image(systemName: "chevron.down")
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
+                            Text(LocalizedStringKey(action.localizedKey)).tag(action)
                         }
                     }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
                     .frame(maxWidth: .infinity, alignment: .trailing)
+                    .tint(.accentColor)
                 }
 
                 HStack(spacing: 8) {
                     Text("settings.paymentWindow")
                         .font(.subheadline)
                         .fixedSize(horizontal: false, vertical: true)
-                    Menu {
+                    Picker("settings.paymentWindow", selection: $paymentWindowDays) {
                         ForEach(Array(1...20), id: \.self) { day in
-                            Button {
-                                paymentWindowDays = day
-                            } label: {
-                                if paymentWindowDays == day {
-                                    Label(windowLabel(day), systemImage: "checkmark")
-                                } else {
-                                    Text(windowLabel(day))
-                                }
-                            }
+                            Text(windowLabel(day)).tag(day)
                         }
-                        Button {
-                            paymentWindowDays = 30
-                        } label: {
-                            if paymentWindowDays == 30 {
-                                Label(windowLabel(30), systemImage: "checkmark")
-                            } else {
-                                Text(windowLabel(30))
-                            }
-                        }
-                    } label: {
-                        HStack(spacing: 4) {
-                            Spacer(minLength: 0)
-                            Text(windowLabel(paymentWindowDays))
-                                .font(.subheadline)
-                                .multilineTextAlignment(.trailing)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Image(systemName: "chevron.down")
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
-                        }
+                        Text(windowLabel(30)).tag(30)
                     }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
                     .frame(maxWidth: .infinity, alignment: .trailing)
+                    .tint(.accentColor)
                 }
             }
 
