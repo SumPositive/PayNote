@@ -72,16 +72,13 @@ enum RecordService {
         let cards = (try? context.fetch(cardDesc)) ?? []
 
         for invoice in invoices where invoice.e6parts.isEmpty {
-            clearInvoiceState(invoice)
-            invoice.e7payment = nil
-            context.delete(invoice)
+            deleteInvoice(invoice, context: context)
         }
         // 同一の請求キーを1件へ統合する
         invoices = (try? context.fetch(invoiceDesc)) ?? []
         normalizeInvoices(invoices, context: context)
         for payment in payments where payment.e2invoices.isEmpty {
-            clearPaymentState(payment)
-            context.delete(payment)
+            deletePayment(payment, context: context)
         }
         // 同一の支払キーを1件へ統合する
         payments = (try? context.fetch(paymentDesc)) ?? []
@@ -405,12 +402,7 @@ enum RecordService {
         var invoices = (try? context.fetch(invoiceDesc)) ?? []
 
         for invoice in invoices where invoice.e6parts.isEmpty {
-            if let payment = invoice.e7payment {
-                payment.e2invoices.removeAll { $0.id == invoice.id }
-            }
-            clearInvoiceState(invoice)
-            invoice.e7payment = nil
-            context.delete(invoice)
+            deleteInvoice(invoice, context: context)
         }
         invoices = (try? context.fetch(invoiceDesc)) ?? []
         normalizeInvoices(
@@ -435,8 +427,7 @@ enum RecordService {
         for payment in payments {
             let key = paymentKey(bankID: payment.e8bank?.id, date: payment.date, isPaid: payment.e8paid != nil)
             if payment.e2invoices.isEmpty {
-                clearPaymentState(payment)
-                context.delete(payment)
+                deletePayment(payment, context: context)
                 continue
             }
             if paymentKeys.contains(key) {
@@ -518,14 +509,7 @@ enum RecordService {
                 if canonical.e7payment == nil {
                     canonical.e7payment = invoice.e7payment
                 }
-                // payment 側の配列から手動除去してから nil 代入する
-                // （recalculateTouchedBilling と同じパターンで逆参照の自動更新を補完）
-                if let oldPayment = invoice.e7payment {
-                    oldPayment.e2invoices.removeAll { $0.id == invoice.id }
-                }
-                clearInvoiceState(invoice)
-                invoice.e7payment = nil
-                context.delete(invoice)
+                deleteInvoice(invoice, context: context)
             } else {
                 canonicalByKey[key] = invoice
             }
@@ -545,10 +529,7 @@ enum RecordService {
                 for invoice in invoicesToMove {
                     invoice.e7payment = canonical
                 }
-                // cascade 削除で移動済み invoice が巻き込まれないよう配列を明示的に空にする
-                payment.e2invoices.removeAll()
-                clearPaymentState(payment)
-                context.delete(payment)
+                deletePayment(payment, context: context)
             } else {
                 canonicalByKey[key] = payment
             }
@@ -595,6 +576,27 @@ enum RecordService {
         payment.e8unpaid = nil
     }
 
+    /// Invoice を安全に削除する
+    /// - 逆参照 payment.e2invoices を手動で除去してから関係を nil にし、その後削除する
+    /// - cleanupOrphanBilling / recalculateTouchedBilling / normalizeInvoices で統一して使う
+    private static func deleteInvoice(_ invoice: E2invoice, context: ModelContext) {
+        if let payment = invoice.e7payment {
+            payment.e2invoices.removeAll { $0.id == invoice.id }
+        }
+        clearInvoiceState(invoice)
+        invoice.e7payment = nil
+        context.delete(invoice)
+    }
+
+    /// Payment を安全に削除する
+    /// - cascade 削除に invoice が巻き込まれないよう配列を空にしてから削除する
+    /// - cleanupOrphanBilling / recalculateTouchedBilling / normalizePayments / moveInvoice で統一して使う
+    private static func deletePayment(_ payment: E7payment, context: ModelContext) {
+        payment.e2invoices.removeAll()
+        clearPaymentState(payment)
+        context.delete(payment)
+    }
+
     private static func moveInvoice(_ invoice: E2invoice, toPaid: Bool, context: ModelContext) {
         let bank = invoice.e1card?.e8bank
         let oldPayment = invoice.e7payment
@@ -613,8 +615,7 @@ enum RecordService {
         if let oldPayment, oldPayment.id != newPayment.id {
             recalculatePayment(oldPayment)
             if oldPayment.e2invoices.isEmpty {
-                clearPaymentState(oldPayment)
-                context.delete(oldPayment)
+                deletePayment(oldPayment, context: context)
             }
         }
     }
