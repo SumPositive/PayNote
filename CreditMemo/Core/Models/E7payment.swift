@@ -17,7 +17,14 @@ final class E7payment {
     @Relationship(deleteRule: .cascade) var e2invoices: [E2invoice]
 
     var e8bank: E8bank? { e8paid ?? e8unpaid }
-    // 口座未選択でも状態判定できるよう、配下 invoice から求める
+
+    /// 物理フィールド（e8paid != nil）による支払済み判定。
+    /// findOrCreatePayment / normalizePayments など内部処理ではこちらを使う。
+    var isPaidPhysical: Bool { e8paid != nil }
+
+    /// UI 表示用: 口座未選択でも状態を返せるよう配下 invoice から計算する。
+    /// 注意: 口座なし（e8paid/e8unpaid 共に nil）の場合は e8paid != nil と乖離しうる。
+    /// 内部処理での payment キー構築には isPaidPhysical を使うこと。
     var isPaid: Bool {
         !e2invoices.isEmpty && e2invoices.allSatisfy(\.isPaid)
     }

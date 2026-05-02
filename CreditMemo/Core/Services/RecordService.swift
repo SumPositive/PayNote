@@ -336,9 +336,11 @@ enum RecordService {
                     snapshot.touchedCardIDs.insert(cardID)
                 }
                 if let payment = invoice.e7payment {
-                    let key = paymentKey(bankID: payment.e8bank?.id, date: payment.date, isPaid: payment.isPaid)
+                    // findOrCreatePayment と同じ基準（物理フィールド）で判定する
+                    let physicalIsPaid = payment.e8paid != nil
+                    let key = paymentKey(bankID: payment.e8bank?.id, date: payment.date, isPaid: physicalIsPaid)
                     snapshot.touchedPaymentKeys.insert(key)
-                    snapshot.paymentPaidByKey[key] = payment.isPaid
+                    snapshot.paymentPaidByKey[key] = physicalIsPaid
                 }
             }
         }
@@ -424,14 +426,15 @@ enum RecordService {
         payments = (try? context.fetch(paymentDesc)) ?? []
         normalizePayments(
             payments.filter { payment in
-                let key = paymentKey(bankID: payment.e8bank?.id, date: payment.date, isPaid: payment.isPaid)
+                // findOrCreatePayment と同じ基準（物理フィールド）でキーを構築する
+                let key = paymentKey(bankID: payment.e8bank?.id, date: payment.date, isPaid: payment.e8paid != nil)
                 return paymentKeys.contains(key)
             },
             context: context
         )
         payments = (try? context.fetch(paymentDesc)) ?? []
         for payment in payments {
-            let key = paymentKey(bankID: payment.e8bank?.id, date: payment.date, isPaid: payment.isPaid)
+            let key = paymentKey(bankID: payment.e8bank?.id, date: payment.date, isPaid: payment.e8paid != nil)
             if payment.e2invoices.isEmpty {
                 clearPaymentState(payment)
                 context.delete(payment)
@@ -534,7 +537,8 @@ enum RecordService {
         var canonicalByKey: [String: E7payment] = [:]
 
         for payment in payments {
-            let key = paymentKey(bankID: payment.e8bank?.id, date: payment.date, isPaid: payment.isPaid)
+            // findOrCreatePayment と同じ基準（物理フィールド）でキーを構築する
+            let key = paymentKey(bankID: payment.e8bank?.id, date: payment.date, isPaid: payment.e8paid != nil)
             if let canonical = canonicalByKey[key] {
                 // ループ中に payment.e2invoices が変化しないよう先にコピーを取る
                 let invoicesToMove = Array(payment.e2invoices)
