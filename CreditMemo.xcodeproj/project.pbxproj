@@ -10,6 +10,7 @@
 		06CE2D98750923E3AD033A00 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75ECBB517883FD08C1A38217 /* SettingsView.swift */; };
 		0C5D0CEC43DCDEF011811AC5 /* ShopListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42741B6237122AF552033F2F /* ShopListView.swift */; };
 		158FFDA181FBC568F5DBFAAB /* NumericKeypadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB4F7EAA70EE49D23DA0441 /* NumericKeypadView.swift */; };
+		162A501B71D24A57A57D4D01 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162A501A71D24A57A57D4D01 /* Log.swift */; };
 		1698067491EBDA300104D152 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 461FBECA42994F0A6C9BEA37 /* Assets.xcassets */; };
 		1EC1A3B5C7312FB9E9E97EAB /* PayNoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0864042EF421461DBA308F5E /* PayNoteApp.swift */; };
 		2921018F4FA6C238795FFF40 /* RecordEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3733DDAFE02614F6EA7B3BC9 /* RecordEditView.swift */; };
@@ -74,6 +75,7 @@
 /* Begin PBXFileReference section */
 		0864042EF421461DBA308F5E /* PayNoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayNoteApp.swift; sourceTree = "<group>"; };
 		0D0B3C93B518431C1ED8CA94 /* ShopEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopEditView.swift; sourceTree = "<group>"; };
+		162A501A71D24A57A57D4D01 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		17B4815A12B4099B3F8C2A8D /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		20DFCCAE92513D9BAEE0F5EF /* CreditMemoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditMemoUITests.swift; sourceTree = "<group>"; };
 		3733DDAFE02614F6EA7B3BC9 /* RecordEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordEditView.swift; sourceTree = "<group>"; };
@@ -166,6 +168,7 @@
 			isa = PBXGroup;
 			children = (
 				DC4455D455525FC6393BF598 /* AppSettings.swift */,
+				162A501A71D24A57A57D4D01 /* Log.swift */,
 				3B42874CB1DB5D8CE3B44F16 /* Export */,
 				96CCBC9F25154EE889A67910 /* Import */,
 				90304E68B2AC5EBF8D2888C5 /* Extensions */,
@@ -549,6 +552,7 @@
 				4DDA8A04C30B6B86A07A2D68 /* E8bank.swift in Sources */,
 				C736EED40B1697AC698B6F81 /* InvoiceListView.swift in Sources */,
 				CE6F6CD0071085C235BAF6F4 /* JSONExport.swift in Sources */,
+				162A501B71D24A57A57D4D01 /* Log.swift in Sources */,
 				EAB27B9B73D8E77F8F5188FA /* MigratingFromCoreData.swift in Sources */,
 				158FFDA181FBC568F5DBFAAB /* NumericKeypadView.swift in Sources */,
 				1EC1A3B5C7312FB9E9E97EAB /* PayNoteApp.swift in Sources */,
