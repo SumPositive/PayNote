@@ -9,7 +9,7 @@ enum JSONExport {
         var banks: [BankData]
         var cards: [CardData]
         var shops: [ShopData]
-        var categories: [CategoryData]
+        var tags: [TagData]
         var records: [RecordData]
         var invoices: [InvoiceData]
         var payments: [PaymentData]
@@ -29,7 +29,7 @@ enum JSONExport {
         var id, name, note: String
     }
 
-    struct CategoryData: Codable {
+    struct TagData: Codable {
         var id, name, note: String
     }
 
@@ -39,8 +39,8 @@ enum JSONExport {
         var dateUpdate: Date?
         var name, note, amount: String
         var payType, repeatMonths: Int
-        var cardID, shopID, categoryID: String?
-        var categoryIDs: [String]
+        var cardID, shopID, categoryID: String?  // categoryID: 旧JSON互換（インポート時のみ使用）
+        var tagIDs: [String]
     }
 
     struct InvoiceData: Codable {
@@ -104,7 +104,7 @@ enum JSONExport {
         let shops      = (try? context.fetch(FetchDescriptor<E4shop>())) ?? []
         onPhase?(.readingCategories)
         await Task.yield()
-        let categories = (try? context.fetch(FetchDescriptor<E5category>())) ?? []
+        let tags       = (try? context.fetch(FetchDescriptor<E5tag>())) ?? []
         onPhase?(.readingRecords)
         await Task.yield()
         let records    = (try? context.fetch(FetchDescriptor<E3record>(sortBy: [SortDescriptor(\E3record.dateUse)]))) ?? []
@@ -127,7 +127,7 @@ enum JSONExport {
             )
         }
         let shopData     = shops.map      { ShopData(id: $0.id, name: $0.zName, note: $0.zNote) }
-        let categoryData = categories.map { CategoryData(id: $0.id, name: $0.zName, note: $0.zNote) }
+        let tagData      = tags.map       { TagData(id: $0.id, name: $0.zName, note: $0.zNote) }
         let recordData   = records.map    { r in
             RecordData(
                 id: r.id,
@@ -140,8 +140,8 @@ enum JSONExport {
                 repeatMonths: Int(r.nRepeat),
                 cardID: r.e1card?.id,
                 shopID: r.e4shop?.id,
-                categoryID: r.e5category?.id,
-                categoryIDs: r.e5categories.map(\.id)
+                categoryID: nil,
+                tagIDs: r.e5tags.map(\.id)
             )
         }
         let invoiceData  = invoices.map   { i in InvoiceData(id: i.id, date: i.date, isPaid: i.isPaid, cardID: i.e1card?.id, paymentID: i.e7payment?.id) }
@@ -161,7 +161,7 @@ enum JSONExport {
             banks: bankData,
             cards: cardData,
             shops: shopData,
-            categories: categoryData,
+            tags: tagData,
             records: recordData,
             invoices: invoiceData,
             payments: paymentData

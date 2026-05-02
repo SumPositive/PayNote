@@ -31,8 +31,7 @@ final class E3record {
 
     var e1card: E1card?
     var e4shop: E4shop?
-    var e5category: E5category?
-    var e5categories: [E5category] = []
+    var e5tags: [E5tag] = []
     @Relationship(deleteRule: .cascade) var e6parts: [E6part]
 
     var payType: PayType {

@@ -1127,7 +1127,7 @@
         }
       }
     },
-    "category.edit.title.add" : {
+    "tag.edit.title.add" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1144,7 +1144,7 @@
         }
       }
     },
-    "category.edit.title.edit" : {
+    "tag.edit.title.edit" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1161,7 +1161,7 @@
         }
       }
     },
-    "category.field.name" : {
+    "tag.field.name" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1178,7 +1178,7 @@
         }
       }
     },
-    "category.field.name.duplicate" : {
+    "tag.field.name.duplicate" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1195,7 +1195,7 @@
         }
       }
     },
-    "category.list.title" : {
+    "tag.list.title" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2166,7 +2166,7 @@
         }
       }
     },
-    "record.field.category" : {
+    "record.field.tag" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3867,7 +3867,7 @@
         }
       }
     },
-    "top.categoryList" : {
+    "top.tagList" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3935,7 +3935,7 @@
         }
       }
     },
-    "top.help.categoryList" : {
+    "top.help.tagList" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

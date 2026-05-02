@@ -125,7 +125,7 @@ struct TopMenuView: View {
                 row(.cardList, icon: "creditcard", color: .green, key: "top.cardList")
                 row(.bankList, icon: "building.columns", color: .teal, key: "top.bankList")
                 if userLevel != .beginner {
-                    row(.categoryList, icon: "tag", color: .pink, key: "top.categoryList")
+                    row(.tagList, icon: "tag", color: .pink, key: "top.tagList")
                 }
             }
 

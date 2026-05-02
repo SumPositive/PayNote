@@ -14,7 +14,8 @@ enum JSONImport {
         var banks: [BankData]?
         var cards: [CardData]?
         var shops: [ShopData]?
-        var categories: [CategoryData]?
+        var tags: [TagData]?
+        var categories: [CategoryData]?  // 旧JSON互換キー
         var records: [RecordData]?
         var invoices: [InvoiceData]?
         var payments: [PaymentData]?
@@ -64,6 +65,13 @@ enum JSONImport {
         var note: String
     }
 
+    struct TagData: Decodable {
+        var id: String
+        var name: String
+        var note: String
+    }
+
+    // 旧JSON互換: "categories" キーで書き出された JSON の読み込みに使用
     struct CategoryData: Decodable {
         var id: String
         var name: String
@@ -81,8 +89,9 @@ enum JSONImport {
         var repeatMonths: Int
         var cardID: String?
         var shopID: String?
-        var categoryID: String?
-        var categoryIDs: [String]?
+        var categoryID: String?    // 旧JSON互換
+        var categoryIDs: [String]? // 旧JSON互換
+        var tagIDs: [String]?      // 新キー
     }
 
     struct InvoiceData: Decodable {
@@ -137,7 +146,7 @@ enum JSONImport {
         var bankCount: Int
         var cardCount: Int
         var shopCount: Int
-        var categoryCount: Int
+        var tagCount: Int
         var recordCount: Int
         var invoiceStateCount: Int
         var paymentStateCount: Int
@@ -161,13 +170,13 @@ enum JSONImport {
         let banks = (try? context.fetch(FetchDescriptor<E8bank>())) ?? []
         let cards = (try? context.fetch(FetchDescriptor<E1card>())) ?? []
         let shops = (try? context.fetch(FetchDescriptor<E4shop>())) ?? []
-        let categories = (try? context.fetch(FetchDescriptor<E5category>())) ?? []
+        let categories = (try? context.fetch(FetchDescriptor<E5tag>())) ?? []
         let records = (try? context.fetch(FetchDescriptor<E3record>())) ?? []
 
         var bankByID = Dictionary(uniqueKeysWithValues: banks.map { ($0.id, $0) })
         var cardByID = Dictionary(uniqueKeysWithValues: cards.map { ($0.id, $0) })
         var shopByID = Dictionary(uniqueKeysWithValues: shops.map { ($0.id, $0) })
-        var categoryByID = Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0) })
+        var tagByID = Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0) })
         var recordByID = Dictionary(uniqueKeysWithValues: records.map { ($0.id, $0) })
 
         onPhase?(.importingMasters)
@@ -175,7 +184,11 @@ enum JSONImport {
         let importedBankCount = importBanks(payload.banks ?? [], bankByID: &bankByID, context: context)
         let importedCardCount = importCards(payload.cards ?? [], cardByID: &cardByID, bankByID: bankByID, context: context)
         let importedShopCount = importShops(payload.shops ?? [], shopByID: &shopByID, context: context)
-        let importedCategoryCount = importCategories(payload.categories ?? [], categoryByID: &categoryByID, context: context)
+        // tags（新）または categories（旧JSON互換）のどちらかを読み込む
+        let importedTagCount = importTags(
+            payload.tags ?? payload.categories?.map { TagData(id: $0.id, name: $0.name, note: $0.note) } ?? [],
+            tagByID: &tagByID, context: context
+        )
 
         onPhase?(.importingRecords)
         await Task.yield()
@@ -184,7 +197,7 @@ enum JSONImport {
             recordByID: &recordByID,
             cardByID: cardByID,
             shopByID: shopByID,
-            categoryByID: categoryByID,
+            tagByID: tagByID,
             context: context
         )
 
@@ -211,7 +224,7 @@ enum JSONImport {
             bankCount: importedBankCount,
             cardCount: importedCardCount,
             shopCount: importedShopCount,
-            categoryCount: importedCategoryCount,
+            tagCount: importedTagCount,
             recordCount: importedRecordCount,
             invoiceStateCount: appliedInvoiceStateCount,
             paymentStateCount: appliedPaymentStateCount
@@ -286,22 +299,22 @@ enum JSONImport {
         return items.count
     }
 
-    private static func importCategories(
-        _ items: [CategoryData],
-        categoryByID: inout [String: E5category],
+    private static func importTags(
+        _ items: [TagData],
+        tagByID: inout [String: E5tag],
         context: ModelContext
     ) -> Int {
         for item in items {
-            let category = categoryByID[item.id] ?? {
-                let value = E5category(id: item.id)
+            let tag = tagByID[item.id] ?? {
+                let value = E5tag(id: item.id)
                 context.insert(value)
-                categoryByID[item.id] = value
+                tagByID[item.id] = value
                 return value
             }()
             // タグマスタの基本項目を上書きする
-            category.zName = item.name
-            category.zNote = item.note
-            category.sortName = item.name
+            tag.zName = item.name
+            tag.zNote = item.note
+            tag.sortName = item.name
         }
         return items.count
     }
@@ -311,7 +324,7 @@ enum JSONImport {
         recordByID: inout [String: E3record],
         cardByID: [String: E1card],
         shopByID: [String: E4shop],
-        categoryByID: [String: E5category],
+        tagByID: [String: E5tag],
         context: ModelContext
     ) -> Int {
         for item in items {
@@ -334,16 +347,9 @@ enum JSONImport {
             record.e1card = item.cardID.flatMap { cardByID[$0] }
             record.e4shop = item.shopID.flatMap { shopByID[$0] }
 
-            let multiCategories = (item.categoryIDs ?? [])
-                .compactMap { categoryByID[$0] }
-            if multiCategories.isEmpty {
-                let singleCategory = item.categoryID.flatMap { categoryByID[$0] }
-                record.e5category = singleCategory
-                record.e5categories = singleCategory.map { [$0] } ?? []
-            } else {
-                record.e5category = multiCategories.first
-                record.e5categories = multiCategories
-            }
+            // tagIDs（新）→ categoryIDs（旧互換）→ categoryID（最旧互換）の順で読む
+            let resolvedIDs = item.tagIDs ?? item.categoryIDs ?? item.categoryID.map { [$0] } ?? []
+            record.e5tags = resolvedIDs.compactMap { tagByID[$0] }
         }
         return items.count
     }

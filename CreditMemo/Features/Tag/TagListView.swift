@@ -1,38 +1,38 @@
 import SwiftUI
 import SwiftData
 
-struct CategoryListView: View {
-    @Query private var categories: [E5category]
+struct TagListView: View {
+    @Query private var tags: [E5tag]
     @Environment(\.modelContext) private var context
 
-    @AppStorage(AppStorageKey.categorySortMode) private var sortModeRaw: Int = SortMode.recent.rawValue
+    @AppStorage(AppStorageKey.tagSortMode) private var sortModeRaw: Int = SortMode.recent.rawValue
 
-    @State private var showAddSheet    = false
-    @State private var deleteTarget: E5category?
+    @State private var showAddSheet  = false
+    @State private var deleteTarget: E5tag?
     @State private var showDeleteAlert = false
 
     private var sortMode: SortMode { SortMode(rawValue: sortModeRaw) ?? .recent }
 
-    private var sorted: [E5category] {
+    private var sorted: [E5tag] {
         switch sortMode {
-        case .recent: categories.sorted { ($0.sortDate ?? .distantPast) > ($1.sortDate ?? .distantPast) }
-        case .count:  categories.sorted { $0.sortCount > $1.sortCount }
-        case .amount: categories.sorted { $0.sortAmount > $1.sortAmount }
-        case .name:   categories.sorted { $0.zName.localizedStandardCompare($1.zName) == .orderedAscending }
+        case .recent: tags.sorted { ($0.sortDate ?? .distantPast) > ($1.sortDate ?? .distantPast) }
+        case .count:  tags.sorted { $0.sortCount > $1.sortCount }
+        case .amount: tags.sorted { $0.sortAmount > $1.sortAmount }
+        case .name:   tags.sorted { $0.zName.localizedStandardCompare($1.zName) == .orderedAscending }
         }
     }
 
     var body: some View {
         List {
-            ForEach(sorted) { cat in
+            ForEach(sorted) { tag in
                 NavigationLink {
-                    CategoryEditView(category: cat)
+                    TagEditView(tag: tag)
                 } label: {
-                    CategoryRow(cat: cat, sortMode: sortMode)
+                    TagRow(tag: tag, sortMode: sortMode)
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     Button(role: .destructive) {
-                        deleteTarget    = cat
+                        deleteTarget    = tag
                         showDeleteAlert = true
                     } label: {
                         Label("button.delete", systemImage: "trash")
@@ -40,7 +40,7 @@ struct CategoryListView: View {
                 }
             }
         }
-        .scalableNavigationTitle("category.list.title")
+        .scalableNavigationTitle("tag.list.title")
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Menu {
@@ -58,11 +58,11 @@ struct CategoryListView: View {
             }
         }
         .sheet(isPresented: $showAddSheet) {
-            NavigationStack { CategoryEditView(category: nil) }
+            NavigationStack { TagEditView(tag: nil) }
         }
         .alert("alert.deleteConfirm.title", isPresented: $showDeleteAlert) {
             Button("button.delete", role: .destructive) {
-                if let c = deleteTarget { context.delete(c) }
+                if let t = deleteTarget { context.delete(t) }
             }
             Button("button.cancel", role: .cancel) {}
         } message: {
@@ -71,30 +71,30 @@ struct CategoryListView: View {
     }
 }
 
-private struct CategoryRow: View {
-    let cat: E5category
+private struct TagRow: View {
+    let tag: E5tag
     let sortMode: SortMode
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(cat.zName)
-                if !cat.zNote.isEmpty {
-                    Text(cat.zNote).font(.caption).foregroundStyle(.secondary)
+                Text(tag.zName)
+                if !tag.zNote.isEmpty {
+                    Text(tag.zNote).font(.caption).foregroundStyle(.secondary)
                 }
             }
             Spacer()
             switch sortMode {
             case .recent:
-                if let d = cat.sortDate {
+                if let d = tag.sortDate {
                     Text(AppDateFormat.singleLineText(d))
                         .font(.caption).foregroundStyle(.secondary)
                 }
             case .count:
-                Text("\(cat.sortCount)")
+                Text("\(tag.sortCount)")
                     .font(.caption).foregroundStyle(.secondary)
             case .amount:
-                Text(cat.sortAmount.currencyString())
+                Text(tag.sortAmount.currencyString())
                     .font(.caption).foregroundStyle(.secondary)
             case .name:
                 EmptyView()

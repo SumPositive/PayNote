@@ -21,7 +21,7 @@
 		4531D860CDB0FDF2415DD421 /* View+ScalableTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F95EF3EE0B184C7D267B8C7 /* View+ScalableTitle.swift */; };
 		490F8CBDAB27E8464CFC9A8C /* SplitPayListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97721A91036068831138735 /* SplitPayListView.swift */; };
 		4DDA8A04C30B6B86A07A2D68 /* E8bank.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BB8D0C0693934C17D3BFD21 /* E8bank.swift */; };
-		5036733F44C02792D514BAB7 /* CategoryEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA39225A4BEA8B500F61FB /* CategoryEditView.swift */; };
+		5036733F44C02792D514BAB7 /* TagEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA39225A4BEA8B500F61FB /* TagEditView.swift */; };
 		5D16A4DE800A0F01FA95B662 /* CreditMemoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DFCCAE92513D9BAEE0F5EF /* CreditMemoUITests.swift */; };
 		6B4262F22E9995FB3C3A513D /* DatabaseErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F79355C01D775C52E0C34B50 /* DatabaseErrorView.swift */; };
 		6B962B07029AF00C00FE072C /* SeedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2EF718F50B10EEBAAAD6744 /* SeedData.swift */; };
@@ -33,7 +33,7 @@
 		8F1D97C3807BF181B8479E3F /* BankEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6BD6FE99BF6A7C356696B78 /* BankEditView.swift */; };
 		922C371C4A3318E289CAE2CC /* E7payment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 612855EBB9B4EB1E945C4A9B /* E7payment.swift */; };
 		96CCBCA225154F1A89A67910 /* JSONImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96CCBCA125154F1A89A67910 /* JSONImport.swift */; };
-		97904E45ADF1EC29C7E38838 /* E5category.swift in Sources */ = {isa = PBXBuildFile; fileRef = 483AE700971FC77C80FC3F80 /* E5category.swift */; };
+		97904E45ADF1EC29C7E38838 /* E5tag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 483AE700971FC77C80FC3F80 /* E5tag.swift */; };
 		9A3B7A6325157E0900A17A10 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 9A3B7A6225157E0900A17A10 /* InfoPlist.strings */; };
 		9F7EEA2ED3C1E874D846C206 /* E4shop.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFD7FE48DBF9525FAED5826E /* E4shop.swift */; };
 		A0404AAC7B624DF4CFF89D0F /* CardEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DEDEA1DAEEECF14059168DE /* CardEditView.swift */; };
@@ -48,7 +48,7 @@
 		C736EED40B1697AC698B6F81 /* InvoiceListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D1DFD33101839DCB19540E9 /* InvoiceListView.swift */; };
 		CE6F6CD0071085C235BAF6F4 /* JSONExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF2D12827F146761299C2F9A /* JSONExport.swift */; };
 		CF1F84FA70C44A2D7D0E4EDC /* PaymentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C888720898CBE1F720F736D /* PaymentListView.swift */; };
-		D6B0F13565CDEA74CD5B1F1A /* CategoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF360467FE5A56224B12660D /* CategoryListView.swift */; };
+		D6B0F13565CDEA74CD5B1F1A /* TagListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF360467FE5A56224B12660D /* TagListView.swift */; };
 		D893C9EB004052F1DE062529 /* BankListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA97A05301775C91BB87CE6F /* BankListView.swift */; };
 		E50EB7AD3DB2F3CE6CAA6AAF /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0AA3264A9D08B8C5FAFC814 /* Config.swift */; };
 		EAB27B9B73D8E77F8F5188FA /* MigratingFromCoreData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F8B9D625DF47B15550D7F4C /* MigratingFromCoreData.swift */; };
@@ -85,8 +85,8 @@
 		3DEDEA1DAEEECF14059168DE /* CardEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardEditView.swift; sourceTree = "<group>"; };
 		42741B6237122AF552033F2F /* ShopListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopListView.swift; sourceTree = "<group>"; };
 		461FBECA42994F0A6C9BEA37 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		483AE700971FC77C80FC3F80 /* E5category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E5category.swift; sourceTree = "<group>"; };
-		4DDA39225A4BEA8B500F61FB /* CategoryEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryEditView.swift; sourceTree = "<group>"; };
+		483AE700971FC77C80FC3F80 /* E5tag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E5tag.swift; sourceTree = "<group>"; };
+		4DDA39225A4BEA8B500F61FB /* TagEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagEditView.swift; sourceTree = "<group>"; };
 		4F8B9D625DF47B15550D7F4C /* MigratingFromCoreData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigratingFromCoreData.swift; sourceTree = "<group>"; };
 		54F1C265A3492ECBB8AD9300 /* CreditMemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CreditMemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		54FAFE5527EBAC98E2BDA7D3 /* CreditMemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CreditMemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -115,7 +115,7 @@
 		DC4455D455525FC6393BF598 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		DD3E0B05EFD2A02C14116685 /* E2invoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E2invoice.swift; sourceTree = "<group>"; };
 		DF2D12827F146761299C2F9A /* JSONExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONExport.swift; sourceTree = "<group>"; };
-		DF360467FE5A56224B12660D /* CategoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryListView.swift; sourceTree = "<group>"; };
+		DF360467FE5A56224B12660D /* TagListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagListView.swift; sourceTree = "<group>"; };
 		F1A1B2E2DD399FBFF391B2C5 /* RecordService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordService.swift; sourceTree = "<group>"; };
 		F2EF718F50B10EEBAAAD6744 /* SeedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedData.swift; sourceTree = "<group>"; };
 		F79355C01D775C52E0C34B50 /* DatabaseErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseErrorView.swift; sourceTree = "<group>"; };
@@ -195,13 +195,13 @@
 			path = CreditMemoTests;
 			sourceTree = "<group>";
 		};
-		59B013F3C2F9BA8CC57E74FE /* Category */ = {
+		59B013F3C2F9BA8CC57E74FE /* Tag */ = {
 			isa = PBXGroup;
 			children = (
-				4DDA39225A4BEA8B500F61FB /* CategoryEditView.swift */,
-				DF360467FE5A56224B12660D /* CategoryListView.swift */,
+				4DDA39225A4BEA8B500F61FB /* TagEditView.swift */,
+				DF360467FE5A56224B12660D /* TagListView.swift */,
 			);
-			path = Category;
+			path = Tag;
 			sourceTree = "<group>";
 		};
 		5A22B2E658FAC59FAAD59E9E /* App */ = {
@@ -232,7 +232,7 @@
 				C54AACA7AAE085AE4CB2B941 /* About */,
 				EF08BD039DE4DBD5B8EE006E /* Bank */,
 				FC1045DC8A93EB88BF887D76 /* Card */,
-				59B013F3C2F9BA8CC57E74FE /* Category */,
+				59B013F3C2F9BA8CC57E74FE /* Tag */,
 				D5D98004F567FD2F6622C09F /* Invoice */,
 				F88E0AEE21FFC5BDE73AC127 /* Payment */,
 				F270635D2AD34DEB3E6D4717 /* Record */,
@@ -251,7 +251,7 @@
 				DD3E0B05EFD2A02C14116685 /* E2invoice.swift */,
 				DAE1EBD323E4A4A04B0805E8 /* E3record.swift */,
 				FFD7FE48DBF9525FAED5826E /* E4shop.swift */,
-				483AE700971FC77C80FC3F80 /* E5category.swift */,
+				483AE700971FC77C80FC3F80 /* E5tag.swift */,
 				ACAC65A5428E245996B921E5 /* E6part.swift */,
 				612855EBB9B4EB1E945C4A9B /* E7payment.swift */,
 				3BB8D0C0693934C17D3BFD21 /* E8bank.swift */,
@@ -342,7 +342,6 @@
 				6E92F55323A0B7797C36B8E0 /* Features */,
 				5B155411FD36B0C994228CCD /* Resources */,
 			);
-			name = CreditMemo;
 			path = CreditMemo;
 			sourceTree = "<group>";
 		};
@@ -535,8 +534,8 @@
 				38369114251626D100E7A110 /* BankService.swift in Sources */,
 				A0404AAC7B624DF4CFF89D0F /* CardEditView.swift in Sources */,
 				8D7B62BEB4834D19FE03E024 /* CardListView.swift in Sources */,
-				5036733F44C02792D514BAB7 /* CategoryEditView.swift in Sources */,
-				D6B0F13565CDEA74CD5B1F1A /* CategoryListView.swift in Sources */,
+				5036733F44C02792D514BAB7 /* TagEditView.swift in Sources */,
+				D6B0F13565CDEA74CD5B1F1A /* TagListView.swift in Sources */,
 				E50EB7AD3DB2F3CE6CAA6AAF /* Config.swift in Sources */,
 				BFCEF1FB428B8D2A4C030C0A /* ContentView.swift in Sources */,
 				6B4262F22E9995FB3C3A513D /* DatabaseErrorView.swift in Sources */,
@@ -545,7 +544,7 @@
 				75ED1A20592772802B0825F5 /* E2invoice.swift in Sources */,
 				B8D5318A0375ABEC58B26E95 /* E3record.swift in Sources */,
 				9F7EEA2ED3C1E874D846C206 /* E4shop.swift in Sources */,
-				97904E45ADF1EC29C7E38838 /* E5category.swift in Sources */,
+				97904E45ADF1EC29C7E38838 /* E5tag.swift in Sources */,
 				A8E87A041745100730C43504 /* E6part.swift in Sources */,
 				922C371C4A3318E289CAE2CC /* E7payment.swift in Sources */,
 				96CCBCA225154F1A89A67910 /* JSONImport.swift in Sources */,

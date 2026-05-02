@@ -51,11 +51,11 @@ enum SeedData {
 
         // タグプリセット
         for p in categoryPresets {
-            let category = E5category(
+            let tag = E5tag(
                 zName: p.name,
                 sortName: p.name
             )
-            context.insert(category)
+            context.insert(tag)
         }
         try? context.save()
     }

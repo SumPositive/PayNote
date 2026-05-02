@@ -21,7 +21,7 @@ enum RecordService {
         record.dateUpdate = Date()
         rebuildBilling(for: record, context: context)
         updateShopStats(record.e4shop, amount: record.nAmount, date: record.dateUse)
-        let cats = record.e5categories.isEmpty ? [record.e5category].compactMap { $0 } : record.e5categories
+        let cats = record.e5tags
         for cat in cats { updateCategoryStats(cat, amount: record.nAmount, date: record.dateUse) }
         try commit(context)
     }
@@ -193,13 +193,12 @@ enum RecordService {
         )
         next.e1card        = source.e1card
         next.e4shop        = source.e4shop
-        next.e5category    = source.e5category
-        next.e5categories  = source.e5categories
+        next.e5tags  = source.e5tags
         context.insert(next)
         // 繰り返し生成も同じ保存単位に含める
         rebuildBilling(for: next, context: context)
         updateShopStats(next.e4shop, amount: next.nAmount, date: next.dateUse)
-        let cats = next.e5categories.isEmpty ? [next.e5category].compactMap { $0 } : next.e5categories
+        let cats = next.e5tags
         for cat in cats {
             updateCategoryStats(cat, amount: next.nAmount, date: next.dateUse)
         }
@@ -660,7 +659,7 @@ enum RecordService {
         shop.sortName    = shop.zName
     }
 
-    private static func updateCategoryStats(_ cat: E5category?, amount: Decimal, date: Date) {
+    private static func updateCategoryStats(_ cat: E5tag?, amount: Decimal, date: Date) {
         guard let cat else { return }
         cat.sortDate    = date
         cat.sortCount  += 1

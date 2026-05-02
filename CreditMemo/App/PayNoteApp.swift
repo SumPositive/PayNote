@@ -26,7 +26,7 @@ struct CreditMemoApp: App {
     init() {
         let schema = Schema([
             E1card.self, E2invoice.self, E3record.self,
-            E4shop.self, E5category.self, E6part.self,
+            E4shop.self, E5tag.self, E6part.self,
             E7payment.self, E8bank.self,
         ])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)

@@ -1,9 +1,9 @@
 import Foundation
 import SwiftData
 
-/// 分類（カテゴリ）
+/// タグ（分類）
 @Model
-final class E5category {
+final class E5tag {
     @Attribute(.unique) var id: String
     var zName: String
     var zNote: String
@@ -12,8 +12,7 @@ final class E5category {
     var sortDate: Date?
     var sortName: String
 
-    @Relationship(deleteRule: .nullify) var e3records: [E3record]
-    @Relationship(deleteRule: .nullify, inverse: \E3record.e5categories) var e3recordsMulti: [E3record] = []
+    @Relationship(deleteRule: .nullify, inverse: \E3record.e5tags) var e3records: [E3record] = []
 
     init(
         id: String = UUID().uuidString,

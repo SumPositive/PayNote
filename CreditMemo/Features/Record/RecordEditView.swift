@@ -29,7 +29,7 @@ struct RecordEditView: View {
     @Query(sort: \E1card.nRow)    private var cards: [E1card]
     @Query(sort: \E8bank.nRow)    private var banks: [E8bank]
     @Query(sort: \E3record.dateUse, order: .reverse) private var pastRecords: [E3record]
-    @Query                        private var categories: [E5category]
+    @Query                        private var categories: [E5tag]
 
     @AppStorage(AppStorageKey.afterSaveAction)   private var afterSaveAction: AfterSaveAction = .goBack
     @AppStorage(AppStorageKey.userLevel)         private var userLevel: UserLevel = .beginner
@@ -43,7 +43,7 @@ struct RecordEditView: View {
     @State private var nRepeat:    Int16    = 0
     @State private var selectedCard:        E1card?
     @State private var selectedBankForCard: E8bank?
-    @State private var selectedCategories:  [E5category] = []
+    @State private var selectedCategories:  [E5tag] = []
 
     @State private var showAmountPad      = false
     @State private var showDatePicker     = false
@@ -59,7 +59,7 @@ struct RecordEditView: View {
     // 過去データ由来の候補をキャッシュして、毎描画の再計算を避ける
     @State private var cachedUsePointCandidates: [String] = []
     @State private var cachedLatestCard: E1card?
-    @State private var cachedCategoryByID: [String: E5category] = [:]
+    @State private var cachedCategoryByID: [String: E5tag] = [:]
     @State private var scrollToTopRequest = 0
     @FocusState private var isUsePointFocused: Bool
     private let similarRecordLimit = 10
@@ -277,7 +277,7 @@ struct RecordEditView: View {
         }
         .sheet(isPresented: $showCategoryPicker) {
             CategoryMultiPickerSheet(
-                title: "record.field.category",
+                title: "record.field.tag",
                 selectedCategories: $selectedCategories
             )
         }
@@ -434,7 +434,7 @@ struct RecordEditView: View {
                         ViewThatFits(in: .horizontal) {
                             // 1行版: タイトルと値が収まる場合
                             HStack(spacing: 8) {
-                                Text("record.field.category")
+                                Text("record.field.tag")
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)
                                     .truncationMode(.tail)
@@ -455,7 +455,7 @@ struct RecordEditView: View {
                             // 2行版: 値は全文を右寄せで表示する
                             VStack(alignment: .leading, spacing: 2) {
                                 HStack(spacing: 0) {
-                                    Text("record.field.category")
+                                    Text("record.field.tag")
                                         .foregroundStyle(.secondary)
                                         .lineLimit(1)
                                         .truncationMode(.tail)
@@ -601,12 +601,7 @@ struct RecordEditView: View {
         selectedCard       = r.e1card
         selectedBankForCard = r.e1card?.e8bank
         keepBankPickerRowVisible = selectedCard != nil && selectedBankForCard == nil
-        // 新しい多対多を優先、なければ旧フィールドから移行
-        if !r.e5categories.isEmpty {
-            selectedCategories = r.e5categories
-        } else if let cat = r.e5category {
-            selectedCategories = [cat]
-        }
+        selectedCategories = r.e5tags
     }
 
     private func save() {
@@ -621,7 +616,7 @@ struct RecordEditView: View {
             let r = E3record(dateUse: dateUse, zName: usePoint, zNote: zNote,
                              nAmount: nAmount, nPayType: PayType.lumpSum.rawValue, nRepeat: nRepeat)
             r.e1card = selectedCard; r.e4shop = nil
-            r.e5categories = selectedCategories; r.e5category = nil
+            r.e5tags = selectedCategories
             context.insert(r)
             do {
                 try RecordService.save(r, context: context)
@@ -654,7 +649,7 @@ struct RecordEditView: View {
             r.dateUse = dateUse; r.zName = usePoint; r.zNote = zNote
             r.nAmount = nAmount; r.nPayType = payType.rawValue; r.nRepeat = nRepeat
             r.e1card = selectedCard; r.e4shop = nil
-            r.e5categories = selectedCategories; r.e5category = nil
+            r.e5tags = selectedCategories
             do {
                 try RecordService.save(r, context: context)
             } catch {
@@ -925,7 +920,7 @@ struct RecordEditView: View {
         // 分類タグ重複を軽く優遇する
         let selectedCategoryIDs = Set(selectedCategories.map(\.id))
         if !selectedCategoryIDs.isEmpty {
-            let overlapCount = record.e5categories.filter { selectedCategoryIDs.contains($0.id) }.count
+            let overlapCount = record.e5tags.filter { selectedCategoryIDs.contains($0.id) }.count
             if 0 < overlapCount {
                 score += min(overlapCount * 6, 18)
             }
@@ -970,16 +965,7 @@ struct RecordEditView: View {
 
         if selectedCategories.isEmpty {
             // 参照切れを避けるため、現在コンテキストのカテゴリへ張り替える
-            let mappedCategories = record.e5categories.compactMap { cachedCategoryByID[$0.id] }
-            if mappedCategories.isEmpty {
-                if let single = record.e5category, let mapped = cachedCategoryByID[single.id] {
-                    selectedCategories = [mapped]
-                } else {
-                    selectedCategories = []
-                }
-            } else {
-                selectedCategories = mappedCategories
-            }
+            selectedCategories = record.e5tags.compactMap { cachedCategoryByID[$0.id] }
         }
 
         isUsePointFocused = false
@@ -1054,8 +1040,8 @@ private struct SimilarRecordRow: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                if !record.e5categories.isEmpty {
-                    Text(record.e5categories.map(\.zName).joined(separator: " / "))
+                if !record.e5tags.isEmpty {
+                    Text(record.e5tags.map(\.zName).joined(separator: " / "))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -1150,16 +1136,16 @@ private struct PickerSheet<T: Identifiable>: View where T.ID: Equatable {
 
 private struct CategoryMultiPickerSheet: View {
     let title: LocalizedStringKey
-    @Binding var selectedCategories: [E5category]
+    @Binding var selectedCategories: [E5tag]
 
     @Environment(\.dismiss) private var dismiss
-    @Query private var allCategories: [E5category]
+    @Query private var allCategories: [E5tag]
     @State private var showAdd = false
-    @State private var displayOrder: [E5category] = []
+    @State private var displayOrder: [E5tag] = []
     @State private var itemIDsBeforeAdd: [String] = []
     private let maxSelection = 10
 
-    private var items: [E5category] {
+    private var items: [E5tag] {
         allCategories.sorted { $0.zName.localizedStandardCompare($1.zName) == .orderedAscending }
     }
 
@@ -1207,7 +1193,7 @@ private struct CategoryMultiPickerSheet: View {
                 // 追加直後は新規タグを最上段へ寄せ、同時に選択状態を反映する
                 rebuildDisplayOrder(prioritizedIDs: newItems.map(\.id))
             }) {
-                NavigationStack { CategoryEditView() }
+                NavigationStack { TagEditView() }
             }
         }
         .presentationDetents([.medium, .large])
@@ -1220,7 +1206,7 @@ private struct CategoryMultiPickerSheet: View {
         }
     }
 
-    private func toggleItem(_ item: E5category) {
+    private func toggleItem(_ item: E5tag) {
         if let idx = selectedCategories.firstIndex(where: { $0.id == item.id }) {
             selectedCategories.remove(at: idx)
         } else {

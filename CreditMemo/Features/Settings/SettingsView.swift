@@ -446,7 +446,7 @@ struct SettingsView: View {
             口座 \(result.bankCount) 件
             決済手段 \(result.cardCount) 件
             利用店 \(result.shopCount) 件
-            タグ \(result.categoryCount) 件
+            タグ \(result.tagCount) 件
             決済履歴 \(result.recordCount) 件
             請求状態反映 \(result.invoiceStateCount) 件
             支払状態反映 \(result.paymentStateCount) 件
@@ -456,7 +456,7 @@ struct SettingsView: View {
         Accounts: \(result.bankCount)
         Payment Methods: \(result.cardCount)
         Shops: \(result.shopCount)
-        Tags: \(result.categoryCount)
+        Tags: \(result.tagCount)
         Records: \(result.recordCount)
         Invoice States: \(result.invoiceStateCount)
         Payment States: \(result.paymentStateCount)

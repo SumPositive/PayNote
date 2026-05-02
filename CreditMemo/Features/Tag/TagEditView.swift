@@ -1,12 +1,12 @@
 import SwiftUI
 import SwiftData
 
-struct CategoryEditView: View {
-    var category: E5category?
+struct TagEditView: View {
+    var tag: E5tag?
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss)      private var dismiss
-    @Query private var categories: [E5category]
+    @Query private var allTags: [E5tag]
     @Query(sort: \E3record.dateUse, order: .reverse) private var records: [E3record]
     @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .system
 
@@ -19,7 +19,7 @@ struct CategoryEditView: View {
     // 関連明細の表示用キャッシュ（毎描画での全件走査を避ける）
     @State private var linkedRecordsCache: [E3record] = []
 
-    private var isNew:   Bool { category == nil }
+    private var isNew:   Bool { tag == nil }
     private var trimmedName: String {
         zName.trimmingCharacters(in: .whitespacesAndNewlines)
     }
@@ -28,8 +28,8 @@ struct CategoryEditView: View {
         if normalizedInput.isEmpty {
             return false
         }
-        return categories.contains { item in
-            if item.id == category?.id {
+        return allTags.contains { item in
+            if item.id == tag?.id {
                 return false
             }
             let normalizedExisting = item.zName
@@ -48,11 +48,11 @@ struct CategoryEditView: View {
     var body: some View {
         Form {
             Section {
-                TextField("category.field.name", text: $zName)
+                TextField("tag.field.name", text: $zName)
                     .autocorrectionDisabled()
                     .focused($focusName)
                 if hasDuplicateName {
-                    Text("category.field.name.duplicate")
+                    Text("tag.field.name.duplicate")
                         .font(.caption)
                         .foregroundStyle(.red)
                 }
@@ -93,7 +93,7 @@ struct CategoryEditView: View {
                 }
             }
         }
-        .navigationTitle(isNew ? "category.edit.title.add" : "category.edit.title.edit")
+        .navigationTitle(isNew ? "tag.edit.title.add" : "tag.edit.title.edit")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(isNew || hasChanges)
         .toolbar {
@@ -133,22 +133,22 @@ struct CategoryEditView: View {
     }
 
     private func loadFields() {
-        guard let category else { return }
-        zName = category.zName
-        zNote = category.zNote
+        guard let tag else { return }
+        zName = tag.zName
+        zNote = tag.zNote
     }
 
     private func save() {
         let name = trimmedName
         guard !name.isEmpty && !hasDuplicateName else { return }
-        if let category {
-            category.zName    = name
-            category.zNote    = zNote
-            category.sortName = name
+        if let tag {
+            tag.zName    = name
+            tag.zNote    = zNote
+            tag.sortName = name
         } else {
             // 新規追加は「最近順」で先頭表示されるよう作成日時を入れる
-            let c = E5category(zName: name, zNote: zNote, sortDate: Date(), sortName: name)
-            context.insert(c)
+            let t = E5tag(zName: name, zNote: zNote, sortDate: Date(), sortName: name)
+            context.insert(t)
         }
         // 新規追加直後に一覧側へ確実に反映させる
         try? context.save()
@@ -171,16 +171,12 @@ struct CategoryEditView: View {
     }
 
     private func refreshLinkedRecordsCache() {
-        guard let category else {
+        guard let tag else {
             linkedRecordsCache = []
             return
         }
         linkedRecordsCache = records.filter { record in
-            // 新しい複数タグを優先し、旧単体タグも対象に含める
-            if record.e5categories.contains(where: { $0.id == category.id }) {
-                return true
-            }
-            return record.e5category?.id == category.id
+            record.e5tags.contains(where: { $0.id == tag.id })
         }
     }
 

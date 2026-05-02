@@ -236,7 +236,7 @@ struct RecordListView: View {
         if label.isEmpty {
             return 1
         }
-        if record.e5categories.isEmpty && record.e5category == nil {
+        if record.e5tags.isEmpty {
             return 2
         }
         return nil
@@ -280,13 +280,7 @@ struct RecordSummaryRow: View {
         record.e1card?.zName ?? NSLocalizedString("payment.card.noSelection", comment: "")
     }
     private var categoryNames: [String] {
-        if !record.e5categories.isEmpty {
-            return record.e5categories.map(\.zName)
-        }
-        if let singleCategory = record.e5category {
-            return [singleCategory.zName]
-        }
-        return []
+        record.e5tags.map(\.zName)
     }
 
     var body: some View {

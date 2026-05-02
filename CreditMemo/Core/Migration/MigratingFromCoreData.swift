@@ -162,12 +162,12 @@ struct MigratingFromCoreData {
             bankMap[b.objectID] = bank
         }
 
-        // E5category（旧分類タグ）
-        var catMap: [NSManagedObjectID: E5category] = [:]
+        // E5tag（旧分類タグ）
+        var catMap: [NSManagedObjectID: E5tag] = [:]
         // 同名カテゴリへ統合するためのインデックス（利用店→分類タグ変換で利用）
-        var categoryByName: [String: E5category] = [:]
+        var categoryByName: [String: E5tag] = [:]
         for c in dto.categories {
-            let cat = E5category(
+            let cat = E5tag(
                 zName: c.zName, zNote: c.zNote,
                 sortAmount: c.sortAmount, sortCount: c.sortCount,
                 sortDate: c.sortDate, sortName: c.sortName
@@ -178,7 +178,7 @@ struct MigratingFromCoreData {
         }
 
         // 旧利用店は分類タグへ変換する（同名タグがあれば統合、なければ新規作成）
-        var shopToCategoryMap: [NSManagedObjectID: E5category] = [:]
+        var shopToCategoryMap: [NSManagedObjectID: E5tag] = [:]
         for s in dto.shops {
             if let existing = categoryByName[s.zName] {
                 // 同名タグがある場合は統計値を統合する
@@ -197,7 +197,7 @@ struct MigratingFromCoreData {
             }
 
             // 同名タグがない場合は新規タグとして作成する
-            let converted = E5category(
+            let converted = E5tag(
                 zName: s.zName,
                 zNote: s.zNote,
                 sortAmount: s.sortAmount,
@@ -250,7 +250,7 @@ struct MigratingFromCoreData {
                 let categoryFromLegacyShop = r.shopObjectID.flatMap { shopToCategoryMap[$0] }
 
                 // 旧 利用店/分類タグ を新 分類タグ配列へ統合する
-                var mergedCategories: [E5category] = []
+                var mergedCategories: [E5tag] = []
                 if let categoryFromLegacyTag {
                     mergedCategories.append(categoryFromLegacyTag)
                 }
@@ -261,9 +261,8 @@ struct MigratingFromCoreData {
 
                 // 新仕様では利用店マスタを使わないため、e4shop は未設定にする
                 record.e4shop = nil
-                // 互換性のため単体参照にも先頭タグを残し、正は複数タグ側へ集約する
-                record.e5category = mergedCategories.first
-                record.e5categories = mergedCategories
+                // 新構造では e5tags に集約する
+                record.e5tags = mergedCategories
                 record.e1card = card
                 context.insert(record)
                 recordMap[r.objectID] = record
@@ -382,7 +381,7 @@ private struct LegacyCoreDataStack {
                 .map { LegacyBankDTO(mo: $0) }
             result.shops = try self.fetch("E4shop")
                 .map { LegacyShopDTO(mo: $0) }
-            result.categories = try self.fetch("E5category")
+            result.categories = try self.fetch("E5tag")
                 .map { LegacyCategoryDTO(mo: $0) }
             result.cards = try self.fetchCards()
             return result
@@ -409,7 +408,7 @@ private struct LegacyCoreDataStack {
         let e2 = entity("E2invoice")
         let e3 = entity("E3record")
         let e4 = entity("E4shop")
-        let e5 = entity("E5category")
+        let e5 = entity("E5tag")
         let e6 = entity("E6part")
         let e7 = entity("E7payment")
         let e8 = entity("E8bank")

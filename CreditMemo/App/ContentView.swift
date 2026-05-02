@@ -119,7 +119,7 @@ enum AppDestination: Hashable, CaseIterable {
     case cardList
     case bankList
     case shopList
-    case categoryList
+    case tagList
     case settings
     case about
 }
@@ -141,7 +141,7 @@ struct AppDestinationView: View {
         case .cardList:      CardListView()
         case .bankList:      BankListView()
         case .shopList:      ShopListView()
-        case .categoryList:  CategoryListView()
+        case .tagList:       TagListView()
         case .settings:      SettingsView()
         case .about:         AboutView()
         }

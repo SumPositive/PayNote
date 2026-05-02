@@ -7,7 +7,7 @@ enum AppStorageKey {
     static let appearanceMode    = "setting.appearanceMode"
     static let fontScale         = "setting.fontScale"
     static let shopSortMode      = "setting.shopSortMode"
-    static let categorySortMode  = "setting.categorySortMode"
+    static let tagSortMode       = "setting.tagSortMode"
     static let afterSaveAction   = "setting.afterSaveAction"
     static let openAddOnActive   = "setting.openAddOnActive"
     static let paymentWindowDays = "setting.paymentWindowDays"
