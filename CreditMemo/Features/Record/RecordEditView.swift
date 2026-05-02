@@ -332,7 +332,9 @@ struct RecordEditView: View {
             Button { showDatePicker = true } label: {
                 twoLineValueRow(
                     titleKey: "record.field.date",
-                    valueText: AppDateFormat.singleLineText(dateUse)
+                    valueText: AppDateFormat.singleLineText(dateUse),
+                    // 選択値はアクセントカラーで見せる
+                    valueColor: .accentColor
                 )
             }
             .buttonStyle(.plain)
@@ -343,7 +345,8 @@ struct RecordEditView: View {
                 twoLineValueRow(
                     titleKey: "record.field.card",
                     valueText: selectedCard?.zName ?? NSLocalizedString("label.noSelection", comment: ""),
-                    valueColor: selectedCard == nil ? .secondary : .primary
+                    // 未選択も含めて選択値はアクセントカラーで見せる
+                    valueColor: .accentColor
                 )
             }
             .buttonStyle(.plain)
@@ -355,7 +358,8 @@ struct RecordEditView: View {
                     twoLineValueRow(
                         titleKey: "card.field.bank",
                         valueText: selectedBankForCard?.zName ?? NSLocalizedString("label.noSelection", comment: ""),
-                        valueColor: selectedBankForCard == nil ? .secondary : .primary
+                        // 未選択も含めて口座値はアクセントカラーで見せる
+                        valueColor: .accentColor
                     )
                 }
                 .buttonStyle(.plain)
@@ -427,7 +431,8 @@ struct RecordEditView: View {
                                 .fixedSize(horizontal: true, vertical: false)
                             Spacer(minLength: 8)
                             Text(categoryValueText)
-                                .foregroundStyle(selectedCategories.isEmpty ? .secondary : .primary)
+                                // 未選択も含めてタグ値はアクセントカラーで見せる
+                                .foregroundColor(.accentColor)
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                                 .fixedSize(horizontal: true, vertical: false)
@@ -449,7 +454,8 @@ struct RecordEditView: View {
                             HStack(alignment: .top, spacing: 6) {
                                 Spacer(minLength: 8)
                                 Text(categoryValueText)
-                                    .foregroundStyle(selectedCategories.isEmpty ? .secondary : .primary)
+                                    // 未選択も含めてタグ値はアクセントカラーで見せる
+                                    .foregroundColor(.accentColor)
                                     .multilineTextAlignment(.trailing)
                                     .lineLimit(nil)
                                     .fixedSize(horizontal: false, vertical: true)
