@@ -260,6 +260,8 @@ enum JSONImport {
                 cardByID[item.id] = value
                 return value
             }()
+            // 締日0はN日後型なので、支払月は常に0へ正規化する
+            let normalizedPayMonth = item.closingDay == 0 ? 0 : item.payMonth
             // 決済手段マスタの基本項目を上書きする
             card.zName = item.name
             card.zNote = item.note
@@ -267,7 +269,7 @@ enum JSONImport {
             // closingDay/payDay/payMonth の正規形だけを読む
             card.nClosingDay = Int16(item.closingDay)
             card.nPayDay = Int16(item.payDay)
-            card.nPayMonth = Int16(item.payMonth)
+            card.nPayMonth = Int16(normalizedPayMonth)
             card.nBonus1 = Int16(item.bonus1)
             card.nBonus2 = Int16(item.bonus2)
             card.e8bank = item.bankID.flatMap { bankByID[$0] }
