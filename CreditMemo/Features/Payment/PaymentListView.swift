@@ -64,11 +64,11 @@ struct PaymentListView: View {
                         ScrollView {
                             LazyVStack(spacing: 16) {
                                 if userLevel == .beginner {
-                                    VStack(alignment: .leading, spacing: 6) {
+                                    VStack(alignment: .leading, spacing: 4) {
                                         Text("payment.beginner.title")
                                             .font(.subheadline.weight(.semibold))
                                         // 文とアイコン付き操作文を分け、改行位置を自然にする
-                                        VStack(alignment: .leading, spacing: 2) {
+                                        VStack(alignment: .leading, spacing: 1) {
                                             Text("payment.beginner.line1")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
@@ -82,7 +82,7 @@ struct PaymentListView: View {
                                                     .fixedSize(horizontal: false, vertical: true)
                                             }
                                         }
-                                        VStack(alignment: .leading, spacing: 2) {
+                                        VStack(alignment: .leading, spacing: 1) {
                                             Text("payment.beginner.line3")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
@@ -375,8 +375,7 @@ private struct PaymentStatusPill: View {
         // セル内の先頭は大きい矢印アイコンのみで状態を示す
         Image(systemName: isPaid ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
             .font(.title2.weight(.bold))
-            .symbolRenderingMode(.hierarchical)
-        .foregroundStyle(isPaid ? COLOR_PAID : COLOR_UNPAID)
+            .foregroundStyle(isPaid ? COLOR_PAID : COLOR_UNPAID)
             .frame(minWidth: 34, minHeight: 34)
     }
 }

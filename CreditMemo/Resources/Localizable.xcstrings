@@ -1246,6 +1246,74 @@
         }
       }
     },
+    "invoice.beginner.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adjust Each Item"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "明細ごとに調整"
+          }
+        }
+      }
+    },
+    "invoice.beginner.line1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark only this item as paid."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この明細だけを済みにできます。"
+          }
+        }
+      }
+    },
+    "invoice.beginner.line2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move only this item back to unpaid."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この明細だけを未払に戻せます。"
+          }
+        }
+      }
+    },
+    "invoice.beginner.line3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A payment near the cutoff may miss it and be debited next time. In that case, adjust each item here."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "締切に近い決済が間に合わずに次回に引き落とされるケースがあります。そのような時、ここで明細の単位で調整してください。"
+          }
+        }
+      }
+    },
     "invoice.status.paid" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1509,13 +1577,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "mark as paid."
+            "value" : "mark this account as paid."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "引き落とし済みにします"
+            "value" : "この口座を引き落とし済みにします。"
           }
         }
       }
@@ -1543,13 +1611,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "move back to unpaid."
+            "value" : "move this account back to unpaid."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "未払に戻せます"
+            "value" : "この口座を未払に戻します。"
           }
         }
       }

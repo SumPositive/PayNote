@@ -163,6 +163,76 @@ enum RecordService {
         try commit(context)
     }
 
+    /// 明細1件だけを反対状態の請求へ移す
+    static func setPartPaid(
+        _ part: E6part,
+        isPaid: Bool,
+        context: ModelContext
+    ) throws {
+        guard let sourceInvoice = part.e2invoice else {
+            return
+        }
+        if sourceInvoice.isPaid == isPaid {
+            return
+        }
+        // 決済手段未選択は未払のまま保持する
+        if sourceInvoice.e1card == nil && isPaid {
+            return
+        }
+
+        let card = sourceInvoice.e1card
+        let bank = card?.e8bank
+        let date = sourceInvoice.date
+        let oldPayment = sourceInvoice.e7payment
+
+        let targetInvoice = findOrCreateInvoice(
+            card: card,
+            date: date,
+            fallbackInvoicePaid: isPaid,
+            fallbackPaymentPaid: isPaid,
+            context: context
+        )
+        setInvoiceState(targetInvoice, isPaid: isPaid)
+
+        let targetPayment = findOrCreatePayment(
+            date: date,
+            bank: bank,
+            isPaid: isPaid,
+            fallbackPaid: isPaid,
+            context: context
+        )
+        targetInvoice.e7payment = targetPayment
+        setPaymentBank(targetPayment, bank: bank, isPaid: bank == nil ? false : isPaid)
+
+        // 明細を移し替える
+        sourceInvoice.e6parts.removeAll { $0.id == part.id }
+        part.e2invoice = targetInvoice
+
+        recalculatePayment(targetPayment)
+        if let oldPayment {
+            recalculatePayment(oldPayment)
+        }
+        if sourceInvoice.e6parts.isEmpty {
+            deleteInvoice(sourceInvoice, context: context)
+        }
+        if let oldPayment, oldPayment.e2invoices.isEmpty {
+            deletePayment(oldPayment, context: context)
+        }
+        if let card {
+            recalculateCard(card)
+        }
+
+        if let record = part.e3record {
+            if isPaid {
+                _ = insertRepeatRecordIfNeeded(from: record, context: context)
+            } else {
+                deleteRepeatRecordIfNeeded(from: record, context: context)
+            }
+        }
+
+        try commit(context)
+    }
+
     // MARK: - Repeat (nRepeat > 0: mark-paid でコピーを翌月以降に作成)
 
     private static func insertRepeatRecordIfNeeded(from source: E3record, context: ModelContext) -> E3record? {

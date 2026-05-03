@@ -6,6 +6,7 @@ struct InvoiceListView: View {
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
     @State private var editRecord: E3record?
 
     private var includesUnselectedCard: Bool {
@@ -28,29 +29,76 @@ struct InvoiceListView: View {
         return "\(dateText)\(suffix)"
     }
 
-    private var invoices: [E2invoice] {
-        payment.e2invoices.sorted {
-            ($0.e1card?.zName ?? "") < ($1.e1card?.zName ?? "")
+    private var cardSections: [InvoiceCardSection] {
+        var buckets: [String: [E6part]] = [:]
+        var titles: [String: String] = [:]
+
+        for invoice in payment.e2invoices {
+            let cardID = invoice.e1card?.id ?? "__no_card__"
+            let cardName = invoice.e1card?.zName ?? "—"
+            titles[cardID] = cardName
+            buckets[cardID, default: []].append(contentsOf: invoice.e6parts)
         }
+
+        return buckets.map { cardID, parts in
+            InvoiceCardSection(
+                id: cardID,
+                title: titles[cardID] ?? "—",
+                parts: parts.sorted { lhs, rhs in
+                    let leftDate = lhs.e3record?.dateUse ?? .distantPast
+                    let rightDate = rhs.e3record?.dateUse ?? .distantPast
+                    if leftDate == rightDate {
+                        return lhs.nPartNo < rhs.nPartNo
+                    }
+                    return leftDate < rightDate
+                }
+            )
+        }
+        .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
     }
 
     var body: some View {
         List {
+            if userLevel == .beginner {
+                Section {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("invoice.beginner.title")
+                            .font(.subheadline.weight(.semibold))
+                        Text("invoice.beginner.line3")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if payment.isPaid {
+                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                InvoiceStatusIcon(isPaid: true)
+                                    .scaleEffect(0.52)
+                                Text("invoice.beginner.line2")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        } else {
+                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                InvoiceStatusIcon(isPaid: false)
+                                    .scaleEffect(0.52)
+                                Text("invoice.beginner.line1")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+
             // 口座名・日付・合計を同一セクションにまとめる
             Section {
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(bankNameText)
-                            .font(.headline)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                        Spacer(minLength: 8)
-                        Image(systemName: payment.isPaid ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
-                            .opacity(0.72)
-                            .fixedSize(horizontal: true, vertical: false)
-                    }
+                    Text(bankNameText)
+                        .font(.headline)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                     Text(statementTitleText)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -68,32 +116,39 @@ struct InvoiceListView: View {
             }
 
             // カード別請求
-            ForEach(invoices) { invoice in
+            ForEach(cardSections) { section in
                 Section {
-                    ForEach(invoice.e6parts.sorted { $0.nPartNo < $1.nPartNo }) { part in
-                        Button {
-                            if let record = part.e3record {
-                                // 明細セルタップで明細編集シートを開く
-                                editRecord = record
+                    ForEach(section.parts) { part in
+                        PartRow(
+                            part: part,
+                            onTogglePaid: {
+                                try? RecordService.setPartPaid(
+                                    part,
+                                    isPaid: !(part.e2invoice?.isPaid ?? false),
+                                    context: context
+                                )
+                            },
+                            onEdit: {
+                                if let record = part.e3record {
+                                    // 明細セルタップで明細編集シートを開く
+                                    editRecord = record
+                                }
                             }
-                        } label: {
-                            PartRow(part: part)
-                        }
-                        .buttonStyle(.plain)
+                        )
                     }
 
                     // 明細が複数行のときのみ小計を表示する
-                    if 1 < invoice.e6parts.count {
+                    if 1 < section.parts.count {
                         HStack {
                             Spacer()
-                            Text(invoice.sumAmount.currencyString())
+                            Text(section.sumAmount.currencyString())
                                 .font(.subheadline.monospacedDigit().bold())
-                                .foregroundStyle(invoice.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                                .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
                         }
                     }
                 } header: {
                     HStack {
-                        Text(invoice.e1card?.zName ?? "—")
+                        Text(section.title)
                     }
                 }
             }
@@ -110,17 +165,27 @@ struct InvoiceListView: View {
             }
         }
     }
+}
 
-    private func toggleInvoicePaid(_ invoice: E2invoice) {
-        // 決済手段未選択は未払のまま保持する
-        if invoice.e1card == nil && !invoice.isPaid {
-            return
-        }
-        try? RecordService.setInvoicePaid(
-            invoice,
-            isPaid: !invoice.isPaid,
-            context: context
-        )
+private struct InvoiceCardSection: Identifiable {
+    let id: String
+    let title: String
+    let parts: [E6part]
+
+    var sumAmount: Decimal {
+        parts.reduce(.zero) { $0 + $1.nAmount }
+    }
+}
+
+private struct InvoiceStatusIcon: View {
+    let isPaid: Bool
+
+    var body: some View {
+        // 引き落とし状況と同じ矢印アイコンを使う
+        Image(systemName: isPaid ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
+            .font(.title2.weight(.bold))
+            .foregroundStyle(isPaid ? COLOR_PAID : COLOR_UNPAID)
+            .frame(minWidth: 34, minHeight: 34)
     }
 }
 
@@ -140,17 +205,40 @@ private extension E7payment {
 
 private struct PartRow: View {
     let part: E6part
+    let onTogglePaid: () -> Void
+    let onEdit: () -> Void
     private var record: E3record? { part.e3record }
+    private var isPaid: Bool { part.e2invoice?.isPaid ?? false }
+    private var canToggleToPaid: Bool {
+        // 決済手段未選択は済みにできない
+        isPaid || part.e2invoice?.e1card != nil
+    }
 
     var body: some View {
         if let record {
-            // 引き落とし明細は履歴セルを流用し、状態カプセルだけ非表示にする
+            HStack(spacing: 10) {
+                Button(action: onTogglePaid) {
+                    // 先頭に未払/済み切替ボタンを置く
+                    Image(systemName: isPaid ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
+                        .font(.title2.weight(.bold))
+                        .foregroundStyle(isPaid ? COLOR_PAID : COLOR_UNPAID)
+                        .frame(minWidth: 34, minHeight: 34)
+                }
+                .buttonStyle(.plain)
+                .disabled(!canToggleToPaid)
+                .opacity(canToggleToPaid ? 1 : 0.35)
+
+                Button(action: onEdit) {
+                    // 明細本体は既存セルを流用し、状態表示だけ消す
                     RecordSummaryRow(
                         record: record,
                         amountOverride: part.nAmount,
-                        showsStatus: true
+                        showsStatus: false
                     )
-                } else {
+                }
+                .buttonStyle(.plain)
+            }
+        } else {
             HStack {
                 Text("—")
                     .foregroundStyle(.secondary)
