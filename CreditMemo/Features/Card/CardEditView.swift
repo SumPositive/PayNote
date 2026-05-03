@@ -198,7 +198,8 @@ struct CardEditView: View {
                             .padding(.leading, 5)
                     }
                     TextEditor(text: $zNote)
-                        .frame(minHeight: 72)
+                        // メモ量に応じて高さを広げ、全文を見やすくする
+                        .frame(height: editorHeight(for: zNote, minHeight: 72, maxHeight: 260))
                         .scrollContentBackground(.hidden)
                         .background(Color.clear)
                         .autocorrectionDisabled()
@@ -318,6 +319,19 @@ struct CardEditView: View {
             return 0
         }
         return Double(rebuildCompletedCount) / Double(rebuildTargetCount)
+    }
+
+    /// メモ量に応じて高さを広げ、内容が欠けないようにする
+    private func editorHeight(
+        for text: String,
+        minHeight: CGFloat,
+        maxHeight: CGFloat
+    ) -> CGFloat {
+        let explicitLines = max(1, text.components(separatedBy: "\n").count)
+        let wrappedLines = max(1, text.count / 18 + 1)
+        let lineCount = max(explicitLines, wrappedLines)
+        let estimated = CGFloat(lineCount) * 24 + 24
+        return min(maxHeight, max(minHeight, estimated))
     }
 
     private func save() async {

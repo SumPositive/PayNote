@@ -80,7 +80,7 @@ struct BankEditView: View {
                             .padding(.leading, 5)
                     }
                     TextEditor(text: $zNote)
-                        .frame(height: editorHeight(for: zNote, minHeight: 40, maxHeight: 180))
+                        .frame(height: editorHeight(for: zNote, minHeight: 40, maxHeight: 320))
                         .scrollDisabled(true)
                         .scrollContentBackground(.hidden)
                         .background(Color.clear)

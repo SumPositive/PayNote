@@ -1127,91 +1127,6 @@
         }
       }
     },
-    "tag.edit.title.add" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Tag"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "タグ追加"
-          }
-        }
-      }
-    },
-    "tag.edit.title.edit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit Tag"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "タグ編集"
-          }
-        }
-      }
-    },
-    "tag.field.name" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tag Name"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "タグ名"
-          }
-        }
-      }
-    },
-    "tag.field.name.duplicate" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This tag already exists."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "このタグ名は既にあります"
-          }
-        }
-      }
-    },
-    "tag.list.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tags"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "タグ"
-          }
-        }
-      }
-    },
     "error.db.message" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2025,7 +1940,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "まずは金額を入れて保存してください。決済手段、ラベルはあとから直せます。"
+            "value" : "まずは金額を入れて保存してください。その他はあとから直せます。"
           }
         }
       }
@@ -2166,23 +2081,6 @@
         }
       }
     },
-    "record.field.tag" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tags"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "タグ"
-          }
-        }
-      }
-    },
     "record.field.date" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2264,6 +2162,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "利用店"
+          }
+        }
+      }
+    },
+    "record.field.tag" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグ"
           }
         }
       }
@@ -3102,6 +3017,57 @@
         }
       }
     },
+    "settings.exportFormat.compact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compact"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コンパクト"
+          }
+        }
+      }
+    },
+    "settings.exportFormat.pretty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pretty"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プリティ"
+          }
+        }
+      }
+    },
+    "settings.exportFormat.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON Style"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON形式"
+          }
+        }
+      }
+    },
     "settings.fontScale" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3319,57 +3285,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "全データをJSONファイルで共有します"
-          }
-        }
-      }
-    },
-    "settings.exportFormat.compact" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Compact"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "コンパクト"
-          }
-        }
-      }
-    },
-    "settings.exportFormat.pretty" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pretty"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "プリティ"
-          }
-        }
-      }
-    },
-    "settings.exportFormat.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "JSON Style"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "JSON形式"
           }
         }
       }
@@ -3816,6 +3731,91 @@
         }
       }
     },
+    "tag.edit.title.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Tag"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグ追加"
+          }
+        }
+      }
+    },
+    "tag.edit.title.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Tag"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグ編集"
+          }
+        }
+      }
+    },
+    "tag.field.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag Name"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグ名"
+          }
+        }
+      }
+    },
+    "tag.field.name.duplicate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This tag already exists."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このタグ名は既にあります"
+          }
+        }
+      }
+    },
+    "tag.list.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグ"
+          }
+        }
+      }
+    },
     "top.about" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3918,23 +3918,6 @@
         }
       }
     },
-    "top.tagList" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tags"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "タグ"
-          }
-        }
-      }
-    },
     "top.help.addRecord" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3982,23 +3965,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "キャッシュレス決済手段の名前を登録します。プリセットは編集・削除できます。"
-          }
-        }
-      }
-    },
-    "top.help.tagList" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "You can add multiple tags per payment. Tags enable tag-based lists and summaries."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "決済ごとにタグを複数付けられます。タグを付けると、タグ別の一覧や集計ができます。"
           }
         }
       }
@@ -4105,6 +4071,23 @@
         }
       }
     },
+    "top.help.tagList" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "You can add multiple tags per payment. Tags enable tag-based lists and summaries."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "決済ごとにタグを複数付けられます。タグを付けると、タグ別の一覧や集計ができます。"
+          }
+        }
+      }
+    },
     "top.paymentList" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4203,6 +4186,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "よく使う店"
+          }
+        }
+      }
+    },
+    "top.tagList" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグ"
           }
         }
       }
