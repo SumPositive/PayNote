@@ -2,6 +2,13 @@
 
 この `readme.md` は、開発者向けの設計メモです
 
+**User Guide**  
+[English](https://azukid.com/en/sumpo/CreditMemo/creditmemo.html) / [日本語](https://azukid.com/jp/sumpo/CreditMemo/creditmemo.html)
+
+![Platform](https://img.shields.io/badge/platform-iOS%2018%2B-blue)
+![Swift](https://img.shields.io/badge/Swift-6-orange)
+[![App Store](https://img.shields.io/badge/App%20Store-Download-blue)](https://apps.apple.com/us/app/id432458298)
+
 ## アプリ前提
 
 - 対象は、**後日口座から引き落とされる決済**です
@@ -215,6 +222,12 @@ SwiftData には DB トリガやストアドプロシージャーはないため
 - SwiftUI
 - SwiftData
 - iOS 18 以降
+
+## ライセンス
+
+本リポジトリのソースコードは参照目的で公開しています。  
+著作権は SumPositive に帰属します。  
+無断での複製、改変、再配布、商用利用を禁止します。
 
 ## ローカライズ運用ルール
 
