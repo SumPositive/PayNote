@@ -3,7 +3,7 @@ import SwiftData
 import UIKit
 
 @main
-struct CreditMemoApp: App {
+struct AppMain: App {
     private let supportMailAddress = "sumpo@azukid.com"
 
     @Environment(\.scenePhase) private var scenePhase

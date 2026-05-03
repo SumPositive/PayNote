@@ -231,23 +231,15 @@ struct RecordEditView: View {
         .sheet(isPresented: $showDatePicker) {
             NavigationStack {
                 Form {
-                    DatePicker("record.field.date",
-                               selection: $draftDateUse,
-                               in: APP_MIN_DATE...APP_MAX_DATE,
-                               displayedComponents: .date)
-                        .datePickerStyle(.graphical)
-                        .onChange(of: draftDateUse) { oldValue, newValue in
-                            let calendar = Calendar.current
-                            let oldDay = calendar.component(.day, from: oldValue)
-                            let newDay = calendar.component(.day, from: newValue)
-
-                            dateUse = newValue
-
-                            // 月送りで同じ日付番号へ移っただけなら閉じない
-                            if oldDay != newDay {
-                                showDatePicker = false
-                            }
-                        }
+                    // 同じ日を再タップした場合も閉じられるよう、UICalendarView を使う
+                    SingleDateCalendarView(
+                        selectedDate: $draftDateUse,
+                        availableRange: APP_MIN_DATE...APP_MAX_DATE
+                    ) { selectedDate in
+                        dateUse = selectedDate
+                        showDatePicker = false
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 360, alignment: .top)
                 }
                 .navigationTitle("record.field.date")
                 .navigationBarTitleDisplayMode(.inline)
@@ -971,6 +963,102 @@ struct RecordEditView: View {
         isUsePointFocused = false
         // 候補反映後はフォーム先頭へ戻す
         scrollToTopRequest += 1
+    }
+}
+
+// MARK: - Calendar View
+
+/// 同日再タップも拾える単一日付カレンダー
+private struct SingleDateCalendarView: UIViewRepresentable {
+    @Binding var selectedDate: Date
+    let availableRange: ClosedRange<Date>
+    let onSelect: (Date) -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    func makeUIView(context: Context) -> UICalendarView {
+        let view = UICalendarView()
+        view.calendar = Calendar.current
+        view.locale = Locale.current
+        view.availableDateRange = DateInterval(start: availableRange.lowerBound, end: availableRange.upperBound)
+        view.fontDesign = .default
+
+        let selection = UICalendarSelectionMultiDate(delegate: context.coordinator)
+        view.selectionBehavior = selection
+
+        let components = Calendar.current.dateComponents([.year, .month, .day], from: selectedDate)
+        selection.setSelectedDates([components], animated: false)
+        view.setVisibleDateComponents(components, animated: false)
+        return view
+    }
+
+    func updateUIView(_ uiView: UICalendarView, context: Context) {
+        let components = Calendar.current.dateComponents([.year, .month, .day], from: selectedDate)
+        if context.coordinator.currentComponents != components {
+            context.coordinator.currentComponents = components
+            if let selection = uiView.selectionBehavior as? UICalendarSelectionMultiDate {
+                selection.setSelectedDates([components], animated: false)
+            }
+            uiView.setVisibleDateComponents(components, animated: false)
+        }
+    }
+
+    final class Coordinator: NSObject, UICalendarSelectionMultiDateDelegate {
+        var parent: SingleDateCalendarView
+        var currentComponents: DateComponents
+
+        init(_ parent: SingleDateCalendarView) {
+            self.parent = parent
+            self.currentComponents = Calendar.current.dateComponents([.year, .month, .day], from: parent.selectedDate)
+        }
+
+        func multiDateSelection(
+            _ selection: UICalendarSelectionMultiDate,
+            canSelectDate dateComponents: DateComponents
+        ) -> Bool {
+            true
+        }
+
+        func multiDateSelection(
+            _ selection: UICalendarSelectionMultiDate,
+            canDeselectDate dateComponents: DateComponents
+        ) -> Bool {
+            true
+        }
+
+        func multiDateSelection(
+            _ selection: UICalendarSelectionMultiDate,
+            didSelectDate dateComponents: DateComponents
+        ) {
+            guard let date = Calendar.current.date(from: dateComponents) else {
+                return
+            }
+            let normalizedDate = Calendar.current.startOfDay(for: date)
+            let components = Calendar.current.dateComponents([.year, .month, .day], from: normalizedDate)
+            currentComponents = components
+            // 常に1件だけ選択状態を維持する
+            selection.setSelectedDates([components], animated: false)
+            parent.selectedDate = normalizedDate
+            parent.onSelect(normalizedDate)
+        }
+
+        func multiDateSelection(
+            _ selection: UICalendarSelectionMultiDate,
+            didDeselectDate dateComponents: DateComponents
+        ) {
+            guard let date = Calendar.current.date(from: dateComponents) else {
+                return
+            }
+            let normalizedDate = Calendar.current.startOfDay(for: date)
+            let components = Calendar.current.dateComponents([.year, .month, .day], from: normalizedDate)
+            currentComponents = components
+            // 同日タップでも選択状態は維持しつつ閉じる
+            selection.setSelectedDates([components], animated: false)
+            parent.selectedDate = normalizedDate
+            parent.onSelect(normalizedDate)
+        }
     }
 }
 
