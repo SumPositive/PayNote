@@ -1246,6 +1246,108 @@
         }
       }
     },
+    "card.beginner.line1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap + in the top right to add a new payment method."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しい決済手段は、右上の＋をタップして追加できます。"
+          }
+        }
+      }
+    },
+    "card.beginner.line2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press and hold a row to drag it up or down."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "明細行を押しながら上下に動かすと移動できます。"
+          }
+        }
+      }
+    },
+    "card.beginner.line3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe a row left to reveal the delete button."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "明細行を左へスワイプすると削除ボタンが現れます。"
+          }
+        }
+      }
+    },
+    "bank.beginner.line1" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap + in the top right to add a new account."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しい口座は、右上の＋をタップして追加できます。"
+          }
+        }
+      }
+    },
+    "bank.beginner.line2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press and hold a row to drag it up or down."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "明細行を押しながら上下に動かすと移動できます。"
+          }
+        }
+      }
+    },
+    "bank.beginner.line3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe a row left to reveal the delete button."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "明細行を左へスワイプすると削除ボタンが現れます。"
+          }
+        }
+      }
+    },
     "invoice.beginner.title" : {
       "extractionState" : "manual",
       "localizations" : {

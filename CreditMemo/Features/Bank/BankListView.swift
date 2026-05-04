@@ -4,6 +4,7 @@ import SwiftData
 struct BankListView: View {
     @Query(sort: \E8bank.nRow) private var banks: [E8bank]
     @Environment(\.modelContext) private var context
+    @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
 
     @State private var showAddSheet    = false
     @State private var deleteTarget: E8bank?
@@ -11,6 +12,25 @@ struct BankListView: View {
 
     var body: some View {
         List {
+            if userLevel == .beginner {
+                Section {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("bank.beginner.line1")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("bank.beginner.line2")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("bank.beginner.line3")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
             ForEach(banks) { bank in
                 NavigationLink {
                     BankEditView(bank: bank)

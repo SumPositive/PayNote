@@ -4,6 +4,7 @@ import SwiftData
 struct CardListView: View {
     @Query(sort: \E1card.nRow) private var cards: [E1card]
     @Environment(\.modelContext) private var context
+    @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
 
     @State private var showAddSheet    = false
     @State private var deleteTarget: E1card?
@@ -11,6 +12,25 @@ struct CardListView: View {
 
     var body: some View {
         List {
+            if userLevel == .beginner {
+                Section {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("card.beginner.line1")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("card.beginner.line2")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("card.beginner.line3")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
             ForEach(cards) { card in
                 NavigationLink {
                     CardEditView(card: card)
