@@ -4,7 +4,6 @@ import UIKit
 
 @main
 struct AppMain: App {
-    private let supportMailAddress = "sumpo@azukid.com"
 
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(AppStorageKey.appearanceMode) private var appearanceMode: AppearanceMode = .automatic
@@ -17,13 +16,11 @@ struct AppMain: App {
     @State private var isMigrating = false
     @State private var didStartMigration = false
     @State private var showMigrationFailure = false
-    @State private var legacyStoreURLs: [URL] = []
-    @State private var shareItems: [Any] = []
-    @State private var showShareSheet = false
-    @State private var didShareLegacyData = false
-    @State private var showThanksAlert = false
 
     init() {
+        // default.store → CreditMemo.store へのリネーム（名前を明示化した際の既存ユーザー対応）
+        Self.renameDefaultStoreIfNeeded()
+
         let schema = Schema([
             E1card.self,
             E2invoice.self,
@@ -33,7 +30,7 @@ struct AppMain: App {
             E7payment.self,
             E8bank.self,
         ])
-        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let config = ModelConfiguration("CreditMemo", schema: schema, isStoredInMemoryOnly: false)
         storeURL = config.url
         do {
             sharedModelContainer = try ModelContainer(for: schema, configurations: [config])
@@ -60,7 +57,6 @@ struct AppMain: App {
             .overlay {
                 if isMigrating {
                     ZStack {
-                        // 処理待ち中は背面操作を受けないように薄い遮蔽を重ねる
                         Color.black.opacity(0.28)
                             .ignoresSafeArea()
                         VStack(spacing: 10) {
@@ -86,45 +82,35 @@ struct AppMain: App {
             .overlay {
                 if showMigrationFailure {
                     ZStack {
-                        // エラー選択が完了するまで背面操作を止める
                         Color.black.opacity(0.28)
                             .ignoresSafeArea()
                         VStack(spacing: 14) {
-                            if didShareLegacyData {
-                                Text("migration.legacy.thanks")
-                                    .font(.body)
-                                    .multilineTextAlignment(.center)
-                                    .foregroundStyle(.primary)
-                            } else {
-                                // 送信先アドレスはローカライズ文字列のプレースホルダへ埋め込む
-                                Text(String(format: NSLocalizedString("migration.legacy.failed.message", comment: ""), supportMailAddress))
-                                    .font(.body)
-                                    .multilineTextAlignment(.center)
-                                    .foregroundStyle(.primary)
-                                Button {
-                                    shareLegacyStore()
-                                } label: {
-                                    Text("migration.legacy.send")
-                                        .frame(maxWidth: .infinity)
-                                }
-                                .buttonStyle(.borderedProminent)
-                                Button(role: .destructive) {
-                                    // 旧データを破棄して、次回起動から新規運用へ切り替える
-                                    MigratingFromCoreData.discardLegacyStores(legacyStoreURLs)
-                                    MigratingFromCoreData.markMigrationCompleted()
-                                    showMigrationFailure = false
-                                    guard let container = sharedModelContainer else { return }
-                                    SeedData.seedIfNeeded(context: container.mainContext)
-                                    RecordService.cleanupOrphanBilling(context: container.mainContext)
-                                    if container.mainContext.hasChanges {
-                                        try? container.mainContext.save()
-                                    }
-                                } label: {
-                                    Text("migration.legacy.discard")
-                                        .frame(maxWidth: .infinity)
-                                }
-                                .buttonStyle(.bordered)
+                            Text("migration.legacy.failed.message")
+                                .font(.body)
+                                .multilineTextAlignment(.center)
+                                .foregroundStyle(.primary)
+                            // スキップ：旧ファイルをそのまま残す → 次回起動で自動再試行
+                            Button {
+                                showMigrationFailure = false
+                                guard let container = sharedModelContainer else { return }
+                                runPostMigrationInit(container: container)
+                            } label: {
+                                Text("migration.legacy.skip")
+                                    .frame(maxWidth: .infinity)
                             }
+                            .buttonStyle(.borderedProminent)
+                            // 破棄：旧データを消して新規運用へ切り替える
+                            Button(role: .destructive) {
+                                MigratingFromCoreData.discardLegacyStores()
+                                MigratingFromCoreData.markMigrationCompleted()
+                                showMigrationFailure = false
+                                guard let container = sharedModelContainer else { return }
+                                runPostMigrationInit(container: container)
+                            } label: {
+                                Text("migration.legacy.discard")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.bordered)
                         }
                         .padding(20)
                         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
@@ -133,42 +119,24 @@ struct AppMain: App {
                     .allowsHitTesting(true)
                 }
             }
-            .sheet(isPresented: $showShareSheet) {
-                ActivityItemsSheet(items: shareItems) { completed in
-                    // 共有が実行された時だけ「送信ありがとう」を表示する
-                    if completed {
-                        didShareLegacyData = true
-                        showThanksAlert = true
-                    }
-                }
-            }
-            .alert(LocalizedStringKey("migration.legacy.thanks"), isPresented: $showThanksAlert) {
-                Button("OK", role: .cancel) {}
-            }
             .task {
                 guard didStartMigration == false else { return }
                 didStartMigration = true
                 guard let container = sharedModelContainer else { return }
                 isMigrating = true
                 migrationMessage = AppLaunchProgressText.message(locale: Locale.current, key: .migrationPreparing)
-                // オーバーレイ描画を先に反映する
                 await Task.yield()
                 let outcome = await MigratingFromCoreData().migrateIfNeeded(modelContainer: container) { phase in
                     migrationMessage = phase.message(locale: Locale.current)
                 }
+                isMigrating = false
                 switch outcome {
                 case .completed:
-                    // マイグレーション完了後に初期データ投入と整合性掃除を実行する
-                    SeedData.seedIfNeeded(context: container.mainContext)
-                    RecordService.cleanupOrphanBilling(context: container.mainContext)
-                    if container.mainContext.hasChanges {
-                        try? container.mainContext.save()
-                    }
-                case .failed(let urls):
-                    legacyStoreURLs = urls
+                    runPostMigrationInit(container: container)
+                case .failed:
+                    // 旧ファイルはそのまま → 次回起動で自動再試行。ユーザーが選択するまでダイアログを表示。
                     showMigrationFailure = true
                 }
-                isMigrating = false
             }
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -179,25 +147,36 @@ struct AppMain: App {
         }
     }
 
-    private func shareLegacyStore() {
-        // SQLite本体とwal/shmをまとめて共有する
-        var items: [Any] = [
-            "CreditMemo migration failed. Please send attached legacy store files to: \(supportMailAddress)"
-        ]
-        for base in legacyStoreURLs {
-            if FileManager.default.fileExists(atPath: base.path) {
-                items.append(base)
-            }
-            for suffix in ["-wal", "-shm"] {
-                let related = URL(fileURLWithPath: base.path + suffix)
-                if FileManager.default.fileExists(atPath: related.path) {
-                    items.append(related)
-                }
-            }
+    // MARK: - 移行後の初期化
+
+    private func runPostMigrationInit(container: ModelContainer) {
+        SeedData.seedIfNeeded(context: container.mainContext)
+        RecordService.cleanupOrphanBilling(context: container.mainContext)
+        if container.mainContext.hasChanges {
+            try? container.mainContext.save()
         }
-        shareItems = items
-        showShareSheet = true
     }
+
+    // MARK: - ストア名移行（default.store → CreditMemo.store）
+
+    /// SwiftData ストアを "default" → "CreditMemo" へ事前リネーム
+    /// 失敗しても ModelContainer 作成時に新規ファイルが作られるだけで致命的にはならない
+    private static func renameDefaultStoreIfNeeded() {
+        let fm = FileManager.default
+        guard let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return }
+        let srcBase = appSupport.appendingPathComponent("default.store")
+        let dstBase = appSupport.appendingPathComponent("CreditMemo.store")
+        guard fm.fileExists(atPath: srcBase.path) else { return }
+        guard !fm.fileExists(atPath: dstBase.path) else { return }
+        for ext in ["", "-shm", "-wal"] {
+            let src = URL(fileURLWithPath: srcBase.path + ext)
+            let dst = URL(fileURLWithPath: dstBase.path + ext)
+            guard fm.fileExists(atPath: src.path) else { continue }
+            try? fm.moveItem(at: src, to: dst)
+        }
+    }
+
+    // MARK: - SwiftData ストア復旧
 
     private func renameStoreForRecovery() {
         let fm = FileManager.default
@@ -222,23 +201,6 @@ struct AppMain: App {
             }
         }
     }
-}
-
-// MARK: - 共有シート
-
-private struct ActivityItemsSheet: UIViewControllerRepresentable {
-    let items: [Any]
-    let onComplete: (Bool) -> Void
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
-        controller.completionWithItemsHandler = { _, completed, _, _ in
-            onComplete(completed)
-        }
-        return controller
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - 起動時進行メッセージ

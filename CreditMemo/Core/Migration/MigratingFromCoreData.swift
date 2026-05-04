@@ -1,6 +1,9 @@
 import Foundation
 import SwiftData
 import CoreData
+import OSLog
+
+private let migrationLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "CreditMemo", category: "Migration")
 
 /// CoreData(旧クレメモ AzCredit.sqlite) → SwiftData マイグレーション
 ///
@@ -14,7 +17,7 @@ struct MigratingFromCoreData {
 
     enum Outcome {
         case completed
-        case failed(legacyStoreURLs: [URL])
+        case failed     // 旧ファイルはそのまま残す → 次回起動で自動再試行
     }
 
     enum Phase {
@@ -69,6 +72,10 @@ struct MigratingFromCoreData {
             do {
                 onPhase?(.loadingLegacyData)
                 await Task.yield()
+
+                // WAL/SHM 欠損補修（iCloud バックアップ復元後にメインファイルだけ残るケース対策）
+                Self.repairWALIfNeeded(at: storeURL)
+
                 let legacyStack = try LegacyCoreDataStack(storeURL: storeURL)
                 let dto = try legacyStack.fetchAll()
                 if dto.banks.isEmpty && dto.cards.isEmpty { continue }
@@ -82,20 +89,22 @@ struct MigratingFromCoreData {
                     try context.save()
                 }
 
-                // 旧SQLiteをリネームして保全
+                // 成功：旧ファイルを .done にリネーム（失敗時はリネームしない → 次回自動再試行）
                 onPhase?(.finalizing)
                 await Task.yield()
-                renameOldStore(storeURL)
+                Self.archiveOldStore(storeURL)
 
                 defaults.set(true, forKey: Self.migrationFlagKey)
+                migrationLogger.info("移行完了: \(storeURL.lastPathComponent)")
                 return .completed
             } catch {
                 context.rollback()
-                debugPrint("CoreData migration failed for \(storeURL.lastPathComponent): \(error)")
+                migrationLogger.error("移行失敗: \(storeURL.lastPathComponent) - \(error.localizedDescription)")
+                // 旧ファイルはそのまま残す → 次回起動で自動再試行
             }
         }
         onPhase?(.finalizing)
-        return .failed(legacyStoreURLs: candidates)
+        return .failed
     }
 
     /// 旧データを破棄して新規開始する時に、移行済みフラグを立てる
@@ -104,16 +113,20 @@ struct MigratingFromCoreData {
     }
 
     /// 旧SQLiteをすべてリネームして退避する（再移行防止）
-    static func discardLegacyStores(_ urls: [URL]) {
-        for url in urls {
-            let backupURL = url.deletingLastPathComponent().appendingPathComponent("\(url.deletingPathExtension().lastPathComponent)_discarded.sqlite")
-            try? FileManager.default.moveItem(at: url, to: backupURL)
+    /// - 失敗ダイアログで「旧データを破棄」を選んだ時に呼ぶ
+    static func discardLegacyStores() {
+        let candidates = MigratingFromCoreData().candidateStoreURLs()
+        for url in candidates {
+            let discardURL = url.deletingLastPathComponent()
+                .appendingPathComponent("\(url.deletingPathExtension().lastPathComponent)_discarded.sqlite")
+            try? FileManager.default.moveItem(at: url, to: discardURL)
             for suffix in ["-shm", "-wal"] {
                 let src = URL(fileURLWithPath: url.path + suffix)
-                let dst = URL(fileURLWithPath: backupURL.path + suffix)
+                let dst = URL(fileURLWithPath: discardURL.path + suffix)
                 try? FileManager.default.moveItem(at: src, to: dst)
             }
         }
+        migrationLogger.info("旧ファイルを破棄しました")
     }
 
     // MARK: - Store URL 候補
@@ -136,18 +149,38 @@ struct MigratingFromCoreData {
         return result
     }
 
-    // MARK: - 旧SQLiteリネーム
+    // MARK: - WAL 補修（iCloud バックアップ復元後の欠損対策）
 
-    private func renameOldStore(_ url: URL) {
+    /// `-wal` / `-shm` が存在しない場合は空ファイルを作成して CoreData の open エラーを防ぐ
+    private static func repairWALIfNeeded(at storeURL: URL) {
         let fm = FileManager.default
-        let bakURL = url.deletingLastPathComponent()
-            .appendingPathComponent("AzCredit_backup.sqlite")
-        try? fm.moveItem(at: url, to: bakURL)
-        for suffix in ["-shm", "-wal"] {
-            let src = URL(fileURLWithPath: url.path + suffix)
-            let dst = URL(fileURLWithPath: bakURL.path + suffix)
-            try? fm.moveItem(at: src, to: dst)
+        for ext in ["-wal", "-shm"] {
+            let auxURL = URL(fileURLWithPath: storeURL.path + ext)
+            if !fm.fileExists(atPath: auxURL.path) {
+                fm.createFile(atPath: auxURL.path, contents: Data())
+                migrationLogger.info("WAL 補修: \(auxURL.lastPathComponent) を空ファイルで作成")
+            }
         }
+    }
+
+    // MARK: - 旧SQLiteアーカイブ（成功時のみ呼ぶ）
+    //
+    // 成功 → .done にリネーム（candidateStoreURLs は .sqlite のみ検索するので再検出されない）
+    // 失敗 → リネームしない（.sqlite のまま残す → 次回起動で自動再試行）
+
+    private static func archiveOldStore(_ url: URL) {
+        let fm = FileManager.default
+        for ext in ["", "-shm", "-wal"] {
+            let src = URL(fileURLWithPath: url.path + ext)
+            let dst = URL(fileURLWithPath: url.path + ext + ".done")
+            guard fm.fileExists(atPath: src.path) else { continue }
+            do {
+                try fm.moveItem(at: src, to: dst)
+            } catch {
+                migrationLogger.warning("アーカイブ失敗: \(src.lastPathComponent) - \(error.localizedDescription)")
+            }
+        }
+        migrationLogger.info("旧ファイルを .done にリネーム完了")
     }
 
     // MARK: - SwiftData へのインポート

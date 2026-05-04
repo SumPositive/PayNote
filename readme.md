@@ -130,8 +130,20 @@ SwiftData には DB トリガやストアドプロシージャーはないため
 
 ## migration 方針
 
-- 対応対象は **旧アプリ Core Data** のみです。
+- 対応対象は **旧アプリ Core Data**（`AzCredit.sqlite`）のみです
 - 旧 `payment` はそのまま移さず、**旧 invoice から `日付 + 口座 + 状態` の `E7payment` を再構成**します
+
+### 失敗時の再試行
+
+- 移行成功時のみ旧ファイルを `AzCredit.sqlite.done` にリネームし、移行済みフラグを立てます
+- 移行失敗時はファイルをそのまま残し、フラグも立てません → **次回起動で自動再試行**します
+- 失敗ダイアログでは「スキップ（次回再試行）」か「旧データを破棄して新規開始」の2択です
+- iCloud バックアップ復元後に `-wal`/`-shm` が欠けている場合は、空ファイルを作成してから CoreData を開きます（WAL 補修）
+
+### SwiftData ストアファイル
+
+- ストア名は **`CreditMemo`**（`Application Support/CreditMemo.store`）
+- `default.store`（名前未指定時のデフォルト）が残っている場合は、起動時に `CreditMemo.store` へ自動リネームします
 
 ## JSON 入出力方針
 
