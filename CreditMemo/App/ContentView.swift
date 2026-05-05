@@ -12,6 +12,7 @@ struct ContentView: View {
     @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .system
     @State private var selectedDestination: AppDestination?
     @State private var addRecordRefreshID = UUID()
+    @State private var editingState = AppEditingState()
     @ScaledMetric(relativeTo: .title) private var emptyIconSize: CGFloat = 64
     /// 特大モード用スタックパス
     @State private var stackPath: [AppDestination] = []
@@ -41,11 +42,14 @@ struct ContentView: View {
     }
 
     var body: some View {
-        if shouldUseStackBody {
-            xlargeBody
-        } else {
-            splitBody
+        Group {
+            if shouldUseStackBody {
+                xlargeBody
+            } else {
+                splitBody
+            }
         }
+        .environment(editingState)
     }
 
     // MARK: - 特大: スプリットなし NavigationStack
@@ -70,6 +74,9 @@ struct ContentView: View {
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active, openAddOnActive else { return }
+            // 既に新規追加画面が開いている、または編集中の場合は何もしない
+            guard !stackPath.contains(.addRecord) else { return }
+            guard !editingState.isEditingInProgress else { return }
             addRecordRefreshID = UUID()
             stackPath = [.addRecord]
         }
@@ -104,6 +111,9 @@ struct ContentView: View {
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active, openAddOnActive else { return }
+            // 既に新規追加画面が開いている、または編集中の場合は何もしない
+            guard selectedDestination != .addRecord else { return }
+            guard !editingState.isEditingInProgress else { return }
             addRecordRefreshID = UUID()
             selectedDestination = .addRecord
         }

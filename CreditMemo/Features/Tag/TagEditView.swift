@@ -4,8 +4,9 @@ import SwiftData
 struct TagEditView: View {
     var tag: E5tag?
 
-    @Environment(\.modelContext) private var context
-    @Environment(\.dismiss)      private var dismiss
+    @Environment(\.modelContext)    private var context
+    @Environment(\.dismiss)         private var dismiss
+    @Environment(AppEditingState.self) private var editingState
     @Query private var allTags: [E5tag]
     @Query(sort: \E3record.dateUse, order: .reverse) private var records: [E3record]
     @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .system
@@ -96,6 +97,12 @@ struct TagEditView: View {
         .navigationTitle(isNew ? "tag.edit.title.add" : "tag.edit.title.edit")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(isNew || hasChanges)
+        .onChange(of: hasChanges) { _, newValue in
+            if newValue { editingState.isEditingInProgress = true }
+        }
+        .onDisappear {
+            editingState.isEditingInProgress = false
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 if isNew || hasChanges {

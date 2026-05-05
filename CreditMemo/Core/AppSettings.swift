@@ -133,6 +133,14 @@ enum SortMode: Int, CaseIterable, Identifiable {
     }
 }
 
+/// 編集系画面が未保存変更を持つかどうかをアプリ全体で共有するクラス
+/// ContentView の起動時新規追加ロジックがこれを参照してスキップ判定する
+@Observable
+final class AppEditingState {
+    /// いずれかの編集画面に未保存変更がある場合は true
+    var isEditingInProgress = false
+}
+
 /// アプリ全体で使う日付表示フォーマット
 enum AppDateFormat {
     /// 単体表示: 年

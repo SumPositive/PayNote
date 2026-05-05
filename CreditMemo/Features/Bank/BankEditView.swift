@@ -4,9 +4,10 @@ import SwiftData
 struct BankEditView: View {
     var bank: E8bank?
 
-    @Environment(\.modelContext) private var context
-    @Environment(\.dismiss)      private var dismiss
-    @Query(sort: \E8bank.nRow)   private var allBanks: [E8bank]
+    @Environment(\.modelContext)    private var context
+    @Environment(\.dismiss)         private var dismiss
+    @Environment(AppEditingState.self) private var editingState
+    @Query(sort: \E8bank.nRow)      private var allBanks: [E8bank]
     @Query private var banks: [E8bank]
     @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .system
 
@@ -91,6 +92,12 @@ struct BankEditView: View {
         .navigationTitle(isNew ? "bank.edit.title.add" : "bank.edit.title.edit")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(isNew || hasChanges)
+        .onChange(of: hasChanges) { _, newValue in
+            if newValue { editingState.isEditingInProgress = true }
+        }
+        .onDisappear {
+            editingState.isEditingInProgress = false
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 if isNew || hasChanges {

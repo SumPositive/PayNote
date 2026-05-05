@@ -24,10 +24,11 @@ struct RecordEditView: View {
     let mode: RecordEditMode
     var onSaved: ((Bool) -> Void)? = nil
 
-    @Environment(\.modelContext)  private var context
-    @Environment(\.dismiss)       private var dismiss
-    @Query(sort: \E1card.nRow)    private var cards: [E1card]
-    @Query(sort: \E8bank.nRow)    private var banks: [E8bank]
+    @Environment(\.modelContext)    private var context
+    @Environment(\.dismiss)         private var dismiss
+    @Environment(AppEditingState.self) private var editingState
+    @Query(sort: \E1card.nRow)      private var cards: [E1card]
+    @Query(sort: \E8bank.nRow)      private var banks: [E8bank]
     @Query(sort: \E3record.dateUse, order: .reverse) private var pastRecords: [E3record]
     @Query                        private var categories: [E5tag]
 
@@ -169,6 +170,12 @@ struct RecordEditView: View {
         .navigationTitle(isNew ? "record.edit.title.add" : "record.edit.title.edit")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(isNew ? hasChanges : true)
+        .onChange(of: hasChanges) { _, newValue in
+            if newValue { editingState.isEditingInProgress = true }
+        }
+        .onDisappear {
+            editingState.isEditingInProgress = false
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 if isNew {

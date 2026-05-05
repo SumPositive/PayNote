@@ -4,9 +4,10 @@ import SwiftData
 struct CardEditView: View {
     var card: E1card?
 
-    @Environment(\.modelContext) private var context
-    @Environment(\.dismiss)      private var dismiss
-    @Query(sort: \E1card.nRow)   private var allCards: [E1card]
+    @Environment(\.modelContext)    private var context
+    @Environment(\.dismiss)         private var dismiss
+    @Environment(AppEditingState.self) private var editingState
+    @Query(sort: \E1card.nRow)      private var allCards: [E1card]
     @Query private var cards: [E1card]
     @Query(sort: \E8bank.nRow)   private var banks: [E8bank]
 
@@ -206,6 +207,12 @@ struct CardEditView: View {
         }
         .scalableNavigationTitle("card.list.title")
         .navigationBarBackButtonHidden(isNew || hasChanges)
+        .onChange(of: hasChanges) { _, newValue in
+            if newValue { editingState.isEditingInProgress = true }
+        }
+        .onDisappear {
+            editingState.isEditingInProgress = false
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 if isNew || hasChanges {
