@@ -31,6 +31,7 @@ struct CardEditView: View {
     @State private var rebuildTargetCount = 0
     @State private var rebuildError: String?
     @FocusState private var focusName: Bool
+    @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
 
     private var isNew:   Bool { card == nil }
     private var trimmedName: String {
@@ -111,6 +112,13 @@ struct CardEditView: View {
                     Text("card.field.name.duplicate")
                         .font(.caption)
                         .foregroundStyle(.red)
+                }
+
+                if userLevel == .beginner {
+                    Text("card.edit.beginner.help")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 AdaptiveValueRow(titleKey: "card.field.bank") {

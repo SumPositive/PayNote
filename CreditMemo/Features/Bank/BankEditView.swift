@@ -11,6 +11,7 @@ struct BankEditView: View {
     @Query private var banks: [E8bank]
     @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .system
 
+    @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
     @State private var zName = ""
     @State private var zNote = ""
     @FocusState private var focusName: Bool
@@ -61,6 +62,13 @@ struct BankEditView: View {
                     Text("bank.field.name.duplicate")
                         .font(.caption)
                         .foregroundStyle(.red)
+                }
+
+                if userLevel == .beginner {
+                    Text("bank.edit.beginner.help")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 if isNew {

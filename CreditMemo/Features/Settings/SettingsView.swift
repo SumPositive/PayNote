@@ -81,42 +81,66 @@ struct SettingsView: View {
             }
 
             Section("settings.panel.payment") {
-                Toggle("settings.openAddOnActive", isOn: $openAddOnActive)
-
-                HStack(spacing: 8) {
-                    Text("settings.afterSave")
-                        .font(.subheadline)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Picker("settings.afterSave", selection: $afterSaveAction) {
-                        ForEach(AfterSaveAction.allCases) { action in
-                            Text(LocalizedStringKey(action.localizedKey)).tag(action)
-                        }
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle("settings.openAddOnActive", isOn: $openAddOnActive)
+                    if userLevel == .beginner {
+                        Text("settings.help.openAddOnActive")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .tint(.accentColor)
                 }
 
-                HStack(spacing: 8) {
-                    Text("settings.paymentWindow")
-                        .font(.subheadline)
-                        // 見出しはできるだけ1行を優先する
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-                        .layoutPriority(1)
-                    Picker("settings.paymentWindow", selection: $paymentWindowDays) {
-                        ForEach(Array(1...20), id: \.self) { day in
-                            Text(windowLabel(day)).tag(day)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Text("settings.afterSave")
+                            .font(.subheadline)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Picker("settings.afterSave", selection: $afterSaveAction) {
+                            ForEach(AfterSaveAction.allCases) { action in
+                                Text(LocalizedStringKey(action.localizedKey)).tag(action)
+                            }
                         }
-                        Text(windowLabel(30)).tag(30)
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .tint(.accentColor)
                     }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
-                    // 選択値は必要幅だけ使い、見出しを圧迫しない
-                    .fixedSize()
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .tint(.accentColor)
+                    if userLevel == .beginner {
+                        Text("settings.help.afterSave")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Text("settings.paymentWindow")
+                            .font(.subheadline)
+                            // 見出しはできるだけ1行を優先する
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                            .layoutPriority(1)
+                        Picker("settings.paymentWindow", selection: $paymentWindowDays) {
+                            ForEach(Array(1...20), id: \.self) { day in
+                                Text(windowLabel(day)).tag(day)
+                            }
+                            Text(windowLabel(30)).tag(30)
+                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                        // 選択値は必要幅だけ使い、見出しを圧迫しない
+                        .fixedSize()
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .tint(.accentColor)
+                    }
+                    if userLevel == .beginner {
+                        Text("settings.help.paymentWindow")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
 
