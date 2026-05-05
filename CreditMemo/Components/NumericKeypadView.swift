@@ -23,6 +23,20 @@ struct NumericKeypadSheet: View {
     private var locale: Locale { .current }
     private var fractionDigits: Int { Decimal.currencyFractionDigits(locale: locale) }
 
+    /// uiScale に応じてコンテンツが収まる最小シート高さを計算する
+    private var idealSheetHeight: CGFloat {
+        let navBar:    CGFloat = 50                                              // ナビゲーションバー
+        let topPad:    CGFloat = (isCompact ? 18 : 24) * uiScale                // 上余白
+        let amountH:   CGFloat = 62 * uiScale                                   // 金額表示行
+        let sp:        CGFloat = sheetSpacing                                    // セクション間スペース
+        let btnH:      CGFloat = (isCompact ? 52 : 56) * uiScale                // キーパッドボタン高さ
+        let keypadH:   CGFloat = 4 * btnH + 3 * ((isCompact ? 8 : 10) * uiScale) // 4行 + 3間隔
+        let doneH:     CGFloat = 17 + 28 * uiScale                              // 完了ボタン(headline + 上下padding×2)
+        let botPad:    CGFloat = (isCompact ? 2 : 6) * uiScale                  // 下余白
+        let systemPad: CGFloat = 44                                             // ドラッグインジケータ + ホームバー
+        return ceil(navBar + topPad + amountH + sp + keypadH + sp + doneH + botPad + systemPad)
+    }
+
     private var committedValue: Decimal {
         guard !isEmpty, let minorUnits = Decimal(string: digits) else { return placeholder }
         return min(Decimal.fromMinorUnits(minorUnits, locale: locale), maxValue)
@@ -89,8 +103,8 @@ struct NumericKeypadSheet: View {
             }
         }
         .modifier(ConditionalSheetDynamicTypeModifier(fontScale: fontScale))
-        // SE3 などの小画面では .large 固定にして、完了ボタン欠けを防ぐ
-        .presentationDetents(isCompact ? [.large] : [.fraction(0.65), .large])
+        // SE3 などの小画面では .large 固定。通常画面はコンテンツ高さに合わせた detent を使う
+        .presentationDetents(isCompact ? [.large] : [.height(idealSheetHeight), .large])
         .presentationDragIndicator(.visible)
     }
 
