@@ -70,7 +70,7 @@ struct RecordEditView: View {
         if case .addNew = mode { return true }
         return false
     }
-    private var isValid:    Bool { nAmount > 0 }
+    private var isValid:    Bool { nAmount != 0 }
     private var usePointCandidates: [String] { cachedUsePointCandidates }
     private var hasChanges: Bool {
         guard let initialDraft else { return false }
@@ -323,7 +323,7 @@ struct RecordEditView: View {
                 twoLineValueRow(
                     titleKey: "record.field.amount",
                     valueText: nAmount == 0 ? "—" : nAmount.currencyString(),
-                    valueColor: nAmount == 0 ? Color(.tertiaryLabel) : COLOR_AMOUNT_POSITIVE,
+                    valueColor: nAmount == 0 ? Color(.tertiaryLabel) : (nAmount < 0 ? .red : COLOR_AMOUNT_POSITIVE),
                     valueFont: .title2.bold().monospacedDigit(),
                     showsChevron: false
                 )
@@ -534,7 +534,7 @@ struct RecordEditView: View {
         // ── 類似決済（新規入力時のみ） ─────────────────────
         if isNew {
             Section(similarSectionHeaderText) {
-                if nAmount <= 0 {
+                if nAmount == 0 {
                     Text(similarGuideText)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -604,7 +604,7 @@ struct RecordEditView: View {
     }
 
     private func save() {
-        guard nAmount > 0 else { return }
+        guard nAmount != 0 else { return }
         let usePoint = zName.trimmingCharacters(in: .whitespacesAndNewlines)
         let previousBankID = selectedCard?.e8bank?.id
         let bankChanged = initialDraft?.bankID != selectedBankForCard?.id
@@ -858,8 +858,8 @@ struct RecordEditView: View {
     private func similarityScore(for record: E3record) -> Int {
         var score = 0
 
-        // 金額: 完全一致を最優先、差分が大きいほど減点する
-        if 0 < nAmount {
+        // 金額: 完全一致を最優先、差分が大きいほど減点する（符号が異なる候補はスコアなし）
+        if nAmount != 0 && (nAmount < 0) == (record.nAmount < 0) {
             if record.nAmount == nAmount {
                 score += 80
             } else {

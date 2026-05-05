@@ -12,6 +12,7 @@ struct NumericKeypadSheet: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .system
     @State private var digits: String = ""
+    @State private var isNegative: Bool = false
 
     private var isEmpty: Bool { digits.isEmpty }
     private var isCompact: Bool { UIScreen.main.bounds.height <= 700 }
@@ -39,12 +40,18 @@ struct NumericKeypadSheet: View {
 
     private var committedValue: Decimal {
         guard !isEmpty, let minorUnits = Decimal(string: digits) else { return placeholder }
-        return min(Decimal.fromMinorUnits(minorUnits, locale: locale), maxValue)
+        let absValue = min(Decimal.fromMinorUnits(minorUnits, locale: locale), maxValue)
+        return isNegative ? -absValue : absValue
     }
 
     /// 入力中の金額表示は、通貨記号の位置も含めてロケールへ合わせる
     private var displayAmountText: String {
         committedValue.currencyString(locale: locale)
+    }
+
+    private var displayColor: Color {
+        guard !isEmpty else { return Color(.tertiaryLabel) }
+        return isNegative ? .red : Color(.label)
     }
 
     /// 入力可能な最大小数単位の桁数
@@ -60,11 +67,12 @@ struct NumericKeypadSheet: View {
                     Spacer()
                     Text(displayAmountText)
                         .font(.system(size: displayFontSize, weight: .bold, design: .rounded).monospacedDigit())
-                        .foregroundStyle(isEmpty ? Color(.tertiaryLabel) : Color(.label))
+                        .foregroundStyle(displayColor)
                         .lineLimit(1)
                         .minimumScaleFactor(0.65)
                         .contentTransition(.numericText())
                         .animation(.snappy, value: digits)
+                        .animation(.snappy, value: isNegative)
                     Spacer()
                 }
                 .frame(minHeight: 62 * uiScale)
@@ -102,6 +110,10 @@ struct NumericKeypadSheet: View {
                 }
             }
         }
+        .onAppear {
+            // placeholder が負の場合はマイナスモードで開く
+            isNegative = placeholder < 0
+        }
         .modifier(ConditionalSheetDynamicTypeModifier(fontScale: fontScale))
         // SE3 などの小画面では .large 固定。通常画面はコンテンツ高さに合わせた detent を使う
         .presentationDetents(isCompact ? [.large] : [.height(idealSheetHeight), .large])
@@ -112,6 +124,8 @@ struct NumericKeypadSheet: View {
         switch key {
         case .digit(let d):   appendDigits(String(d))
         case .doubleZero:     appendDigits("00")
+        case .tripleZero:     appendDigits("000")
+        case .minus:          isNegative.toggle()
         case .delete:
             if !digits.isEmpty { digits.removeLast() }
         }
@@ -149,6 +163,8 @@ private struct ConditionalSheetDynamicTypeModifier: ViewModifier {
 enum NumericKeypadKey {
     case digit(Int)
     case doubleZero
+    case tripleZero
+    case minus
     case delete
 }
 
@@ -181,10 +197,12 @@ struct NumericKeypad: View {
                     }
                 }
             }
+            // 底行: − / 0 / 000 / ⌫
             HStack(spacing: spacing) {
-                KeypadDigitButton(label: "0",  compact: compact, scale: scale) { onKey(.digit(0)) }
+                KeypadActionButton(systemImage: "minus.forwardslash.plus", compact: compact, scale: scale) { onKey(.minus) }
+                KeypadDigitButton(label: "0",   compact: compact, scale: scale) { onKey(.digit(0)) }
                 KeypadDigitButton(label: "00", compact: compact, scale: scale) { onKey(.doubleZero) }
-                KeypadDeleteButton(compact: compact, scale: scale)             { onKey(.delete) }
+                KeypadDeleteButton(compact: compact, scale: scale)              { onKey(.delete) }
             }
         }
         .padding(.horizontal, hPadding)
@@ -208,6 +226,28 @@ private struct KeypadDigitButton: View {
                 .font(font)
                 .frame(maxWidth: .infinity, minHeight: minHeight)
                 .background(Color(.secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// サイン操作用ボタン（⌫ と同系の背景色）
+private struct KeypadActionButton: View {
+    let systemImage: String
+    let compact: Bool
+    let scale: CGFloat
+    let action: () -> Void
+
+    private var minHeight: CGFloat { (compact ? 52 : 56) * scale }
+    private var font: Font { compact ? .title3 : .title2 }
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(font)
+                .frame(maxWidth: .infinity, minHeight: minHeight)
+                .background(Color(.tertiarySystemGroupedBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
