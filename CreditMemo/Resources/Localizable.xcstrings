@@ -2146,6 +2146,23 @@
         }
       }
     },
+    "record.privacy.warning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Do not enter personal or secret information. This app does not encrypt data."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️データは暗号化しないので個人情報や秘密情報を入れないでください。"
+          }
+        }
+      }
+    },
     "record.beginner.title" : {
       "extractionState" : "manual",
       "localizations" : {

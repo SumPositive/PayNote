@@ -527,6 +527,21 @@ struct RecordEditView: View {
                     .background(Color.clear)
                     .autocorrectionDisabled()
             }
+        } header: {
+            privacyHeader
+        }
+    }
+
+    /// オプション入力欄の上に注意文を1つだけ出す
+    @ViewBuilder private var privacyHeader: some View {
+        if userLevel == .beginner {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("record.privacy.warning")
+                    .font(.caption2)
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .textCase(nil)
         }
     }
 
