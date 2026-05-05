@@ -129,14 +129,12 @@ struct CardEditView: View {
 
             // 締日〜支払設定を1パネルにまとめる
             Section {
-                AdaptiveValueRow(titleKey: billingModeTitleText) {
-                    Picker("", selection: $usesAfterDays) {
-                        Text(billingModeCycleText).tag(false)
-                        Text(billingModeAfterDaysText).tag(true)
-                    }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
+                // Form ネイティブ行（ラベル左・選択値右）で1行表示を確保する
+                Picker(billingModeTitleText, selection: $usesAfterDays) {
+                    Text(billingModeCycleText).tag(false)
+                    Text(billingModeAfterDaysText).tag(true)
                 }
+                .pickerStyle(.menu)
 
                 if !usesAfterDays {
                     AdaptiveValueRow(titleKey: "card.field.closingDay") {
@@ -542,30 +540,30 @@ struct CardEditView: View {
 
 }
 
-/// 1行優先で表示し、収まらない場合だけ値を2行目右寄せで表示する行コンポーネント
+/// タイトルと値を並べる行コンポーネント
+/// 1行に収まる場合は HStack、収まらない場合はタイトルの下に値を右寄せで表示する
 private struct AdaptiveValueRow<ValueView: View>: View {
     let titleKey: LocalizedStringKey
     @ViewBuilder let valueView: () -> ValueView
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+            HStack(alignment: .center, spacing: 8) {
                 Text(titleKey)
                     .lineLimit(1)
                 Spacer(minLength: 0)
                 valueView()
                     .lineLimit(1)
             }
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(titleKey)
                     .lineLimit(1)
                 HStack(spacing: 0) {
                     Spacer(minLength: 0)
                     valueView()
-                        .lineLimit(1)
                 }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 44)
     }
 }
