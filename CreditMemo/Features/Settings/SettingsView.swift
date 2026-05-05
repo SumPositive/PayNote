@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
+import SafariServices
 
 struct SettingsView: View {
     @AppStorage(AppStorageKey.userLevel)         private var userLevel: UserLevel = .beginner
@@ -13,11 +14,10 @@ struct SettingsView: View {
     @AppStorage(AppStorageKey.showCurrencySymbol)  private var showCurrencySymbol = true
 
     @Environment(\.modelContext) private var context
-
     @State private var showShareSheet  = false
     @State private var showImportPicker = false
     @State private var exportedURL: URL?
-    @State private var showAboutSheet  = false
+    @State private var showDocsSheet = false
     @State private var showPruneOldRecordsConfirm = false
     @State private var alertItem: SettingsAlertItem?
     @State private var isWorking = false
@@ -26,6 +26,15 @@ struct SettingsView: View {
 
     private var exportFormat: JSONExport.OutputStyle {
         JSONExport.OutputStyle(rawValue: exportFormatRaw) ?? .compact
+    }
+
+    private var versionBuildText: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""
+        if version.isEmpty || build.isEmpty {
+            return version.isEmpty ? build : version
+        }
+        return "\(version).\(build)"
     }
 
     var body: some View {
@@ -213,13 +222,14 @@ struct SettingsView: View {
 
             Section("settings.panel.support") {
                 Button {
-                    showAboutSheet = true
+                    // About画面を挟まず、直接アプリ内シートで取扱説明を開く
+                    showDocsSheet = true
                 } label: {
                     Label("settings.about", systemImage: "info.circle")
                 }
             }
 
-            Section("settings.panel.cheer") {
+            Section {
                 Button("settings.cheer.tip") {
                     alertItem = .localized(
                         id: "cheer.tip",
@@ -234,11 +244,16 @@ struct SettingsView: View {
                         messageKey: "settings.cheer.ad.todo"
                     )
                 }
+            } header: {
+                Text("settings.panel.cheer")
+            } footer: {
+                settingsFooter
             }
         }
         .scalableNavigationTitle("top.settings")
-        .sheet(isPresented: $showAboutSheet) {
-            NavigationStack { AboutView() }
+        .sheet(isPresented: $showDocsSheet) {
+            SafariView(url: helpDocURL())
+                .ignoresSafeArea()
         }
         .sheet(isPresented: $showShareSheet) {
             if let url = exportedURL {
@@ -312,6 +327,18 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private var settingsFooter: some View {
+        VStack(spacing: 2) {
+            Text(versionBuildText)
+            Text("about.copyright")
+        }
+        .font(.caption2)
+        .foregroundStyle(.tertiary)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding(.top, 4)
     }
 
     /// 設定画面のアラート表示モデル
