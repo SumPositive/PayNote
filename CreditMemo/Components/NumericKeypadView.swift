@@ -63,8 +63,9 @@ struct NumericKeypadSheet: View {
         NavigationStack {
             VStack(spacing: sheetSpacing) {
                 // 入力表示
-                HStack(alignment: .lastTextBaseline, spacing: 6) {
+                HStack {
                     Spacer()
+                    // 金額は以前どおり中央へ固定する
                     Text(displayAmountText)
                         .font(.system(size: displayFontSize, weight: .bold, design: .rounded).monospacedDigit())
                         .foregroundStyle(displayColor)
@@ -75,7 +76,6 @@ struct NumericKeypadSheet: View {
                         .animation(.snappy, value: isNegative)
                     Spacer()
                 }
-                .frame(minHeight: 62 * uiScale)
                 .padding(.horizontal)
                 // ナビゲーションタイトルとの重なりを避けるため、金額表示を下げる
                 .padding(.top, (isCompact ? 18 : 24) * uiScale)
@@ -102,10 +102,21 @@ struct NumericKeypadSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
+                    // 閉じるボタンは左端に固定する
                     Button { dismiss() } label: {
                         Image(systemName: "chevron.down")
                             .font(.title3)
                             .symbolRenderingMode(.hierarchical)
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    // 符号切替は右端の独立項目にして、閉じると分離する
+                    Button {
+                        isNegative.toggle()
+                    } label: {
+                        Image(systemName: "minus.forwardslash.plus")
+                            .font(.body.weight(.semibold))
+                            .foregroundColor(isNegative ? .red : .accentColor)
                     }
                 }
             }
@@ -124,8 +135,6 @@ struct NumericKeypadSheet: View {
         switch key {
         case .digit(let d):   appendDigits(String(d))
         case .doubleZero:     appendDigits("00")
-        case .tripleZero:     appendDigits("000")
-        case .minus:          isNegative.toggle()
         case .delete:
             if !digits.isEmpty { digits.removeLast() }
         }
@@ -163,8 +172,6 @@ private struct ConditionalSheetDynamicTypeModifier: ViewModifier {
 enum NumericKeypadKey {
     case digit(Int)
     case doubleZero
-    case tripleZero
-    case minus
     case delete
 }
 
@@ -197,9 +204,8 @@ struct NumericKeypad: View {
                     }
                 }
             }
-            // 底行: − / 0 / 000 / ⌫
+            // 底行は元の大きさに戻すため、3分割にする
             HStack(spacing: spacing) {
-                KeypadActionButton(systemImage: "minus.forwardslash.plus", compact: compact, scale: scale) { onKey(.minus) }
                 KeypadDigitButton(label: "0",   compact: compact, scale: scale) { onKey(.digit(0)) }
                 KeypadDigitButton(label: "00", compact: compact, scale: scale) { onKey(.doubleZero) }
                 KeypadDeleteButton(compact: compact, scale: scale)              { onKey(.delete) }
@@ -226,28 +232,6 @@ private struct KeypadDigitButton: View {
                 .font(font)
                 .frame(maxWidth: .infinity, minHeight: minHeight)
                 .background(Color(.secondarySystemGroupedBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-/// サイン操作用ボタン（⌫ と同系の背景色）
-private struct KeypadActionButton: View {
-    let systemImage: String
-    let compact: Bool
-    let scale: CGFloat
-    let action: () -> Void
-
-    private var minHeight: CGFloat { (compact ? 52 : 56) * scale }
-    private var font: Font { compact ? .title3 : .title2 }
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(font)
-                .frame(maxWidth: .infinity, minHeight: minHeight)
-                .background(Color(.tertiarySystemGroupedBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
