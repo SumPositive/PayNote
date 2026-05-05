@@ -1126,7 +1126,7 @@ private struct SimilarRecordRow: View {
 
                 Text(record.nAmount.currencyString())
                     .font(.subheadline.monospacedDigit().weight(.semibold))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(record.nAmount < 0 ? Color.red : Color.primary)
                     .fixedSize(horizontal: true, vertical: false)
             }
 

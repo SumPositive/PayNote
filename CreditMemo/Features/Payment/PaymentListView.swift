@@ -47,9 +47,14 @@ struct PaymentListView: View {
                 VStack(spacing: 0) {
                     if hasOverdueUnpaid {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("payment.overdue.warning")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(COLOR_UNPAID)
+                            Text(unpaidFilter == .upcoming
+                                ? "payment.overdue.warning.upcoming"
+                                : "payment.overdue.warning.past"
+                            )
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(COLOR_UNPAID)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .multilineTextAlignment(.center)
                             Picker("payment.overdue.filter", selection: $unpaidFilter) {
                                 Text("payment.overdue.upcoming").tag(PaymentUnpaidFilter.upcoming)
                                 Text("payment.overdue.past").tag(PaymentUnpaidFilter.overdue)
@@ -64,14 +69,17 @@ struct PaymentListView: View {
                         ScrollView {
                             LazyVStack(spacing: 16) {
                                 if userLevel == .beginner {
-                                    VStack(alignment: .leading, spacing: 4) {
+                                    VStack(alignment: .center, spacing: 4) {
                                         Text("payment.beginner.title")
                                             .font(.subheadline.weight(.semibold))
+                                            .frame(maxWidth: .infinity, alignment: .center)
                                         // 文とアイコン付き操作文を分け、改行位置を自然にする
-                                        VStack(alignment: .leading, spacing: 1) {
+                                        VStack(alignment: .center, spacing: 1) {
                                             Text("payment.beginner.line1")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
+                                                .frame(maxWidth: .infinity, alignment: .center)
+                                                .multilineTextAlignment(.center)
                                                 .fixedSize(horizontal: false, vertical: true)
                                             HStack(alignment: .firstTextBaseline, spacing: 4) {
                                                 PaymentStatusPill(isPaid: false)
@@ -79,13 +87,16 @@ struct PaymentListView: View {
                                                 Text("payment.beginner.line2")
                                                     .font(.caption)
                                                     .foregroundStyle(.secondary)
+                                                    .multilineTextAlignment(.center)
                                                     .fixedSize(horizontal: false, vertical: true)
                                             }
                                         }
-                                        VStack(alignment: .leading, spacing: 1) {
+                                        VStack(alignment: .center, spacing: 1) {
                                             Text("payment.beginner.line3")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
+                                                .frame(maxWidth: .infinity, alignment: .center)
+                                                .multilineTextAlignment(.center)
                                                 .fixedSize(horizontal: false, vertical: true)
                                             HStack(alignment: .firstTextBaseline, spacing: 4) {
                                                 PaymentStatusPill(isPaid: true)
@@ -93,10 +104,12 @@ struct PaymentListView: View {
                                                 Text("payment.beginner.line4")
                                                     .font(.caption)
                                                     .foregroundStyle(.secondary)
+                                                    .multilineTextAlignment(.center)
                                                     .fixedSize(horizontal: false, vertical: true)
                                             }
                                         }
                                     }
+                                    .frame(maxWidth: .infinity, alignment: .center)
                                 }
                                 PaymentCombinedCard(
                                     unpaidPayments: selectedUnpaidPayments,
@@ -336,7 +349,7 @@ private struct PaymentRow: View {
                         Spacer(minLength: 8)
                         Text(payment.sumAmount.currencyString())
                             .font(.body.monospacedDigit())
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(payment.sumAmount < 0 ? Color.red : Color.primary)
                             .lineLimit(1)
                             .fixedSize(horizontal: true, vertical: false)
                     }
@@ -351,7 +364,7 @@ private struct PaymentRow: View {
                             Spacer(minLength: 0)
                             Text(payment.sumAmount.currencyString())
                                 .font(.body.monospacedDigit())
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(payment.sumAmount < 0 ? Color.red : Color.primary)
                                 .lineLimit(1)
                                 // 金額は最優先で欠けないようにする
                                 .fixedSize(horizontal: true, vertical: false)

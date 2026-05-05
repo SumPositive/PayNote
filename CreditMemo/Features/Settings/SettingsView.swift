@@ -80,7 +80,7 @@ struct SettingsView: View {
                     }
                 }
 
-                Toggle("settings.showCurrencySymbol", isOn: $showCurrencySymbol)
+                Toggle(showCurrencySymbolLabel, isOn: $showCurrencySymbol)
             }
 
             Section("settings.panel.payment") {
@@ -548,6 +548,16 @@ struct SettingsView: View {
 }
 
 private extension SettingsView {
+    /// 通貨記号スイッチのラベル（ロケールの記号を括弧内に表示）
+    var showCurrencySymbolLabel: String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = .current
+        let symbol = formatter.currencySymbol ?? ""
+        let isJapanese = Locale.current.language.languageCode?.identifier == "ja"
+        return isJapanese ? "通貨記号(\(symbol))を表示する" : "Show Currency Symbol (\(symbol))"
+    }
+
     /// 集計期間ラベル
     func windowLabel(_ days: Int) -> String {
         let isJapanese = Locale.current.language.languageCode?.identifier == "ja"

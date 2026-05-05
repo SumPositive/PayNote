@@ -1891,6 +1891,40 @@
         }
       }
     },
+    "payment.overdue.warning.past" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check and move them to paid."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "確認して済みへ移動してください"
+          }
+        }
+      }
+    },
+    "payment.overdue.warning.upcoming" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There are unpaid items past their debit date."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引き落とし日を過ぎた未払があります"
+          }
+        }
+      }
+    },
     "payment.row.methods" : {
       "extractionState" : "manual",
       "localizations" : {
