@@ -25,14 +25,20 @@ extension Decimal {
     var isZero: Bool { self == .zero }
 
     /// 通貨表示（通貨記号と小数桁数はロケールに従う）
+    /// 設定「通貨記号を表示する」が OFF の場合は記号を省略する
     func currencyString(locale: Locale = .current) -> String {
+        let showSymbol = UserDefaults.standard.object(forKey: "setting.showCurrencySymbol") as? Bool ?? true
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.locale = locale
         let fractionDigits = Self.currencyFractionDigits(locale: locale)
         formatter.minimumFractionDigits = fractionDigits
         formatter.maximumFractionDigits = fractionDigits
-        return formatter.string(from: self as NSDecimalNumber) ?? "\(self)"
+        if !showSymbol {
+            formatter.currencySymbol = ""
+        }
+        let result = formatter.string(from: self as NSDecimalNumber) ?? "\(self)"
+        return showSymbol ? result : result.trimmingCharacters(in: .whitespaces)
     }
 
     /// 通貨の最小単位へ変換した整数値を返す

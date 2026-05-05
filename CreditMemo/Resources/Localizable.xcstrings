@@ -4441,6 +4441,23 @@
           }
         }
       }
+    },
+    "settings.showCurrencySymbol" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Currency Symbol (¥)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通貨記号(¥)を表示する"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"
