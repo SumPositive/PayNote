@@ -4414,13 +4414,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Number of days shown in the Debit Status screen. For example, 7 days shows totals due within 7 days from the nearest debit date. Use this as a reference for preparing funds."
+            "value" : "Number of days shown in the Debit Status screen. For example, 7 days shows totals due within 7 days from today. Use this as a reference for preparing funds."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「引き落とし状況」画面に表示する引き落とし合計の集計日数です。例えば7日にすると、直近の引き落とし日から7日以内の引き落とし合計を表示します。資金準備の参考にしてください。"
+            "value" : "「引き落とし状況」画面に表示する引き落とし合計の集計日数です。例えば7日にすると、今日から7日以内の引き落とし合計を表示します。資金準備の参考にしてください。"
           }
         }
       }

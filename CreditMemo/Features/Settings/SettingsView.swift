@@ -8,7 +8,7 @@ struct SettingsView: View {
     @AppStorage(AppStorageKey.fontScale)         private var fontScale: FontScale = .system
     @AppStorage(AppStorageKey.afterSaveAction)   private var afterSaveAction: AfterSaveAction = .goBack
     @AppStorage(AppStorageKey.openAddOnActive)   private var openAddOnActive = false
-    @AppStorage(AppStorageKey.paymentWindowDays) private var paymentWindowDays = 7
+    @AppStorage(AppStorageKey.paymentWindowDays) private var paymentWindowDays = 15
     @AppStorage(AppStorageKey.exportFormat)      private var exportFormatRaw = JSONExport.OutputStyle.compact.rawValue
 
     @Environment(\.modelContext) private var context

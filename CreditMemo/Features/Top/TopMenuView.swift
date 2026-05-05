@@ -4,7 +4,7 @@ import SwiftData
 struct TopMenuView: View {
     @Binding var selectedDestination: AppDestination?
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
-    @AppStorage(AppStorageKey.paymentWindowDays) private var paymentWindowDays = 7
+    @AppStorage(AppStorageKey.paymentWindowDays) private var paymentWindowDays = 15
 
     @Query(sort: \E7payment.date, order: .reverse)
     private var allPayments: [E7payment]
@@ -17,24 +17,20 @@ struct TopMenuView: View {
     }
 
     private var recentUnpaidTotal: Decimal {
-        // メニュー表示は「直近の引き落とし計」を使う
+        // メニュー表示は「本日から N 日間の引き落とし合計」を使う
         let windowDays = max(1, min(paymentWindowDays, 30))
         let sorted = unpaidPayments.sorted { $0.date < $1.date }
         let today = Calendar.current.startOfDay(for: Date())
-        let firstAnchor = sorted
-            .map { Calendar.current.startOfDay(for: $0.date) }
-            .first { today <= $0 } ?? sorted.first.map { Calendar.current.startOfDay(for: $0.date) }
-        guard let firstAnchor else { return .zero }
         let end: Date
         if windowDays == 30 {
-            end = Calendar.current.date(byAdding: .month, value: 1, to: firstAnchor) ?? firstAnchor
+            end = Calendar.current.date(byAdding: .month, value: 1, to: today) ?? today
         } else {
-            end = Calendar.current.date(byAdding: .day, value: windowDays - 1, to: firstAnchor) ?? firstAnchor
+            end = Calendar.current.date(byAdding: .day, value: windowDays - 1, to: today) ?? today
         }
         return sorted
             .filter {
                 let date = Calendar.current.startOfDay(for: $0.date)
-                return firstAnchor <= date && date <= end
+                return today <= date && date <= end
             }
             .reduce(.zero) { partialResult, payment in
                 partialResult + payment.sumAmount

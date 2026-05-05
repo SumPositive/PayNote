@@ -4,7 +4,7 @@ import SwiftData
 struct PaymentListView: View {
     @Environment(\.modelContext) private var context
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
-    @AppStorage(AppStorageKey.paymentWindowDays) private var paymentWindowDays = 7
+    @AppStorage(AppStorageKey.paymentWindowDays) private var paymentWindowDays = 15
     @State private var upcomingUnpaidPayments: [E7payment] = []
     @State private var overdueUnpaidPayments: [E7payment] = []
     @State private var overdueUnpaidCount = 0
@@ -432,9 +432,7 @@ private struct PaymentCombinedCard: View {
                     if 0 < sectionIndex {
                         PaymentSectionSeparator()
                     }
-                    if section.items.isEmpty {
-                        PaymentEmptyRow()
-                    } else {
+                    if !section.items.isEmpty {
                         let indexedItems = Array(section.items.enumerated())
                         ForEach(indexedItems, id: \.element.id) { index, payment in
                             PaymentNavigationRow(
@@ -448,6 +446,7 @@ private struct PaymentCombinedCard: View {
                             }
                         }
                     }
+                    // 空セクションは PaymentEmptyRow を省き、フッター（¥0）のみ表示する
                     PaymentPeriodFooter(
                         title: section.footerTitle,
                         amount: section.totalAmount
@@ -681,44 +680,22 @@ private struct PaymentUnpaidSummaries {
         let windowDays = max(1, min(rawWindowDays, 30))
         let sorted = payments.sorted { $0.date < $1.date }
         let today = Calendar.current.startOfDay(for: Date())
-        let allDates = sorted.map { Calendar.current.startOfDay(for: $0.date) }
 
-        let firstAnchor = allDates.first { today <= $0 } ?? allDates.first
-        guard let firstAnchor else {
-            return PaymentUnpaidSummaries(
-                currentTitle: localizedCurrentTitle(windowDays: windowDays),
-                currentAmount: .zero,
-                nextTitle: localizedNextTitle(windowDays: windowDays),
-                nextAmount: .zero,
-                futureTitle: localizedFutureTitle(),
-                futureAmount: .zero
-            )
-        }
-
-        let secondAnchor = allDates.first { firstAnchor < $0 }
-        let firstRange = windowRange(start: firstAnchor, windowDays: windowDays)
-        let secondRange = secondAnchor.map { windowRange(start: $0, windowDays: windowDays) }
+        // 起点は常に本日。データがなくても空集計を返す
+        let firstRange  = windowRange(start: today, windowDays: windowDays)
+        // 次の期間は現在期間の翌日から同じ幅で取る
+        let secondStart = Calendar.current.date(byAdding: .day, value: 1, to: firstRange.upperBound) ?? firstRange.upperBound
+        let secondRange = windowRange(start: secondStart, windowDays: windowDays)
 
         let currentAmount = sorted
             .filter { firstRange.contains(Calendar.current.startOfDay(for: $0.date)) }
-            .reduce(Decimal.zero) { partialResult, payment in
-                partialResult + payment.sumAmount
-            }
+            .reduce(Decimal.zero) { $0 + $1.sumAmount }
         let nextAmount = sorted
-            .filter { payment in
-                guard let secondRange else { return false }
-                return secondRange.contains(Calendar.current.startOfDay(for: payment.date))
-            }
-            .reduce(Decimal.zero) { partialResult, payment in
-                partialResult + payment.sumAmount
-            }
-
-        let futureBoundary = (secondRange?.upperBound ?? firstRange.upperBound)
+            .filter { secondRange.contains(Calendar.current.startOfDay(for: $0.date)) }
+            .reduce(Decimal.zero) { $0 + $1.sumAmount }
         let futureAmount = sorted
-            .filter { futureBoundary < Calendar.current.startOfDay(for: $0.date) }
-            .reduce(Decimal.zero) { partialResult, payment in
-                partialResult + payment.sumAmount
-            }
+            .filter { secondRange.upperBound < Calendar.current.startOfDay(for: $0.date) }
+            .reduce(Decimal.zero) { $0 + $1.sumAmount }
 
         return PaymentUnpaidSummaries(
             currentTitle: localizedCurrentTitle(windowDays: windowDays),
@@ -793,55 +770,29 @@ private struct PaymentUnpaidGrouped {
         let windowDays = max(1, min(rawWindowDays, 30))
         let sorted = payments.sorted { $0.date < $1.date }
         let today = Calendar.current.startOfDay(for: Date())
-        let allDates = sorted.map { Calendar.current.startOfDay(for: $0.date) }
-        let firstAnchor = allDates.first { today <= $0 } ?? allDates.first
 
-        guard let firstAnchor else {
-            return PaymentUnpaidGrouped(
-                sections: [
-                    Section(id: "current", footerTitle: PaymentUnpaidSummaries.localizedCurrentSummaryTitle(windowDays: windowDays), items: [], totalAmount: .zero),
-                    Section(id: "next", footerTitle: PaymentUnpaidSummaries.localizedNextTitle(windowDays: windowDays), items: [], totalAmount: .zero),
-                    Section(id: "future", footerTitle: PaymentUnpaidSummaries.localizedFutureTitle(), items: [], totalAmount: .zero),
-                ]
-            )
-        }
-
-        let secondAnchor = allDates.first { firstAnchor < $0 }
-        let firstRange = PaymentUnpaidSummaries.windowRange(start: firstAnchor, windowDays: windowDays)
-        let secondRange = secondAnchor.map { PaymentUnpaidSummaries.windowRange(start: $0, windowDays: windowDays) }
-        let nextRangeLowerBound = Calendar.current.date(byAdding: .day, value: 1, to: firstRange.upperBound) ?? firstRange.upperBound
-        let futureLowerBound = Calendar.current.date(byAdding: .day, value: 1, to: (secondRange?.upperBound ?? firstRange.upperBound)) ?? (secondRange?.upperBound ?? firstRange.upperBound)
+        // 起点は常に本日（PaymentUnpaidSummaries と一致させる）
+        let firstRange  = PaymentUnpaidSummaries.windowRange(start: today, windowDays: windowDays)
+        let secondStart = Calendar.current.date(byAdding: .day, value: 1, to: firstRange.upperBound) ?? firstRange.upperBound
+        let secondRange = PaymentUnpaidSummaries.windowRange(start: secondStart, windowDays: windowDays)
+        let futureLowerBound = Calendar.current.date(byAdding: .day, value: 1, to: secondRange.upperBound) ?? secondRange.upperBound
 
         // 期間が重複しないよう、直近/次/将来を排他的な範囲で分割する
         let currentItems = sorted
             .filter { firstRange.contains(Calendar.current.startOfDay(for: $0.date)) }
             .sorted { $1.date < $0.date }
         let nextItems = sorted
-            .filter { payment in
-                let date = Calendar.current.startOfDay(for: payment.date)
-                if let secondRange {
-                    if date < nextRangeLowerBound {
-                        return false
-                    }
-                    return date <= secondRange.upperBound
-                }
-                return nextRangeLowerBound <= date
-            }
+            .filter { secondRange.contains(Calendar.current.startOfDay(for: $0.date)) }
             .sorted { $1.date < $0.date }
         let futureItems = sorted
             .filter { futureLowerBound <= Calendar.current.startOfDay(for: $0.date) }
             .sorted { $1.date < $0.date }
 
-        let currentTotal = currentItems.reduce(Decimal.zero) { partialResult, payment in
-            partialResult + payment.sumAmount
-        }
-        let nextTotal = nextItems.reduce(Decimal.zero) { partialResult, payment in
-            partialResult + payment.sumAmount
-        }
-        let futureTotal = futureItems.reduce(Decimal.zero) { partialResult, payment in
-            partialResult + payment.sumAmount
-        }
+        let currentTotal = currentItems.reduce(Decimal.zero) { $0 + $1.sumAmount }
+        let nextTotal    = nextItems.reduce(Decimal.zero)    { $0 + $1.sumAmount }
+        let futureTotal  = futureItems.reduce(Decimal.zero)  { $0 + $1.sumAmount }
 
+        // 3セクション常に表示（空でも ¥0 フッターで期間の状況を示す）
         return PaymentUnpaidGrouped(
             sections: [
                 Section(
