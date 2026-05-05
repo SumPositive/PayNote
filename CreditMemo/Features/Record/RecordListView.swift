@@ -5,6 +5,7 @@ struct RecordListView: View {
     /// フィルターの選択状態を1つの値で扱う
     private enum FilterOption: Hashable {
         case all
+        case allByDate
         case incomplete
         case card(String)
     }
@@ -15,6 +16,7 @@ struct RecordListView: View {
 
     @State private var filterCard: E1card?
     @State private var filterIncomplete = false
+    @State private var filterDateSort = false
     @State private var records: [E3record] = []
     @State private var recordPage = 0
     @State private var hasMoreRecords = true
@@ -32,18 +34,21 @@ struct RecordListView: View {
         }
         return "All (Saved Order)"
     }
+    private var allByDateFilterText: String {
+        if Locale.current.language.languageCode?.identifier == "ja" {
+            return "すべて（日付順）"
+        }
+        return "All (Date Order)"
+    }
     private var filtered: [E3record] {
         records
     }
     private var selectedFilterOption: Binding<FilterOption> {
         Binding(
             get: {
-                if filterIncomplete {
-                    return .incomplete
-                }
-                if let filterCard {
-                    return .card(filterCard.id)
-                }
+                if filterIncomplete { return .incomplete }
+                if filterDateSort  { return .allByDate }
+                if let filterCard  { return .card(filterCard.id) }
                 return .all
             },
             set: { newValue in
@@ -52,12 +57,19 @@ struct RecordListView: View {
                 case .all:
                     filterCard = nil
                     filterIncomplete = false
+                    filterDateSort = false
+                case .allByDate:
+                    filterCard = nil
+                    filterIncomplete = false
+                    filterDateSort = true
                 case .incomplete:
                     filterCard = nil
                     filterIncomplete = true
+                    filterDateSort = false
                 case .card(let id):
                     filterCard = cards.first { $0.id == id }
                     filterIncomplete = false
+                    filterDateSort = false
                 }
             }
         )
@@ -134,6 +146,9 @@ struct RecordListView: View {
         .onChange(of: filterIncomplete) { _, _ in
             resetAndLoadRecords()
         }
+        .onChange(of: filterDateSort) { _, _ in
+            resetAndLoadRecords()
+        }
     }
 
     @ViewBuilder
@@ -141,6 +156,8 @@ struct RecordListView: View {
         Picker(selection: selectedFilterOption) {
             Text(allFilterText)
                 .tag(FilterOption.all)
+            Text(allByDateFilterText)
+                .tag(FilterOption.allByDate)
             Text("record.filter.incomplete")
                 .tag(FilterOption.incomplete)
             ForEach(cards) { c in
@@ -196,6 +213,18 @@ struct RecordListView: View {
             }
             recordPage += 1
             hasMoreRecords = end < sortedCache.count
+            return
+        } else if filterDateSort {
+            // 「すべて（日付順）」は利用日の降順でフェッチする
+            descriptor = FetchDescriptor<E3record>(
+                sortBy: [SortDescriptor(\E3record.dateUse, order: .reverse)]
+            )
+            descriptor.fetchOffset = recordPage * pageSize
+            descriptor.fetchLimit = pageSize
+            let fetched = (try? context.fetch(descriptor)) ?? []
+            records.append(contentsOf: fetched)
+            recordPage += 1
+            hasMoreRecords = pageSize <= fetched.count
             return
         } else if let filterCardID = filterCard?.id {
             descriptor = FetchDescriptor<E3record>(
@@ -303,7 +332,7 @@ struct RecordSummaryRow: View {
                     .lineLimit(1)
                 Text(AppDateFormat.monthDayText(record.dateUse))
                     .font(.subheadline)
-                    .foregroundStyle(amountToneColor)
+                    .foregroundStyle(Color(.label))
                     .lineLimit(1)
                 Text(AppDateFormat.weekdayText(record.dateUse))
                     .font(.system(size: 10, weight: .regular))
@@ -318,7 +347,7 @@ struct RecordSummaryRow: View {
                     HStack(alignment: .top, spacing: 8) {
                         Text(recordLabelText)
                             .font(.body)
-                            .foregroundStyle(amountToneColor)
+                            .foregroundStyle(Color(.label))
                             .lineLimit(1)
                             .truncationMode(.tail)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -330,7 +359,7 @@ struct RecordSummaryRow: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(recordLabelText)
                             .font(.body)
-                            .foregroundStyle(amountToneColor)
+                            .foregroundStyle(Color(.label))
                             .lineLimit(1)
                             .truncationMode(.tail)
                             .frame(maxWidth: .infinity, alignment: .leading)
