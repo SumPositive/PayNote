@@ -13,6 +13,8 @@ struct PaymentListView: View {
     @State private var isLoadingMorePaid = false
     @State private var unpaidFilter: PaymentUnpaidFilter = .upcoming
     @State private var togglingPaymentIDs: Set<String> = []
+    /// false のとき自動スクロールをスキップする
+    @State private var autoScrollEnabled = true
     private let paymentMoveAnimation = Animation.easeInOut(duration: 0.55)
     private let pageSize = 100
     private let overduePageSize = 100
@@ -36,6 +38,8 @@ struct PaymentListView: View {
     }
 
     private var scrollPositionKey: String {
+        // カウントを含めることで初回データ読み込み後に確実に発火させる。
+        // 戻り時の不要スクロールは suppressNextScroll フラグで抑制する。
         "\(unpaidFilter.rawValue)-\(selectedUnpaidPayments.count)-\(paidPayments.count)"
     }
 
@@ -121,7 +125,8 @@ struct PaymentListView: View {
                                     onLoadMorePaid: loadMorePaidIfNeeded,
                                     boundaryAnchorID: paymentBoundaryAnchorID,
                                     paidFirstRowAnchorID: paidFirstRowAnchorID,
-                                    windowDays: paymentWindowDays
+                                    windowDays: paymentWindowDays,
+                                    onNavigateToDetail: { autoScrollEnabled = false }
                                 )
                             }
                             .padding(.horizontal, 16)
@@ -138,6 +143,14 @@ struct PaymentListView: View {
         .scalableNavigationTitle("payment.list.title")
         .onAppear {
             loadInitialPayments()
+            // 詳細から戻ったとき（autoScrollEnabled が OFF）は復元タスクを立てる。
+            // タスクが発火すれば scrollToInitialPosition 内で ON へ戻るため、タイムアウトは保険
+            if !autoScrollEnabled {
+                Task {
+                    try? await Task.sleep(nanoseconds: 150_000_000)
+                    autoScrollEnabled = true
+                }
+            }
         }
     }
 
@@ -154,6 +167,11 @@ struct PaymentListView: View {
     }
 
     private func scrollToInitialPosition(proxy: ScrollViewProxy) async {
+        // 詳細から戻ったときなど、スクロール OFF のときはスキップして次回のために ON へ戻す
+        guard autoScrollEnabled else {
+            autoScrollEnabled = true
+            return
+        }
         // レイアウト確定後に境界を中央へ寄せる
         try? await Task.sleep(nanoseconds: 50_000_000)
         await MainActor.run {
@@ -421,6 +439,7 @@ private struct PaymentCombinedCard: View {
     let boundaryAnchorID: String
     let paidFirstRowAnchorID: String
     let windowDays: Int
+    let onNavigateToDetail: () -> Void
     @State private var boundaryMidY: CGFloat = 0
 
     /// ViewBuilder 内の型推論負荷を下げるため、表示用の添字付き配列を事前に作る
@@ -452,7 +471,8 @@ private struct PaymentCombinedCard: View {
                                 payment: payment,
                                 rowID: payment.id,
                                 isToggling: togglingPaymentIDs.contains(payment.id),
-                                onToggle: onToggle
+                                onToggle: onToggle,
+                                onNavigateToDetail: onNavigateToDetail
                             )
                             if index + 1 < section.items.count {
                                 PaymentRowDivider()
@@ -475,7 +495,8 @@ private struct PaymentCombinedCard: View {
                             payment: payment,
                             rowID: payment.id,
                             isToggling: togglingPaymentIDs.contains(payment.id),
-                            onToggle: onToggle
+                            onToggle: onToggle,
+                            onNavigateToDetail: onNavigateToDetail
                         )
                         if index + 1 < unpaidPayments.count {
                             PaymentRowDivider()
@@ -497,7 +518,8 @@ private struct PaymentCombinedCard: View {
                         payment: payment,
                         rowID: index == 0 ? paidFirstRowAnchorID : payment.id,
                         isToggling: togglingPaymentIDs.contains(payment.id),
-                        onToggle: onToggle
+                        onToggle: onToggle,
+                        onNavigateToDetail: onNavigateToDetail
                     )
                     if showsPaidDivider(after: index) {
                         PaymentRowDivider()
@@ -580,10 +602,12 @@ private struct PaymentNavigationRow: View {
     let rowID: String
     let isToggling: Bool
     let onToggle: (E7payment) -> Void
+    let onNavigateToDetail: () -> Void
 
     var body: some View {
         NavigationLink {
             InvoiceListView(payment: payment)
+                .onAppear { onNavigateToDetail() }
         } label: {
             PaymentRow(payment: payment, isToggling: isToggling) {
                 onToggle(payment)
