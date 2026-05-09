@@ -10,6 +10,7 @@ struct ContentView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(AppStorageKey.openAddOnActive) private var openAddOnActive = false
     @AppStorage(AppStorageKey.fontScale) private var fontScale: FontScale = .system
+    @SceneStorage("content.selectedDestination") private var selectedDestinationRaw: String?
     @State private var selectedDestination: AppDestination?
     @State private var addRecordRefreshID = UUID()
     @State private var editingState = AppEditingState()
@@ -49,6 +50,17 @@ struct ContentView: View {
                 splitBody
             }
         }
+        .onAppear {
+            restoreDestinationIfNeeded()
+        }
+        .onChange(of: selectedDestination) { _, newValue in
+            // 文字サイズ切替で再生成されても戻れるように保持する
+            selectedDestinationRaw = newValue?.rawValue
+        }
+        .onChange(of: stackPath) { _, newValue in
+            // 特大レイアウト時の先頭画面も同じ保存先へ同期する
+            selectedDestinationRaw = newValue.last?.rawValue
+        }
         .environment(editingState)
     }
 
@@ -71,6 +83,12 @@ struct ContentView: View {
                         addRecordRefreshID: addRecordRefreshID
                     )
                 }
+        }
+        .onAppear {
+            // レイアウトが切り替わっても、直前の選択画面を復元する
+            if stackPath.isEmpty, let stored = storedDestination {
+                stackPath = [stored]
+            }
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active, openAddOnActive else { return }
@@ -109,6 +127,12 @@ struct ContentView: View {
                 }
             }
         }
+        .onAppear {
+            // 文字サイズ変更後も同じ詳細画面を維持する
+            if selectedDestination == nil {
+                selectedDestination = storedDestination
+            }
+        }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active, openAddOnActive else { return }
             // 既に新規追加画面が開いている、または編集中の場合は何もしない
@@ -122,7 +146,7 @@ struct ContentView: View {
 
 // MARK: - 画面遷移先
 
-enum AppDestination: Hashable, CaseIterable {
+enum AppDestination: String, Hashable, CaseIterable {
     case addRecord
     case recordList
     case paymentList
@@ -131,6 +155,25 @@ enum AppDestination: Hashable, CaseIterable {
     case tagList
     case settings
     case about
+}
+
+private extension ContentView {
+    /// 保存済みの遷移先を列挙値へ戻す
+    var storedDestination: AppDestination? {
+        guard let selectedDestinationRaw else { return nil }
+        return AppDestination(rawValue: selectedDestinationRaw)
+    }
+
+    /// 初回表示時に保存済みの遷移先を復元する
+    func restoreDestinationIfNeeded() {
+        if shouldUseStackBody {
+            if stackPath.isEmpty, let stored = storedDestination {
+                stackPath = [stored]
+            }
+        } else if selectedDestination == nil {
+            selectedDestination = storedDestination
+        }
+    }
 }
 
 // MARK: - 遷移先ビュー振り分け
