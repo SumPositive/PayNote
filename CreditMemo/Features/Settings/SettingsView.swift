@@ -593,7 +593,7 @@ private final class TipStore {
     static let shared = TipStore()
 
     // 投げ銭商品は少額と通常額の2段だけに絞る
-    private let productIds = ["CreditMemo_Tips_1", "CreditMemo_Tips_5"]
+    private let productIds = ["CreditMemo_Tips_1", "CreditMemo_Tips_5"] // 製品ID
     var products: [Product] = []
     var isLoadingProducts = false
     var isPurchasing = false
@@ -854,11 +854,12 @@ private struct TossedCoin: View {
     }
 
     @State private var fire = false
-    private let duration: Double = 0.65
+    private let duration: Double = 1.8
+    /// ゆらゆら揺れる横幅
+    private let sway: CGFloat = 24
 
     private var deltaX: CGFloat { end.x - start.x }
     private var deltaY: CGFloat { end.y - start.y }
-    private var bulge: CGFloat { deltaX < 0 ? -45 : 45 }
 
     var body: some View {
         Circle()
@@ -878,31 +879,37 @@ private struct TossedCoin: View {
             .keyframeAnimator(initialValue: KeyframeValue(), trigger: fire) { content, value in
                 content
                     .offset(x: value.offsetX, y: value.offsetY)
-                    .rotationEffect(.degrees(value.rotation))
                     .scaleEffect(value.scale)
                     .opacity(value.opacity)
             } keyframes: { _ in
+                // 横：直線経路に左右の揺れを乗せる
                 KeyframeTrack(\.offsetX) {
-                    LinearKeyframe(0, duration: 0.01)
-                    CubicKeyframe(deltaX * 0.5 + bulge, duration: duration * 0.5)
-                    CubicKeyframe(deltaX, duration: duration * 0.5)
+                    LinearKeyframe(0,                    duration: 0.01)
+                    CubicKeyframe(deltaX * 0.25 + sway,  duration: duration * 0.25)
+                    CubicKeyframe(deltaX * 0.50 - sway,  duration: duration * 0.25)
+                    CubicKeyframe(deltaX * 0.75 + sway,  duration: duration * 0.25)
+                    CubicKeyframe(deltaX,                duration: duration * 0.25)
                 }
+                // 縦：弧を描かず直線的にアイコンへ向かう
                 KeyframeTrack(\.offsetY) {
-                    LinearKeyframe(0, duration: 0.01)
-                    CubicKeyframe(deltaY * 0.30, duration: duration * 0.40)
-                    CubicKeyframe(deltaY, duration: duration * 0.60)
+                    LinearKeyframe(0,      duration: 0.01)
+                    LinearKeyframe(deltaY, duration: duration * 0.99)
                 }
+                // 回転なし
                 KeyframeTrack(\.rotation) {
-                    LinearKeyframe(0, duration: 0.01)
-                    LinearKeyframe(540, duration: duration)
+                    LinearKeyframe(0, duration: duration)
                 }
+                // スケール：アイコンに届いてから縮む
                 KeyframeTrack(\.scale) {
-                    LinearKeyframe(1.0, duration: duration * 0.88)
-                    LinearKeyframe(0.4, duration: duration * 0.12)
+                    LinearKeyframe(1.0,  duration: duration * 0.35)
+                    CubicKeyframe(1.12,  duration: duration * 0.30)
+                    CubicKeyframe(1.0,   duration: duration * 0.25)
+                    LinearKeyframe(0.2,  duration: duration * 0.10)
                 }
+                // 不透明度：アイコン内で消える
                 KeyframeTrack(\.opacity) {
-                    LinearKeyframe(1.0, duration: duration * 0.82)
-                    LinearKeyframe(0.0, duration: duration * 0.18)
+                    LinearKeyframe(1.0, duration: duration * 0.90)
+                    LinearKeyframe(0.0, duration: duration * 0.10)
                 }
             }
             .position(start)
