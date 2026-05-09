@@ -747,9 +747,6 @@ private struct TipSheetView: View {
                         : Color(red: 0.72, green: 0.45, blue: 0.20)
                     CoinButtonView(
                         price: product.displayPrice,
-                        label: isLarge
-                            ? String(localized: "support.tip.large")
-                            : String(localized: "support.tip.small"),
                         color: coinColor,
                         disabled: activeThrow != nil || store.isPurchasing
                     ) {
@@ -769,14 +766,12 @@ private struct TipSheetView: View {
 
 private struct CoinButtonView: View {
     let price: String
-    let label: String
     let color: Color
     let disabled: Bool
     let action: () -> Void
 
     var body: some View {
-        VStack(spacing: 12) {
-            Button(action: action) {
+        Button(action: action) {
                 ZStack {
                     Circle()
                         .fill(LinearGradient(
@@ -806,11 +801,6 @@ private struct CoinButtonView: View {
             .buttonStyle(CoinPressStyle())
             .disabled(disabled)
             .opacity(disabled ? 0.5 : 1.0)
-
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
     }
 }
 
