@@ -21,6 +21,12 @@ struct PaymentListView: View {
     private let paymentBoundaryAnchorID = "payment-boundary-anchor"
     private let paidFirstRowAnchorID = "payment-paid-first-row-anchor"
 
+    private var paymentStatusStartDate: Date {
+        // 引き落とし状況は、古い決済で画面が重くならないよう直近1年だけを対象にする
+        let today = Calendar.current.startOfDay(for: Date())
+        return Calendar.current.date(byAdding: .year, value: -1, to: today) ?? today
+    }
+
     private var hasMorePaid: Bool {
         paidPayments.count < allPaidCount
     }
@@ -256,7 +262,8 @@ struct PaymentListView: View {
     /// 前日以前の未払件数だけを先に取る
     private func fetchOverdueUnpaidCount() -> Int {
         let today = Calendar.current.startOfDay(for: Date())
-        let predicate = #Predicate<E7payment> { $0.date < today }
+        let startDate = paymentStatusStartDate
+        let predicate = #Predicate<E7payment> { startDate <= $0.date && $0.date < today }
         let descriptor = FetchDescriptor<E7payment>(predicate: predicate)
         // 口座未選択の済みも混ざりうるため、件数も実状態で数える
         return ((try? context.fetch(descriptor)) ?? []).filter { !$0.isPaid }.count
@@ -265,7 +272,8 @@ struct PaymentListView: View {
     /// 前日以前の未払は最大件数だけ表示する
     private func fetchOverdueUnpaidPayments(limit: Int) -> [E7payment] {
         let today = Calendar.current.startOfDay(for: Date())
-        let predicate = #Predicate<E7payment> { $0.date < today }
+        let startDate = paymentStatusStartDate
+        let predicate = #Predicate<E7payment> { startDate <= $0.date && $0.date < today }
         let descriptor = FetchDescriptor<E7payment>(
             predicate: predicate,
             sortBy: [SortDescriptor(\E7payment.date, order: .reverse)]
@@ -277,14 +285,19 @@ struct PaymentListView: View {
 
     /// 済み件数だけ先に取り、ページングの終端判定に使う
     private func fetchPaidCount() -> Int {
-        let descriptor = FetchDescriptor<E7payment>()
+        let startDate = paymentStatusStartDate
+        let predicate = #Predicate<E7payment> { startDate <= $0.date }
+        let descriptor = FetchDescriptor<E7payment>(predicate: predicate)
         // 口座未選択でも済みになりうるため、件数は実状態で数える
         return ((try? context.fetch(descriptor)) ?? []).filter(\.isPaid).count
     }
 
     /// 済みは必要件数だけ読む
     private func fetchPaidPayments(offset: Int, limit: Int) -> [E7payment] {
+        let startDate = paymentStatusStartDate
+        let predicate = #Predicate<E7payment> { startDate <= $0.date }
         let descriptor = FetchDescriptor<E7payment>(
+            predicate: predicate,
             sortBy: [SortDescriptor(\E7payment.date, order: .reverse)]
         )
         let paid = ((try? context.fetch(descriptor)) ?? []).filter(\.isPaid)
