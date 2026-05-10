@@ -288,6 +288,7 @@ struct RecordEditView: View {
                 allowNone: true,
                 addContent: { AnyView(NavigationStack { CardEditView() }) }
             )
+            .modifier(ConditionalDynamicTypeModifier(fontScale: fontScale))
         }
         .sheet(isPresented: $showBankPicker) {
             PickerSheet(
@@ -298,12 +299,14 @@ struct RecordEditView: View {
                 allowNone: true,
                 addContent: { AnyView(NavigationStack { BankEditView(bank: nil) }) }
             )
+            .modifier(ConditionalDynamicTypeModifier(fontScale: fontScale))
         }
         .sheet(isPresented: $showCategoryPicker) {
             CategoryMultiPickerSheet(
                 title: "record.field.tag",
                 selectedCategories: $selectedCategories
             )
+            .modifier(ConditionalDynamicTypeModifier(fontScale: fontScale))
         }
         .overlay(alignment: .top) {
             if savedBanner {
