@@ -78,7 +78,8 @@ enum RecordService {
         normalizeInvoices(invoices, context: context)
         // 決済手段の口座変更後、既存請求が古い支払先へ残るケースを修復する
         invoices = (try? context.fetch(invoiceDesc)) ?? []
-        repairPaymentMembership(invoices, context: context)
+        payments = (try? context.fetch(paymentDesc)) ?? []
+        repairPaymentMembership(invoices, payments: payments, context: context)
         // 張り替え後の支払配列を読み直し、空になった古い支払を確実に消す
         payments = (try? context.fetch(paymentDesc)) ?? []
         for payment in payments where payment.e2invoices.isEmpty {
@@ -634,19 +635,37 @@ enum RecordService {
         }
     }
 
-    private static func repairPaymentMembership(_ invoices: [E2invoice], context: ModelContext) {
+    private static func repairPaymentMembership(
+        _ invoices: [E2invoice],
+        payments: [E7payment],
+        context: ModelContext
+    ) {
+        var paymentByKey: [String: E7payment] = [:]
+        for payment in payments {
+            let key = paymentKey(bankID: payment.e8bank?.id, date: payment.date, isPaid: payment.e8paid != nil)
+            // 重複支払は後続の normalizePayments で統合するため、ここでは先頭だけを代表にする
+            if paymentByKey[key] == nil {
+                paymentByKey[key] = payment
+            }
+        }
         for invoice in invoices {
             if invoice.e6parts.isEmpty {
                 continue
             }
             let bank = invoice.e1card?.e8bank
-            let payment = findOrCreatePayment(
-                date: invoice.date,
-                bank: bank,
-                isPaid: invoice.isPaid,
-                fallbackPaid: invoice.isPaid,
-                context: context
-            )
+            // 口座未選択は物理的な paid/unpaid 所属を持てないため、内部キーは未払側へ寄せる
+            let physicalIsPaid = bank == nil ? false : invoice.isPaid
+            let key = paymentKey(bankID: bank?.id, date: invoice.date, isPaid: physicalIsPaid)
+            let payment: E7payment
+            if let existingPayment = paymentByKey[key] {
+                payment = existingPayment
+            } else {
+                let newPayment = E7payment(date: Calendar.current.startOfDay(for: invoice.date))
+                setPaymentBank(newPayment, bank: bank, isPaid: bank == nil ? false : invoice.isPaid)
+                context.insert(newPayment)
+                paymentByKey[key] = newPayment
+                payment = newPayment
+            }
             // 決済手段の口座変更後も、請求が古い支払先に残っていれば現在の口座へ張り替える
             if invoice.e7payment?.id != payment.id {
                 invoice.e7payment?.e2invoices.removeAll { $0.id == invoice.id }
