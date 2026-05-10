@@ -228,7 +228,12 @@ struct RecordEditView: View {
             // レコード集合が変わったときだけ再計算する
             refreshDerivedCaches()
         }
-        .sheet(isPresented: $showAmountPad) {
+        .sheet(isPresented: $showAmountPad, onDismiss: {
+            // テンキーを閉じた時に金額が未入力のままなら新規入力画面ごと閉じる
+            if isNew && nAmount == 0 {
+                dismiss()
+            }
+        }) {
             NumericKeypadSheet(
                 title: "record.field.amount",
                 placeholder: nAmount,

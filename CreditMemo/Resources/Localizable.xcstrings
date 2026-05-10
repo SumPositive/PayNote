@@ -2390,13 +2390,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Label"
+            "value": "Label (store, purpose, etc.)"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ラベル"
+            "value": "ラベル（店名・用途など）"
           }
         }
       }
@@ -2407,13 +2407,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Has Missing"
+            "value": "Has Blanks"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "未選択あり"
+            "value": "未入力あり"
           }
         }
       }
@@ -2596,13 +2596,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enter an amount to see similar payments."
+            "value": "Similar past payments are shown. Select one to fill in blank fields."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "類似の決済を提案します。選択すれば未入力の箇所を埋めます。"
+            "value": "近い履歴を提示します。選択すれば未入力項目が補塡されます。"
           }
         }
       }
@@ -2613,13 +2613,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pick from Similar"
+            "value": "Quote from History"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "類似の決済から選択"
+            "value": "履歴から引用"
           }
         }
       }
