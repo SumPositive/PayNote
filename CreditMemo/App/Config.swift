@@ -1,15 +1,40 @@
 import SwiftUI
 import Foundation
+import UIKit
 
 // MARK: - URL
 
-/// ヘルプドキュメント URL（言語別）
+/// ヘルプドキュメント URL（言語別・fontScale パラメータ付き）
+@MainActor
 func helpDocURL() -> URL {
     let lang = Locale.current.language.languageCode?.identifier ?? "en"
-    if lang == "ja" {
-        return URL(string: "https://docs.azukid.com/jp/sumpo/CreditMemo/creditmemo.html")!
+    let base = lang == "ja"
+        ? "https://docs.azukid.com/jp/sumpo/CreditMemo/creditmemo.html"
+        : "https://docs.azukid.com/en/sumpo/CreditMemo/creditmemo.html"
+    var components = URLComponents(string: base)!
+    components.queryItems = [URLQueryItem(name: "fontScale", value: helpDocFontScaleValue())]
+    return components.url!
+}
+
+/// FontScale 設定を Web 用の 3 段階文字列に変換する
+@MainActor
+private func helpDocFontScaleValue() -> String {
+    let raw = UserDefaults.standard.string(forKey: AppStorageKey.fontScale) ?? FontScale.system.rawValue
+    switch FontScale(rawValue: raw) ?? .system {
+    case .standard: return "standard"
+    case .large:    return "large"
+    case .xLarge:   return "xLarge"
+    case .system:
+        // 自動設定時は現在の iOS 文字サイズを 3 段階へ丸める
+        switch UIApplication.shared.preferredContentSizeCategory {
+        case .extraSmall, .small, .medium, .large:
+            return "standard"
+        case .extraLarge, .extraExtraLarge, .extraExtraExtraLarge:
+            return "large"
+        default:
+            return "xLarge"
+        }
     }
-    return URL(string: "https://docs.azukid.com/en/sumpo/CreditMemo/creditmemo.html")!
 }
 
 // MARK: - 入力制約
