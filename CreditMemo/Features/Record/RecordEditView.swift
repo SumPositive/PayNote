@@ -157,6 +157,7 @@ struct RecordEditView: View {
                 similarSection
                 deleteSection
             }
+            .scrollDismissesKeyboard(.interactively)
             .onChange(of: scrollToTopRequest) { _, _ in
                 withAnimation(.easeInOut(duration: 0.22)) {
                     proxy.scrollTo(formTopAnchorID, anchor: .top)
