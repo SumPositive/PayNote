@@ -64,6 +64,7 @@ struct RecordEditView: View {
     @State private var cachedLatestCard: E1card?
     @State private var cachedCategoryByID: [String: E5tag] = [:]
     @State private var scrollToTopRequest = 0
+    @State private var isSimilarExpanded = true
     @FocusState private var isUsePointFocused: Bool
     private let similarRecordLimit = 10
     private let formTopAnchorID = "record-form-top"
@@ -153,8 +154,8 @@ struct RecordEditView: View {
             Form {
                 beginnerSection
                 requiredSection
-                optionalSection
                 similarSection
+                optionalSection
                 deleteSection
             }
             .scrollDismissesKeyboard(.interactively)
@@ -565,23 +566,42 @@ struct RecordEditView: View {
     @ViewBuilder private var similarSection: some View {
         // ── 類似決済（新規入力時のみ） ─────────────────────
         if isNew {
-            Section(similarSectionHeaderText) {
-                if nAmount == 0 {
-                    Text(similarGuideText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else if similarCandidates.isEmpty {
-                    Text(similarEmptyText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(similarCandidates, id: \.record.id) { candidate in
-                        Button {
-                            applySimilarRecord(candidate.record)
-                        } label: {
-                            SimilarRecordRow(record: candidate.record)
+            Section {
+                if isSimilarExpanded {
+                    if nAmount == 0 {
+                        Text(similarGuideText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else if similarCandidates.isEmpty {
+                        Text(similarEmptyText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(similarCandidates, id: \.record.id) { candidate in
+                            Button {
+                                applySimilarRecord(candidate.record)
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    isSimilarExpanded = false
+                                }
+                            } label: {
+                                SimilarRecordRow(record: candidate.record)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
+                    }
+                }
+            } header: {
+                HStack {
+                    Text(similarSectionHeaderText)
+                    Spacer()
+                    Image(systemName: isSimilarExpanded ? "chevron.up" : "chevron.down")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isSimilarExpanded.toggle()
                     }
                 }
             }
