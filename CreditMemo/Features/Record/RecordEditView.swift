@@ -392,14 +392,9 @@ struct RecordEditView: View {
                 .buttonStyle(.plain)
                 .disabled(isCoreFieldsLocked)
             }
-        }
-    }
 
-    @ViewBuilder private var optionalSection: some View {
-        Section {
-            // 利用点（自由入力 + 頻度候補）
+            // ラベル（自由入力 + 頻度候補）
             VStack(alignment: .leading, spacing: 8) {
-                // ラベルは1行入力にし、return でフォーカスを外せるようにする
                 TextField("record.field.usePoint", text: $zName)
                     .focused($isUsePointFocused)
                     .textInputAutocapitalization(.never)
@@ -418,7 +413,6 @@ struct RecordEditView: View {
                     VStack(spacing: 0) {
                         ForEach(shownUsePointCandidates, id: \.self) { candidate in
                             Button {
-                                // 候補タップで確定する
                                 zName = candidate
                                 isUsePointFocused = false
                             } label: {
@@ -444,7 +438,11 @@ struct RecordEditView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
             }
+        }
+    }
 
+    @ViewBuilder private var optionalSection: some View {
+        Section {
             if userLevel != .beginner {
                 // 分類タグ（複数選択）
                 VStack(alignment: .leading, spacing: 6) {
