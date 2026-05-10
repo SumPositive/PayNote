@@ -237,8 +237,9 @@ struct RecordEditView: View {
         }
         .sheet(isPresented: $showDatePicker) {
             NavigationStack {
-                Form {
-                    // 同じ日を再タップした場合も閉じられるよう、UICalendarView を使う
+                // 同じ日を再タップした場合も閉じられるよう、UICalendarView を使う
+                // Form を使うと水平インセットで曜日列が欠けるため直接配置する
+                ScrollView {
                     SingleDateCalendarView(
                         selectedDate: $draftDateUse,
                         availableRange: APP_MIN_DATE...APP_MAX_DATE
@@ -246,13 +247,14 @@ struct RecordEditView: View {
                         dateUse = selectedDate
                         showDatePicker = false
                     }
-                    .frame(maxWidth: .infinity, minHeight: 360, alignment: .top)
                 }
+                .padding(.horizontal, 16)
                 .navigationTitle("record.field.date")
                 .navigationBarTitleDisplayMode(.inline)
             }
-            // カレンダーが欠けない最小寄りの固定高さで表示する
-            .presentationDetents([.height(540)])
+            .modifier(ConditionalDynamicTypeModifier(fontScale: fontScale))
+            // SE3 など小画面は低め、通常画面はやや高めの固定高さで表示する
+            .presentationDetents(UIScreen.main.bounds.height <= 700 ? [.height(460)] : [.height(520)])
         }
         .sheet(isPresented: $showCardPicker) {
             PickerSheet(
@@ -1014,6 +1016,16 @@ private struct SingleDateCalendarView: UIViewRepresentable {
         selection.setSelectedDates([components], animated: false)
         view.setVisibleDateComponents(components, animated: false)
         return view
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UICalendarView, context: Context) -> CGSize? {
+        let width = proposal.width ?? UIScreen.main.bounds.width
+        let fitted = uiView.systemLayoutSizeFitting(
+            CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        )
+        return CGSize(width: width, height: fitted.height)
     }
 
     func updateUIView(_ uiView: UICalendarView, context: Context) {
