@@ -584,7 +584,7 @@ struct RecordEditView: View {
                                     isSimilarExpanded = false
                                 }
                             } label: {
-                                SimilarRecordRow(record: candidate.record)
+                                RecordSummaryRow(record: candidate.record, showsStatus: false)
                             }
                             .buttonStyle(.plain)
                         }
@@ -1166,50 +1166,6 @@ private struct BeginnerRecordHelpBlock: View {
 
 // MARK: - Similar Record Row
 
-private struct SimilarRecordRow: View {
-    let record: E3record
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 8) {
-                Text(AppDateFormat.singleLineText(record.dateUse))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
-
-                Text(record.zName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "—" : record.zName)
-                    .font(.subheadline)
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-
-                Spacer()
-
-                Text(record.nAmount.currencyString())
-                    .font(.subheadline.monospacedDigit().weight(.semibold))
-                    .foregroundStyle(record.nAmount < 0 ? Color.red : Color.primary)
-                    .fixedSize(horizontal: true, vertical: false)
-            }
-
-            HStack(spacing: 8) {
-                Text(record.e1card?.zName ?? NSLocalizedString("label.noSelection", comment: ""))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                if !record.e5tags.isEmpty {
-                    Text(record.e5tags.map(\.zName).joined(separator: " / "))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                }
-            }
-        }
-        .padding(.vertical, 2)
-        .contentShape(Rectangle())
-    }
-}
 
 private struct SimilarCandidate {
     let record: E3record

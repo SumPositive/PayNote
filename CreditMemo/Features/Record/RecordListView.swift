@@ -378,14 +378,14 @@ struct RecordSummaryRow: View {
                             .foregroundStyle(statusTextColor)
                             .opacity(0.5)
                             .fixedSize(horizontal: true, vertical: false)
-                        if showsRepeatIcon {
-                            // 未払時だけ、繰り返し予定の印を右へ添える
-                            Image(systemName: "repeat")
-                                .font(.system(size: 14, weight: .regular))
-                                .foregroundStyle(.secondary)
-                                .opacity(0.65)
-                                .fixedSize(horizontal: true, vertical: false)
-                        }
+                    }
+                    if showsRepeatIcon {
+                        // 繰り返し予定の印（showsStatus に関わらず表示する）
+                        Image(systemName: "repeat")
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundStyle(.secondary)
+                            .opacity(0.65)
+                            .fixedSize(horizontal: true, vertical: false)
                     }
                     Text(cardNameText)
                         .font(.caption)
