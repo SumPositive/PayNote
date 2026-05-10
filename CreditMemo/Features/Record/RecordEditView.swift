@@ -962,10 +962,31 @@ struct RecordEditView: View {
             score += 10
         }
 
-        // 曜日一致を軽く優遇する
-        if Calendar.current.component(.weekday, from: record.dateUse) ==
-            Calendar.current.component(.weekday, from: dateUse) {
-            score += 12
+        // 時刻情報があれば時刻近接を優先、なければ曜日一致にフォールバックする
+        let cal = Calendar.current
+        let midnight = cal.startOfDay(for: dateUse)
+        let recordMidnight = cal.startOfDay(for: record.dateUse)
+        let inputHasTime  = !cal.isDate(dateUse,        equalTo: midnight,       toGranularity: .minute)
+        let recordHasTime = !cal.isDate(record.dateUse, equalTo: recordMidnight, toGranularity: .minute)
+
+        if inputHasTime && recordHasTime {
+            let inputMin  = cal.component(.hour, from: dateUse)        * 60 + cal.component(.minute, from: dateUse)
+            let recordMin = cal.component(.hour, from: record.dateUse) * 60 + cal.component(.minute, from: record.dateUse)
+            let diff = abs(inputMin - recordMin)
+            if diff <= 30 {
+                score += 20
+            } else if diff <= 60 {
+                score += 15
+            } else if diff <= 120 {
+                score += 10
+            } else if diff <= 240 {
+                score += 6
+            }
+        } else {
+            // 時刻情報なし：曜日一致を軽く優遇する
+            if cal.component(.weekday, from: record.dateUse) == cal.component(.weekday, from: dateUse) {
+                score += 12
+            }
         }
 
         // 分類タグ重複を軽く優遇する
