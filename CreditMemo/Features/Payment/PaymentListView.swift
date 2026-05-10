@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct PaymentListView: View {
     @Environment(\.modelContext) private var context
@@ -198,6 +199,9 @@ struct PaymentListView: View {
         if !previousIsPaid && payment.includesUnselectedCard {
             return
         }
+        // 未払→済みは重め、済み→未払は軽めの触覚フィードバック
+        let style: UIImpactFeedbackGenerator.FeedbackStyle = nextIsPaid ? .medium : .light
+        UIImpactFeedbackGenerator(style: style).impactOccurred()
         togglingPaymentIDs.insert(payment.id)
         applyPaidState(payment, isPaid: nextIsPaid)
         Task { @MainActor in

@@ -1026,6 +1026,7 @@ struct RecordEditView: View {
 
     /// 類似候補を現在のフォームへ反映する
     private func applySimilarRecord(_ record: E3record) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         // 金額と日付は常に維持し、未入力の項目だけ候補から補う
         if zName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             zName = record.zName

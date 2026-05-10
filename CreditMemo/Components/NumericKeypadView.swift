@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // MARK: - テンキーシート
 
@@ -85,6 +86,7 @@ struct NumericKeypadSheet: View {
 
                 // 決定ボタン
                 Button {
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     onCommit(committedValue)
                     dismiss()
                 } label: {
