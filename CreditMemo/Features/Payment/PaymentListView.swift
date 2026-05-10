@@ -648,7 +648,7 @@ private struct PaymentBoundaryMarker: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private var boundaryColor: Color {
-        colorScheme == .dark ? Color.black.opacity(0.9) : Color.white
+        colorScheme == .dark ? Color.white : Color.black
     }
 
     private var edgeHighlightOpacity: Double {
