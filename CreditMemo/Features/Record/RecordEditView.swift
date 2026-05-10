@@ -49,6 +49,8 @@ struct RecordEditView: View {
     @State private var showAmountPad      = false
     @State private var showDatePicker     = false
     @State private var draftDateUse       = Date()
+    /// カレンダーコンテンツの実測高（月ナビで更新される）
+    @State private var datePickerCalendarHeight: CGFloat = 390
     @State private var showCardPicker     = false
     @State private var showBankPicker     = false
     @State private var showCategoryPicker = false
@@ -247,14 +249,28 @@ struct RecordEditView: View {
                         dateUse = selectedDate
                         showDatePicker = false
                     }
+                    // カレンダーの実際の高さを PreferenceKey で収集する
+                    .background(
+                        GeometryReader { geo in
+                            Color.clear.preference(
+                                key: CalendarHeightPreferenceKey.self,
+                                value: geo.size.height
+                            )
+                        }
+                    )
                 }
                 .padding(.horizontal, 16)
+                .onPreferenceChange(CalendarHeightPreferenceKey.self) { h in
+                    if h > 10 { datePickerCalendarHeight = h }
+                }
                 .navigationTitle("record.field.date")
                 .navigationBarTitleDisplayMode(.inline)
             }
             .modifier(ConditionalDynamicTypeModifier(fontScale: fontScale))
-            // SE3 など小画面は低め、通常画面はやや高めの固定高さで表示する
-            .presentationDetents(UIScreen.main.bounds.height <= 700 ? [.height(460)] : [.height(520)])
+            .presentationBackground(Color(uiColor: .systemBackground))
+            // ナビゲーションバー(50) + カレンダー実測値 + ドラッグ indicator・ホームバー(44)
+            .presentationDetents([.height(ceil(50 + datePickerCalendarHeight + 44))])
+            .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showCardPicker) {
             PickerSheet(
@@ -1363,5 +1379,13 @@ private struct SavedBanner: View {
         .padding(.horizontal, 16).padding(.vertical, 10)
         .background(.regularMaterial, in: Capsule())
         .shadow(radius: 4, y: 2)
+    }
+}
+
+private struct CalendarHeightPreferenceKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        let next = nextValue()
+        if next > value { value = next }
     }
 }

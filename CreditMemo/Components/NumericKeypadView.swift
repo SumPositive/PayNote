@@ -126,8 +126,9 @@ struct NumericKeypadSheet: View {
             isNegative = placeholder < 0
         }
         .modifier(ConditionalSheetDynamicTypeModifier(fontScale: fontScale))
-        // SE3 などの小画面では .large 固定。通常画面はコンテンツ高さに合わせた detent を使う
-        .presentationDetents(isCompact ? [.large] : [.height(idealSheetHeight), .large])
+        .presentationBackground(Color(uiColor: .systemGroupedBackground))
+        // コンテンツ高さに合わせた detent を使う。画面に収まらない大きい文字サイズは .large へフォールバック
+        .presentationDetents([.height(idealSheetHeight), .large])
         .presentationDragIndicator(.visible)
     }
 
