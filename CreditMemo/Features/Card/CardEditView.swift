@@ -395,7 +395,7 @@ struct CardEditView: View {
     @MainActor
     private func rebuildBillingForCard(_ card: E1card) async {
         // 請求日に影響する変更だけ、その決済手段配下の履歴へ限定して再構築する
-        let records = card.e3records.sorted { $0.dateUse < $1.dateUse }
+        let records = fetchRecords(for: card)
         let batchSize = 50
         isRebuildingBilling = true
         rebuildCompletedCount = 0
@@ -453,6 +453,16 @@ struct CardEditView: View {
         if context.hasChanges {
             try context.save()
         }
+    }
+
+    private func fetchRecords(for card: E1card) -> [E3record] {
+        let cardID = card.id
+        let descriptor = FetchDescriptor<E3record>(
+            predicate: #Predicate<E3record> { $0.e1card?.id == cardID },
+            sortBy: [SortDescriptor(\E3record.dateUse)]
+        )
+        // 逆参照配列だけに頼ると、SwiftData の関係同期が遅れた履歴を取りこぼすことがある
+        return (try? context.fetch(descriptor)) ?? []
     }
 
     // MARK: - Bank Picker

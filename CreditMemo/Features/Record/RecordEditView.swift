@@ -279,7 +279,10 @@ struct RecordEditView: View {
             .presentationDetents([.height(ceil(50 + datePickerCalendarHeight + 44))])
             .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $showCardPicker) {
+        .sheet(isPresented: $showCardPicker, onDismiss: {
+            // カード選択/編集後、口座が変わっている可能性があるため最新値を取得する
+            selectedBankForCard = selectedCard?.e8bank
+        }) {
             PickerSheet(
                 title: "record.field.card",
                 items: cards,
@@ -745,7 +748,7 @@ struct RecordEditView: View {
         guard previousBankID != currentBankID || currentBankID != selectedBankID else { return }
 
         // 決済手段マスタの口座変更は同カード配下の請求全体へ影響する
-        for sibling in card.e3records where sibling.id != savedRecord.id {
+        for sibling in fetchSiblingRecords(for: card, excluding: savedRecord.id) {
             RecordService.rebuildBilling(for: sibling, context: context)
         }
         RecordService.cleanupOrphanBilling(context: context)
@@ -756,6 +759,16 @@ struct RecordEditView: View {
                 appLog(.error, "口座変更後の再保存に失敗しました: \(error)")
             }
         }
+    }
+
+    private func fetchSiblingRecords(for card: E1card, excluding recordID: String) -> [E3record] {
+        let cardID = card.id
+        let descriptor = FetchDescriptor<E3record>(
+            predicate: #Predicate<E3record> { $0.e1card?.id == cardID },
+            sortBy: [SortDescriptor(\E3record.dateUse)]
+        )
+        // SwiftData の逆参照配列に残っていない履歴も、口座変更時は再構築対象に含める
+        return ((try? context.fetch(descriptor)) ?? []).filter { $0.id != recordID }
     }
 
     private func resetForm(keepDateAndCard: Bool) {

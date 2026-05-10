@@ -76,6 +76,11 @@ enum RecordService {
         // 同一の請求キーを1件へ統合する
         invoices = (try? context.fetch(invoiceDesc)) ?? []
         normalizeInvoices(invoices, context: context)
+        // 決済手段の口座変更後、既存請求が古い支払先へ残るケースを修復する
+        invoices = (try? context.fetch(invoiceDesc)) ?? []
+        repairPaymentMembership(invoices, context: context)
+        // 張り替え後の支払配列を読み直し、空になった古い支払を確実に消す
+        payments = (try? context.fetch(paymentDesc)) ?? []
         for payment in payments where payment.e2invoices.isEmpty {
             deletePayment(payment, context: context)
         }
@@ -201,7 +206,17 @@ enum RecordService {
             fallbackPaid: isPaid,
             context: context
         )
-        targetInvoice.e7payment = targetPayment
+        // SwiftData は逆参照（oldPayment.e2invoices）を自動更新しないため明示的に除去する
+        if targetInvoice.e7payment?.id != targetPayment.id {
+            targetInvoice.e7payment?.e2invoices.removeAll { $0.id == targetInvoice.id }
+            targetInvoice.e7payment = targetPayment
+            // SwiftData は順参照（newPayment.e2invoices への追加）も自動更新しないことがあるため明示的に追加する
+            if !targetPayment.e2invoices.contains(where: { $0.id == targetInvoice.id }) {
+                targetPayment.e2invoices.append(targetInvoice)
+            }
+        } else {
+            targetInvoice.e7payment = targetPayment
+        }
         setPaymentBank(targetPayment, bank: bank, isPaid: bank == nil ? false : isPaid)
 
         // 明細を移し替える
@@ -336,7 +351,13 @@ enum RecordService {
             )
             // 口座変更時は既存invoiceでも支払先を最新のpaymentへ張り替える
             if invoice.e7payment?.id != payment.id {
+                // SwiftData は逆参照（oldPayment.e2invoices）を自動更新しないため明示的に除去する
+                invoice.e7payment?.e2invoices.removeAll { $0.id == invoice.id }
                 invoice.e7payment = payment
+                // SwiftData は順参照（newPayment.e2invoices への追加）も自動更新しないことがあるため明示的に追加する
+                if !payment.e2invoices.contains(where: { $0.id == invoice.id }) {
+                    payment.e2invoices.append(invoice)
+                }
             }
             let part = E6part(nPartNo: partNo, nAmount: amount)
             part.nNoCheck = snapshot.partNoCheckByPartNo[partNo] ?? 1
@@ -543,16 +564,18 @@ enum RecordService {
         context: ModelContext
     ) -> E7payment {
         let day  = Calendar.current.startOfDay(for: date)
+        // 口座未選択は物理的な paid/unpaid 所属を持てないため、内部キーは未払側へ寄せる
+        let physicalIsPaid = bank == nil ? false : isPaid
         let desc = FetchDescriptor<E7payment>(predicate: #Predicate { $0.date == day })
         let payments = (try? context.fetch(desc)) ?? []
         if let ex = payments.first(where: {
             // invoice 集計の見かけ状態でなく、所属先そのものを見る
-            $0.e8bank?.id == bank?.id && (($0.e8paid != nil) == isPaid)
+            $0.e8bank?.id == bank?.id && (($0.e8paid != nil) == physicalIsPaid)
         }) {
             return ex
         }
         let p = E7payment(date: day)
-        setPaymentBank(p, bank: bank, isPaid: bank == nil ? false : (fallbackPaid ?? isPaid))
+        setPaymentBank(p, bank: bank, isPaid: bank == nil ? false : (fallbackPaid ?? physicalIsPaid))
         context.insert(p)
         return p
     }
@@ -573,8 +596,12 @@ enum RecordService {
                     part.e2invoice = canonical
                 }
                 // 親 payment が無ければ引き継ぐ
-                if canonical.e7payment == nil {
-                    canonical.e7payment = invoice.e7payment
+                if canonical.e7payment == nil, let p = invoice.e7payment {
+                    canonical.e7payment = p
+                    // SwiftData は順参照（p.e2invoices への追加）も自動更新しないことがあるため明示的に追加する
+                    if !p.e2invoices.contains(where: { $0.id == canonical.id }) {
+                        p.e2invoices.append(canonical)
+                    }
                 }
                 deleteInvoice(invoice, context: context)
             } else {
@@ -595,11 +622,41 @@ enum RecordService {
                 // 同一支払へ invoice を集約する
                 for invoice in invoicesToMove {
                     invoice.e7payment = canonical
+                    // SwiftData は順参照（canonical.e2invoices への追加）も自動更新しないことがあるため明示的に追加する
+                    if !canonical.e2invoices.contains(where: { $0.id == invoice.id }) {
+                        canonical.e2invoices.append(invoice)
+                    }
                 }
                 deletePayment(payment, context: context)
             } else {
                 canonicalByKey[key] = payment
             }
+        }
+    }
+
+    private static func repairPaymentMembership(_ invoices: [E2invoice], context: ModelContext) {
+        for invoice in invoices {
+            if invoice.e6parts.isEmpty {
+                continue
+            }
+            let bank = invoice.e1card?.e8bank
+            let payment = findOrCreatePayment(
+                date: invoice.date,
+                bank: bank,
+                isPaid: invoice.isPaid,
+                fallbackPaid: invoice.isPaid,
+                context: context
+            )
+            // 決済手段の口座変更後も、請求が古い支払先に残っていれば現在の口座へ張り替える
+            if invoice.e7payment?.id != payment.id {
+                invoice.e7payment?.e2invoices.removeAll { $0.id == invoice.id }
+                invoice.e7payment = payment
+            }
+            // SwiftData の逆参照が追従しない場合に備え、支払側にも明示的に追加する
+            if !payment.e2invoices.contains(where: { $0.id == invoice.id }) {
+                payment.e2invoices.append(invoice)
+            }
+            setPaymentBank(payment, bank: bank, isPaid: bank == nil ? false : invoice.isPaid)
         }
     }
 
@@ -675,7 +732,13 @@ enum RecordService {
             fallbackPaid: toPaid,
             context: context
         )
+        // SwiftData は逆参照（oldPayment.e2invoices）を自動更新しないため明示的に除去する
+        oldPayment?.e2invoices.removeAll { $0.id == invoice.id }
         invoice.e7payment = newPayment
+        // SwiftData は順参照（newPayment.e2invoices への追加）も自動更新しないことがあるため明示的に追加する
+        if !newPayment.e2invoices.contains(where: { $0.id == invoice.id }) {
+            newPayment.e2invoices.append(invoice)
+        }
         // 再利用された payment でも paid/unpaid 所属を正に戻す
         setPaymentBank(newPayment, bank: bank, isPaid: bank == nil ? false : toPaid)
         recalculatePayment(newPayment)
