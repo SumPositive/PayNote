@@ -213,6 +213,7 @@ struct CardEditView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .scalableNavigationTitle("card.list.title")
         .navigationBarBackButtonHidden(isNew || hasChanges)
         .onChange(of: hasChanges) { _, newValue in

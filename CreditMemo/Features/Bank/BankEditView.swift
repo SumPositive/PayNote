@@ -97,6 +97,7 @@ struct BankEditView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle(isNew ? "bank.edit.title.add" : "bank.edit.title.edit")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(isNew || hasChanges)

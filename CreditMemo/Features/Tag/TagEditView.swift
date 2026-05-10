@@ -94,6 +94,7 @@ struct TagEditView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle(isNew ? "tag.edit.title.add" : "tag.edit.title.edit")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(isNew || hasChanges)
