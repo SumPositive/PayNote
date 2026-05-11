@@ -28,7 +28,7 @@ struct TagListView: View {
                 NavigationLink {
                     TagEditView(tag: tag)
                 } label: {
-                    TagRow(tag: tag, sortMode: sortMode)
+                    TagRow(tag: tag)
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     Button(role: .destructive) {
@@ -73,7 +73,6 @@ struct TagListView: View {
 
 private struct TagRow: View {
     let tag: E5tag
-    let sortMode: SortMode
 
     var body: some View {
         HStack {
@@ -84,21 +83,6 @@ private struct TagRow: View {
                 }
             }
             Spacer()
-            switch sortMode {
-            case .recent:
-                if let d = tag.sortDate {
-                    Text(AppDateFormat.singleLineText(d))
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-            case .count:
-                Text("\(tag.sortCount)")
-                    .font(.caption).foregroundStyle(.secondary)
-            case .amount:
-                Text(tag.sortAmount.currencyString())
-                    .font(.caption).foregroundStyle(.secondary)
-            case .name:
-                EmptyView()
-            }
         }
         .contentShape(Rectangle())
     }
