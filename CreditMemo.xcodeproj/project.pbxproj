@@ -18,6 +18,7 @@
 		38369112251625BA00E7A110 /* CardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38369111251625BA00E7A110 /* CardService.swift */; };
 		38369114251626D100E7A110 /* BankService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38369113251626D100E7A110 /* BankService.swift */; };
 		4531D860CDB0FDF2415DD421 /* View+ScalableTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F95EF3EE0B184C7D267B8C7 /* View+ScalableTitle.swift */; };
+		260F3E001BE44EBABDFC9258 /* View+TextTrimming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A3FC2C30656461C9CEBA1D0 /* View+TextTrimming.swift */; };
 		490F8CBDAB27E8464CFC9A8C /* SplitPayListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97721A91036068831138735 /* SplitPayListView.swift */; };
 		4DDA8A04C30B6B86A07A2D68 /* E8bank.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BB8D0C0693934C17D3BFD21 /* E8bank.swift */; };
 		5036733F44C02792D514BAB7 /* TagEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DDA39225A4BEA8B500F61FB /* TagEditView.swift */; };
@@ -102,6 +103,7 @@
 		9A3B7A6025157DD900A17A10 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		9AFC963C5C24B15862ECE64B /* CreditMemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CreditMemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F95EF3EE0B184C7D267B8C7 /* View+ScalableTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+ScalableTitle.swift"; sourceTree = "<group>"; };
+		4A3FC2C30656461C9CEBA1D0 /* View+TextTrimming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+TextTrimming.swift"; sourceTree = "<group>"; };
 		ACAC65A5428E245996B921E5 /* E6part.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = E6part.swift; sourceTree = "<group>"; };
 		B0AA3264A9D08B8C5FAFC814 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		CA97A05301775C91BB87CE6F /* BankListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BankListView.swift; sourceTree = "<group>"; };
@@ -268,6 +270,7 @@
 			children = (
 				90A96AFAF7BCB93A9445E45C /* Decimal+Rounding.swift */,
 				9F95EF3EE0B184C7D267B8C7 /* View+ScalableTitle.swift */,
+				4A3FC2C30656461C9CEBA1D0 /* View+TextTrimming.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -563,6 +566,7 @@
 				490F8CBDAB27E8464CFC9A8C /* SplitPayListView.swift in Sources */,
 				C03BB2AEED264F9C4A50EAB7 /* TopMenuView.swift in Sources */,
 				4531D860CDB0FDF2415DD421 /* View+ScalableTitle.swift in Sources */,
+				260F3E001BE44EBABDFC9258 /* View+TextTrimming.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

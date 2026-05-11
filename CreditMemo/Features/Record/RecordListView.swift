@@ -353,7 +353,8 @@ struct RecordSummaryRow: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                         if !categoryNames.isEmpty {
                             RecordCategorySingleLineView(names: categoryNames)
-                                .frame(maxWidth: .infinity, alignment: .trailing)
+                                // タグは自然幅で固定し、ラベルが残り幅を使い切れるようにする
+                                .fixedSize(horizontal: true, vertical: false)
                         }
                     }
                     VStack(alignment: .leading, spacing: 4) {
