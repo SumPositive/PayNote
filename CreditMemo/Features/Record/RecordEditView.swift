@@ -256,6 +256,8 @@ struct RecordEditView: View {
                         dateUse = selectedDate
                         showDatePicker = false
                     }
+                    // iPad など幅に余裕があるときは中央に寄せる
+                    .frame(maxWidth: .infinity)
                     // カレンダーの実際の高さを PreferenceKey で収集する
                     .background(
                         GeometryReader { geo in
@@ -1097,7 +1099,9 @@ private struct SingleDateCalendarView: UIViewRepresentable {
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: UICalendarView, context: Context) -> CGSize? {
-        let width = proposal.width ?? UIScreen.main.bounds.width
+        // iPad では広幅を与えると複数月が並ぶため、1ヶ月分に収まる上限で抑える
+        let maxSingleMonthWidth: CGFloat = 380
+        let width = min(proposal.width ?? UIScreen.main.bounds.width, maxSingleMonthWidth)
         let fitted = uiView.systemLayoutSizeFitting(
             CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
             withHorizontalFittingPriority: .required,
