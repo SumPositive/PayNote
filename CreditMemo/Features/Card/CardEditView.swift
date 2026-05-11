@@ -107,6 +107,7 @@ struct CardEditView: View {
                     .autocorrectionDisabled()
                     .focused($focusName)
                     .multilineTextAlignment(.leading)
+                    .trimmingTrailingNewlines($zName)
 
                 if hasDuplicateName {
                     Text("card.field.name.duplicate")
@@ -210,6 +211,7 @@ struct CardEditView: View {
                         .scrollContentBackground(.hidden)
                         .background(Color.clear)
                         .autocorrectionDisabled()
+                        .trimmingTrailingNewlines($zNote)
                 }
             }
         }

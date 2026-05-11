@@ -421,6 +421,9 @@ struct RecordEditView: View {
                         if 100 < newValue.count {
                             zName = String(newValue.prefix(100))
                         }
+                        // 末尾の改行を除去する
+                        let trimmed = newValue.replacingOccurrences(of: "\n+$", with: "", options: .regularExpression)
+                        if trimmed != newValue { zName = trimmed }
                     }
 
                 if isUsePointFocused && !shownUsePointCandidates.isEmpty {
@@ -555,6 +558,7 @@ struct RecordEditView: View {
                     .scrollContentBackground(.hidden)
                     .background(Color.clear)
                     .autocorrectionDisabled()
+                    .trimmingTrailingNewlines($zNote)
             }
         } header: {
             privacyHeader

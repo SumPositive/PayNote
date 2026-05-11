@@ -52,6 +52,7 @@ struct TagEditView: View {
                 TextField("tag.field.name", text: $zName)
                     .autocorrectionDisabled()
                     .focused($focusName)
+                    .trimmingTrailingNewlines($zName)
                 if hasDuplicateName {
                     Text("tag.field.name.duplicate")
                         .font(.caption)
@@ -73,6 +74,7 @@ struct TagEditView: View {
                         .scrollContentBackground(.hidden)
                         .background(Color.clear)
                         .autocorrectionDisabled()
+                        .trimmingTrailingNewlines($zNote)
                 }
             }
             if !isNew {

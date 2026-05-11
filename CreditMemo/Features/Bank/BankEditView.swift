@@ -57,6 +57,7 @@ struct BankEditView: View {
                 TextField("bank.field.name", text: $zName)
                     .autocorrectionDisabled()
                     .focused($focusName)
+                    .trimmingTrailingNewlines($zName)
 
                 if hasDuplicateName {
                     Text("bank.field.name.duplicate")
@@ -94,6 +95,7 @@ struct BankEditView: View {
                         .scrollContentBackground(.hidden)
                         .background(Color.clear)
                         .autocorrectionDisabled()
+                        .trimmingTrailingNewlines($zNote)
                 }
             }
         }
