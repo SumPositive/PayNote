@@ -17,6 +17,7 @@ struct TagEditView: View {
     @State private var hasInitialized = false
     @State private var initialDraft: DraftState?
     @State private var editRecord: E3record?
+    @State private var isSaving = false
     // 関連明細の表示用キャッシュ（毎描画での全件走査を避ける）
     @State private var linkedRecordsCache: [E3record] = []
 
@@ -53,7 +54,7 @@ struct TagEditView: View {
                     .autocorrectionDisabled()
                     .focused($focusName)
                     .trimmingTrailingNewlines($zName)
-                if hasDuplicateName {
+                if hasDuplicateName && !isSaving {
                     Text("tag.field.name.duplicate")
                         .font(.caption)
                         .foregroundStyle(.red)
@@ -151,6 +152,7 @@ struct TagEditView: View {
     private func save() {
         let name = trimmedName
         guard !name.isEmpty && !hasDuplicateName else { return }
+        isSaving = true
         if let tag {
             tag.zName    = name
             tag.zNote    = zNote
