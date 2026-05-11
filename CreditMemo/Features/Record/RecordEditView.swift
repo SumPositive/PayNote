@@ -1302,13 +1302,21 @@ private struct CategoryMultiPickerSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Query private var allCategories: [E5tag]
+    @AppStorage(AppStorageKey.tagSortMode) private var sortModeRaw: Int = SortMode.recent.rawValue
     @State private var showAdd = false
     @State private var displayOrder: [E5tag] = []
     @State private var itemIDsBeforeAdd: [String] = []
     private let maxSelection = 10
 
+    private var sortMode: SortMode { SortMode(rawValue: sortModeRaw) ?? .recent }
+
     private var items: [E5tag] {
-        allCategories.sorted { $0.zName.localizedStandardCompare($1.zName) == .orderedAscending }
+        switch sortMode {
+        case .recent: allCategories.sorted { ($0.sortDate ?? .distantPast) > ($1.sortDate ?? .distantPast) }
+        case .count:  allCategories.sorted { $0.sortCount > $1.sortCount }
+        case .amount: allCategories.sorted { $0.sortAmount > $1.sortAmount }
+        case .name:   allCategories.sorted { $0.zName.localizedStandardCompare($1.zName) == .orderedAscending }
+        }
     }
 
     var body: some View {
@@ -1334,6 +1342,17 @@ private struct CategoryMultiPickerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("button.cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Picker("shop.field.sortMode", selection: $sortModeRaw) {
+                            ForEach(SortMode.allCases) { mode in
+                                Text(LocalizedStringKey(mode.localizedKey)).tag(mode.rawValue)
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down")
+                    }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
@@ -1364,6 +1383,9 @@ private struct CategoryMultiPickerSheet: View {
         }
         .onChange(of: items.map(\.id)) { _, _ in
             // 追加後や一覧更新後も、選択状態に合わせて表示順を組み直す
+            rebuildDisplayOrder()
+        }
+        .onChange(of: sortModeRaw) { _, _ in
             rebuildDisplayOrder()
         }
     }

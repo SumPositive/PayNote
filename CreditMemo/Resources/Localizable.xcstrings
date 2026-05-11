@@ -4142,13 +4142,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Amount"
+            "value": "Amount (Highest total)"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "金額"
+            "value": "金額（累計金額が多いタグ）"
           }
         }
       }
@@ -4159,13 +4159,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uses"
+            "value": "Count (Frequently used)"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "回数"
+            "value": "回数（よく使うタグ）"
           }
         }
       }
@@ -4176,13 +4176,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Name"
+            "value": "Name (Alphabetical)"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "名前"
+            "value": "名前（タグ名の順）"
           }
         }
       }
@@ -4193,13 +4193,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Recent"
+            "value": "Recent (Recently used)"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最近"
+            "value": "最近（最近使ったタグ）"
           }
         }
       }

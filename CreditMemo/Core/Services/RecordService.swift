@@ -21,7 +21,7 @@ enum RecordService {
         record.dateUpdate = Date()
         rebuildBilling(for: record, context: context)
         let cats = record.e5tags
-        for cat in cats { updateCategoryStats(cat, amount: record.nAmount, date: record.dateUse) }
+        for cat in cats { updateCategoryStats(cat, amount: record.nAmount, date: Date()) }
         try commit(context)
     }
 
@@ -280,7 +280,7 @@ enum RecordService {
         rebuildBilling(for: next, context: context)
         let cats = next.e5tags
         for cat in cats {
-            updateCategoryStats(cat, amount: next.nAmount, date: next.dateUse)
+            updateCategoryStats(cat, amount: next.nAmount, date: Date())
         }
         return next
     }
@@ -806,6 +806,7 @@ enum RecordService {
         // 並び順用の重みとして単純加算する
         // 正確な累計ではないため、編集差分や削除では減算しない
         // 将来は順序を保ったままリセットする機能を追加する
+        // date には Date()（保存日時）を渡す。利用日では数ヶ月先の明細が「最近」に来てしまうため。
         cat.sortDate    = date
         cat.sortCount  += 1
         cat.sortAmount += amount
