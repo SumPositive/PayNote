@@ -33,7 +33,7 @@ struct CardListView: View {
             }
             ForEach(cards) { card in
                 NavigationLink {
-                    CardEditView(card: card)
+                    CardInvoiceListView(card: card)
                 } label: {
                     CardRow(card: card)
                 }
