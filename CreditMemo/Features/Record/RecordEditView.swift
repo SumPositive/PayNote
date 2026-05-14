@@ -49,6 +49,9 @@ struct RecordEditView: View {
     @State private var showAmountPad      = false
     @State private var showDatePicker     = false
     @State private var draftDateUse       = Date()
+    @State private var showPartDatePicker = false
+    @State private var editingPart: E6part?
+    @State private var draftPartDueDate   = Date()
     /// カレンダーコンテンツの実測高（月ナビで更新される）
     @State private var datePickerCalendarHeight: CGFloat = 390
     @State private var showCardPicker     = false
@@ -58,6 +61,8 @@ struct RecordEditView: View {
     @State private var savedBanner        = false
     @State private var hasInitialized     = false
     @State private var initialDraft: DraftState?
+    // 保存ボタンを押すまで、E6part.nPartNo ごとの引き落とし日変更を保持する
+    @State private var partDueDateOverridesByPartNo: [Int16: Date] = [:]
     @State private var keepBankPickerRowVisible = false
     // 過去データ由来の候補をキャッシュして、毎描画の再計算を避ける
     @State private var cachedUsePointCandidates: [String] = []
@@ -77,7 +82,8 @@ struct RecordEditView: View {
     private var usePointCandidates: [String] { cachedUsePointCandidates }
     private var hasChanges: Bool {
         guard let initialDraft else { return false }
-        return currentDraft() != initialDraft
+        // 明細単位の引き落とし日変更も、保存ボタンの強調対象に含める
+        return currentDraft() != initialDraft || !partDueDateOverridesByPartNo.isEmpty
     }
     private var shouldShowBankPickerRow: Bool {
         if selectedCard == nil {
@@ -148,6 +154,16 @@ struct RecordEditView: View {
         }
         return selectedCategories.map(\.zName).joined(separator: " / ")
     }
+    private var editableParts: [E6part] {
+        guard case .edit(let record) = mode else { return [] }
+        // 旧アプリ同様、分割パーツ番号順に安定表示する
+        return record.e6parts.sorted { lhs, rhs in
+            if lhs.nPartNo == rhs.nPartNo {
+                return lhs.id.localizedStandardCompare(rhs.id) == .orderedAscending
+            }
+            return lhs.nPartNo < rhs.nPartNo
+        }
+    }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -156,6 +172,7 @@ struct RecordEditView: View {
                 requiredSection
                 similarSection
                 optionalSection
+                partPaymentSection
                 deleteSection
             }
             .scrollDismissesKeyboard(.interactively)
@@ -278,6 +295,40 @@ struct RecordEditView: View {
             .modifier(ConditionalDynamicTypeModifier(fontScale: fontScale))
             .presentationBackground(Color(uiColor: .systemBackground))
             // ナビゲーションバー(50) + カレンダー実測値 + ドラッグ indicator・ホームバー(44)
+            .presentationDetents([.height(ceil(50 + datePickerCalendarHeight + 44))])
+            .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showPartDatePicker, onDismiss: {
+            editingPart = nil
+        }) {
+            NavigationStack {
+                ScrollView {
+                    SingleDateCalendarView(
+                        selectedDate: $draftPartDueDate,
+                        availableRange: APP_MIN_DATE...APP_MAX_DATE
+                    ) { selectedDate in
+                        applyPartDueDate(selectedDate)
+                    }
+                    // 明細単位の日付変更でも同じカレンダー高さを使う
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        GeometryReader { geo in
+                            Color.clear.preference(
+                                key: CalendarHeightPreferenceKey.self,
+                                value: geo.size.height
+                            )
+                        }
+                    )
+                }
+                .padding(.horizontal, 16)
+                .onPreferenceChange(CalendarHeightPreferenceKey.self) { h in
+                    if 10 < h { datePickerCalendarHeight = h }
+                }
+                .navigationTitle("record.partDueDate.title")
+                .navigationBarTitleDisplayMode(.inline)
+            }
+            .modifier(ConditionalDynamicTypeModifier(fontScale: fontScale))
+            .presentationBackground(Color(uiColor: .systemBackground))
             .presentationDetents([.height(ceil(50 + datePickerCalendarHeight + 44))])
             .presentationDragIndicator(.visible)
         }
@@ -565,6 +616,38 @@ struct RecordEditView: View {
         }
     }
 
+    @ViewBuilder private var partPaymentSection: some View {
+        if !editableParts.isEmpty {
+            // 旧アプリ同様、1件でも支払日を確認・調整できるように表示する
+            Section {
+                ForEach(editableParts) { part in
+                    let canEdit = canEditPartDueDate(part)
+                    Button {
+                        openPartDueDatePicker(part)
+                    } label: {
+                        PartDueDateRow(
+                            part: part,
+                            overrideDate: partDueDateOverridesByPartNo[part.nPartNo],
+                            canEdit: canEdit
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!canEdit)
+                }
+            } header: {
+                Text("record.partDueDate.section")
+            } footer: {
+                if userLevel == .beginner {
+                    // 明細単位で支払日を動かせることを初心者向けに明示する
+                    Text("record.partDueDate.help")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
     /// オプション入力欄の上に注意文を1つだけ出す
     @ViewBuilder private var privacyHeader: some View {
         if userLevel == .beginner {
@@ -675,6 +758,11 @@ struct RecordEditView: View {
         let usePoint = zName.trimmingCharacters(in: .whitespacesAndNewlines)
         let previousBankID = selectedCard?.e8bank?.id
         let bankChanged = initialDraft?.bankID != selectedBankForCard?.id
+        let billingChanged = initialDraft?.dateUse != dateUse
+            || initialDraft?.nAmount != nAmount
+            || initialDraft?.payType != payType
+            || initialDraft?.cardID != selectedCard?.id
+            || bankChanged
         switch mode {
         case .addNew:
             // 保存直前にだけマスタへ口座変更を反映する
@@ -717,7 +805,20 @@ struct RecordEditView: View {
             r.e1card = selectedCard
             r.e5tags = selectedCategories
             do {
-                try RecordService.save(r, context: context)
+                if billingChanged {
+                    try RecordService.save(
+                        r,
+                        partDueDateOverridesByPartNo: partDueDateOverridesByPartNo,
+                        context: context
+                    )
+                } else {
+                    // ラベル・メモ・タグだけの編集では、手動調整した引き落とし日を保持する
+                    try RecordService.saveMetadata(
+                        r,
+                        partDueDateOverridesByPartNo: partDueDateOverridesByPartNo,
+                        context: context
+                    )
+                }
             } catch {
                 appLog(.error, "編集保存に失敗しました: \(error)")
                 // context に乗った未保存の変更（フィールド更新・請求再構築・口座変更）を破棄する
@@ -728,6 +829,36 @@ struct RecordEditView: View {
             onSaved?(bankChanged)
             dismiss()
         }
+    }
+
+    private func canEditPartDueDate(_ part: E6part) -> Bool {
+        guard let invoice = part.e2invoice else { return false }
+        // 旧アプリ同様、済み・確認済みのパーツは日付変更しない
+        return !invoice.isPaid && !part.isChecked
+    }
+
+    private func openPartDueDatePicker(_ part: E6part) {
+        guard canEditPartDueDate(part), let invoice = part.e2invoice else { return }
+        editingPart = part
+        draftPartDueDate = partDueDateOverridesByPartNo[part.nPartNo] ?? invoice.date
+        showPartDatePicker = true
+    }
+
+    private func applyPartDueDate(_ date: Date) {
+        guard let part = editingPart else {
+            showPartDatePicker = false
+            return
+        }
+        let selectedDate = Calendar.current.startOfDay(for: date)
+        if let currentDate = part.e2invoice?.date,
+           Calendar.current.isDate(currentDate, inSameDayAs: selectedDate) {
+            // 元の日付に戻した場合は保存待ち変更から外す
+            partDueDateOverridesByPartNo.removeValue(forKey: part.nPartNo)
+        } else {
+            // 保存ボタンを押すまで、明細番号ごとの変更予定日として保持する
+            partDueDateOverridesByPartNo[part.nPartNo] = selectedDate
+        }
+        showPartDatePicker = false
     }
 
     private func deleteCurrentRecord() {
@@ -1210,6 +1341,54 @@ private struct BeginnerRecordHelpBlock: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.vertical, 4)
+    }
+}
+
+private struct PartDueDateRow: View {
+    let part: E6part
+    // 保存前の変更予定日があれば、実データより優先して表示する
+    let overrideDate: Date?
+    let canEdit: Bool
+
+    private var invoice: E2invoice? { part.e2invoice }
+    private var isPaid: Bool { invoice?.isPaid ?? false }
+    private var dateText: String {
+        guard let date = overrideDate ?? invoice?.date else { return "—" }
+        return AppDateFormat.singleLineText(date)
+    }
+    private var statusText: String {
+        NSLocalizedString(isPaid ? "payment.status.paidShort" : "payment.status.unpaidShort", comment: "")
+    }
+    private var statusColor: Color {
+        isPaid ? COLOR_PAID : COLOR_UNPAID
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: isPaid ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
+                .font(.title3)
+                .foregroundStyle(statusColor)
+                .frame(width: 26)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(dateText)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.primary)
+                Text(statusText)
+                    .font(.caption)
+                    .foregroundStyle(statusColor)
+            }
+
+            Spacer(minLength: 8)
+
+            Text(part.nAmount.currencyString())
+                .font(.body.weight(.semibold).monospacedDigit())
+                .foregroundStyle(part.nAmount < 0 ? .red : COLOR_AMOUNT_POSITIVE)
+                .lineLimit(1)
+
+        }
+        .opacity(canEdit ? 1 : 0.55)
+        .contentShape(Rectangle())
     }
 }
 

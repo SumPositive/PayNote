@@ -25,6 +25,69 @@ enum RecordService {
         try commit(context)
     }
 
+    /// 支払日変更ドラフトを含めて、明細保存と請求再構築を同じ保存単位で行う
+    static func save(
+        _ record: E3record,
+        partDueDateOverridesByPartNo: [Int16: Date],
+        context: ModelContext
+    ) throws {
+        // 通常保存で E6part を再構築した後、画面で指定された支払日を同じ保存単位で反映する
+        record.dateUpdate = Date()
+        rebuildBilling(for: record, context: context)
+        let cats = record.e5tags
+        for cat in cats { updateCategoryStats(cat, amount: record.nAmount, date: Date()) }
+        applyPartDueDateOverrides(
+            to: record,
+            overridesByPartNo: partDueDateOverridesByPartNo,
+            context: context
+        )
+        try commit(context)
+    }
+
+    /// 請求を作り直さず、明細のメタ情報だけを保存する
+    static func saveMetadata(_ record: E3record, context: ModelContext) throws {
+        // 手動で調整した E6part の引き落とし日を保つため、請求再構築は行わない
+        record.dateUpdate = Date()
+        let cats = record.e5tags
+        for cat in cats { updateCategoryStats(cat, amount: record.nAmount, date: Date()) }
+        try commit(context)
+    }
+
+    /// メタ情報と支払日変更ドラフトだけを、請求再構築なしで同じ保存単位に反映する
+    static func saveMetadata(
+        _ record: E3record,
+        partDueDateOverridesByPartNo: [Int16: Date],
+        context: ModelContext
+    ) throws {
+        // メタ情報だけの保存でも、画面で指定された支払日だけは同じ保存単位で反映する
+        record.dateUpdate = Date()
+        let cats = record.e5tags
+        for cat in cats { updateCategoryStats(cat, amount: record.nAmount, date: Date()) }
+        applyPartDueDateOverrides(
+            to: record,
+            overridesByPartNo: partDueDateOverridesByPartNo,
+            context: context
+        )
+        try commit(context)
+    }
+
+    private static func applyPartDueDateOverrides(
+        to record: E3record,
+        overridesByPartNo: [Int16: Date],
+        context: ModelContext
+    ) {
+        // 保存ボタンを押すまでは画面側の辞書で保持し、ここで初めて E6part へ反映する
+        if overridesByPartNo.isEmpty {
+            return
+        }
+        for part in record.e6parts {
+            guard let date = overridesByPartNo[part.nPartNo] else {
+                continue
+            }
+            movePartDueDate(part, date: date, context: context)
+        }
+    }
+
     // MARK: - Delete
 
     static func delete(_ record: E3record, context: ModelContext) throws {
@@ -247,6 +310,86 @@ enum RecordService {
         }
 
         try commit(context)
+    }
+
+    /// 明細1件だけを指定した引き落とし日の請求へ移す
+    static func setPartDueDate(
+        _ part: E6part,
+        date: Date,
+        context: ModelContext
+    ) throws {
+        movePartDueDate(part, date: date, context: context)
+        try commit(context)
+    }
+
+    private static func movePartDueDate(
+        _ part: E6part,
+        date: Date,
+        context: ModelContext
+    ) {
+        guard let sourceInvoice = part.e2invoice else {
+            return
+        }
+        // 旧アプリ同様、済み・確認済みの明細は支払日を変更しない
+        if sourceInvoice.isPaid || part.isChecked {
+            return
+        }
+
+        let targetDate = Calendar.current.startOfDay(for: date)
+        if Calendar.current.isDate(sourceInvoice.date, inSameDayAs: targetDate) {
+            return
+        }
+
+        let card = sourceInvoice.e1card
+        let bank = card?.e8bank
+        let oldPayment = sourceInvoice.e7payment
+        let targetInvoice = findOrCreateInvoice(
+            card: card,
+            date: targetDate,
+            fallbackInvoicePaid: false,
+            fallbackPaymentPaid: false,
+            context: context
+        )
+        setInvoiceState(targetInvoice, isPaid: false)
+
+        let targetPayment = findOrCreatePayment(
+            date: targetDate,
+            bank: bank,
+            isPaid: false,
+            fallbackPaid: false,
+            context: context
+        )
+        if targetInvoice.e7payment?.id != targetPayment.id {
+            // 支払先変更時は古い支払から請求を外してから張り替える
+            targetInvoice.e7payment?.e2invoices.removeAll { $0.id == targetInvoice.id }
+            targetInvoice.e7payment = targetPayment
+        }
+        if !targetPayment.e2invoices.contains(where: { $0.id == targetInvoice.id }) {
+            // SwiftData の逆参照が追従しない場合に備えて明示的に追加する
+            targetPayment.e2invoices.append(targetInvoice)
+        }
+        setPaymentBank(targetPayment, bank: bank, isPaid: false)
+
+        // 明細を指定日の請求へ移し替える
+        sourceInvoice.e6parts.removeAll { $0.id == part.id }
+        part.e2invoice = targetInvoice
+        if !targetInvoice.e6parts.contains(where: { $0.id == part.id }) {
+            targetInvoice.e6parts.append(part)
+        }
+
+        recalculatePayment(targetPayment)
+        if let oldPayment {
+            recalculatePayment(oldPayment)
+        }
+        if sourceInvoice.e6parts.isEmpty {
+            deleteInvoice(sourceInvoice, context: context)
+        }
+        if let oldPayment, oldPayment.e2invoices.isEmpty {
+            deletePayment(oldPayment, context: context)
+        }
+        if let card {
+            recalculateCard(card)
+        }
     }
 
     // MARK: - Repeat (nRepeat > 0: mark-paid でコピーを翌月以降に作成)

@@ -2248,6 +2248,57 @@
         }
       }
     },
+    "record.partDueDate.section": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Debit Date (Payment Date)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "引き落とし日（支払日）"
+          }
+        }
+      }
+    },
+    "record.partDueDate.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to change the debit date for this item only."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タップすればこの明細だけの引き落とし日を変更できます"
+          }
+        }
+      }
+    },
+    "record.partDueDate.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Debit Date"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "引き落とし日"
+          }
+        }
+      }
+    },
     "record.field.amount": {
       "extractionState": "manual",
       "localizations": {
