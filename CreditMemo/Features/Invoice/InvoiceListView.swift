@@ -9,6 +9,19 @@ struct InvoiceListView: View {
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
     @State private var editRecord: E3record?
 
+    // MARK: Check Toggle
+
+    /// チェック状態を反転し、関連集計を更新する
+    private func toggleCheck(_ part: E6part) {
+        part.isChecked.toggle()
+        if let invoice = part.e2invoice {
+            if let card = invoice.e1card {
+                RecordService.recalculateCard(card)
+            }
+            payment.sumNoCheck = payment.e2invoices.reduce(0) { $0 + $1.sumNoCheck }
+        }
+    }
+
     private var includesUnselectedCard: Bool {
         payment.e2invoices.contains { $0.e1card == nil }
     }
@@ -68,6 +81,19 @@ struct InvoiceListView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
+                        // 解錠→施錠のインライン説明
+                        (
+                            Text("invoice.beginner.line4a")
+                            + Text(Image(systemName: "lock.open.fill"))
+                                .foregroundStyle(Color(.systemGray3))
+                            + Text("invoice.beginner.line4b")
+                            + Text(Image(systemName: "lock.fill"))
+                                .foregroundStyle(Color(.systemGreen))
+                            + Text("invoice.beginner.line4c")
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                         if payment.isPaid {
                             HStack(alignment: .firstTextBaseline, spacing: 6) {
                                 InvoiceStatusIcon(isPaid: true)
@@ -127,6 +153,9 @@ struct InvoiceListView: View {
                                     isPaid: !(part.e2invoice?.isPaid ?? false),
                                     context: context
                                 )
+                            },
+                            onToggleCheck: {
+                                toggleCheck(part)
                             },
                             onEdit: {
                                 if let record = part.e3record {
@@ -206,9 +235,11 @@ private extension E7payment {
 private struct PartRow: View {
     let part: E6part
     let onTogglePaid: () -> Void
+    let onToggleCheck: () -> Void
     let onEdit: () -> Void
     private var record: E3record? { part.e3record }
     private var isPaid: Bool { part.e2invoice?.isPaid ?? false }
+    private var isChecked: Bool { part.isChecked }
     private var canToggleToPaid: Bool {
         // 決済手段未選択は済みにできない
         isPaid || part.e2invoice?.e1card != nil
@@ -235,6 +266,16 @@ private struct PartRow: View {
                         amountOverride: part.nAmount,
                         showsStatus: false
                     )
+                }
+                .buttonStyle(.plain)
+                .opacity(isChecked ? 0.45 : 1)
+
+                // 確定ロック（解錠 → 施錠でロック ON/OFF）
+                Button(action: onToggleCheck) {
+                    Image(systemName: isChecked ? "lock.fill" : "lock.open.fill")
+                        .foregroundStyle(isChecked ? Color(.systemGreen) : Color(.systemGray3))
+                        .imageScale(.large)
+                        .frame(width: 30, height: 30)
                 }
                 .buttonStyle(.plain)
             }

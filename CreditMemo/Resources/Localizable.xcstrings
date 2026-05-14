@@ -1352,13 +1352,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adjust Each Item"
+            "value": "Edit and Confirm Each Item"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "明細ごとに調整"
+            "value": "明細ごとに編集と確認"
           }
         }
       }
@@ -1403,13 +1403,64 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A payment near the cutoff may miss it and be debited next time. In that case, adjust each item here."
+            "value": "Sometimes a payment near the cutoff misses it and is debited next time. In that case, you can change the debit date for each item here."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "締切に近い決済が間に合わずに次回に引き落とされるケースがあります。そのような時、ここで明細の単位で調整してください。"
+            "value": "締切に近い決済が間に合わず次回に引き落とされるケースがあります。そのような時、ここで明細の引き落とし日が変更できます。"
+          }
+        }
+      }
+    },
+    "invoice.beginner.line4a": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap "
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "右側の"
+          }
+        }
+      }
+    },
+    "invoice.beginner.line4b": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " on the right; it becomes "
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "をタップすると"
+          }
+        }
+      }
+    },
+    "invoice.beginner.line4c": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " and key fields are locked. This does not affect processing — use it as a confirmation sign."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "に変わり重要項目がロックされます。処理に影響はありませんが、確認サインとしてご利用ください。"
           }
         }
       }
