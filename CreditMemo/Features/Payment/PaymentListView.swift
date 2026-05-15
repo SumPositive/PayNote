@@ -78,7 +78,12 @@ struct PaymentListView: View {
                         selectedBankName: selectedBank?.zName,
                         selectedCardName: selectedCard?.zName,
                         onSelectBank: { showBankPicker = true },
-                        onSelectCard: { showCardPicker = true }
+                        onSelectCard: { showCardPicker = true },
+                        onClearFilter: {
+                            selectedBank = nil
+                            selectedCard = nil
+                            filterMode = .all
+                        }
                     )
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -536,63 +541,32 @@ private struct PaymentDisplayControlBar: View {
     let selectedCardName: String?
     let onSelectBank: () -> Void
     let onSelectCard: () -> Void
-    private let headerWidth: CGFloat = 86
+    let onClearFilter: () -> Void
 
-    private var usesDefaultFilterWidths: Bool {
-        // 絞り込み解除時は選択名を隠し、「すべて」「口座」「手段」を等幅に戻す
-        filterMode == .all
-    }
-    private var bankChipTitle: String {
-        filterMode == .bank ? (selectedBankName ?? NSLocalizedString("payment.filter.bank", comment: ""))
-                            : NSLocalizedString("payment.filter.bank", comment: "")
-    }
-    private var cardChipTitle: String {
-        filterMode == .card ? (selectedCardName ?? NSLocalizedString("payment.filter.card", comment: ""))
-                            : NSLocalizedString("payment.filter.card", comment: "")
+    private var filterTitle: String {
+        // 絞り込み状態を1つのチップに集約して、長い名称でも崩れにくくする
+        switch filterMode {
+        case .all:
+            return NSLocalizedString("label.all", comment: "")
+        case .bank:
+            let name = selectedBankName ?? NSLocalizedString("payment.filter.bank", comment: "")
+            return String(format: NSLocalizedString("payment.filter.bankPrefix", comment: ""), name)
+        case .card:
+            let name = selectedCardName ?? NSLocalizedString("payment.filter.card", comment: "")
+            return String(format: NSLocalizedString("payment.filter.cardPrefix", comment: ""), name)
+        }
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             PaymentGroupSegmentedControl(selection: $groupMode)
-
-            HStack(spacing: 6) {
-                PaymentControlHeaderCell(
-                    titleKey: "payment.filter.short",
-                    systemImage: "line.3.horizontal.decrease.circle",
-                    usesFlexibleWidth: false,
-                    fixedWidth: headerWidth
-                )
-
-                PaymentFilterChip(
-                    titleKey: "label.all",
-                    isSelected: filterMode == .all,
-                    usesFlexibleWidth: usesDefaultFilterWidths,
-                    fixedWidth: usesDefaultFilterWidths ? nil : 74
-                ) {
-                    filterMode = .all
-                }
-                .layoutPriority(usesDefaultFilterWidths ? 1 : 0)
-                PaymentFilterChip(
-                    title: bankChipTitle,
-                    isSelected: filterMode == .bank,
-                    usesFlexibleWidth: usesDefaultFilterWidths || filterMode == .bank,
-                    fixedWidth: usesDefaultFilterWidths || filterMode == .bank ? nil : 74,
-                    action: onSelectBank
-                )
-                .layoutPriority(filterMode == .bank ? 3 : 1)
-                PaymentFilterChip(
-                    title: cardChipTitle,
-                    isSelected: filterMode == .card,
-                    usesFlexibleWidth: usesDefaultFilterWidths || filterMode == .card,
-                    fixedWidth: usesDefaultFilterWidths || filterMode == .card ? nil : 74,
-                    action: onSelectCard
-                )
-                .layoutPriority(filterMode == .card ? 3 : 1)
-            }
-            .padding(2)
-            .background(
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .fill(Color(uiColor: .tertiarySystemFill))
+            PaymentFilterStatusBar(
+                title: filterTitle,
+                isFiltered: filterMode != .all,
+                onSelectAll: onClearFilter,
+                onSelectBank: onSelectBank,
+                onSelectCard: onSelectCard,
+                onClear: onClearFilter
             )
         }
     }
@@ -600,18 +574,9 @@ private struct PaymentDisplayControlBar: View {
 
 private struct PaymentGroupSegmentedControl: View {
     @Binding var selection: PaymentGroupMode
-    private let headerWidth: CGFloat = 86
 
     var body: some View {
         HStack(spacing: 0) {
-            // 「集計」は選択肢に見せるだけで、タップ対象にはしない
-            PaymentControlHeaderCell(
-                titleKey: "payment.group.title",
-                systemImage: "rectangle.grid.1x2",
-                usesFlexibleWidth: false,
-                fixedWidth: headerWidth
-            )
-
             ForEach(PaymentGroupMode.allCases, id: \.self) { mode in
                 Button {
                     selection = mode
@@ -640,94 +605,72 @@ private struct PaymentGroupSegmentedControl: View {
     }
 }
 
-private struct PaymentControlHeaderCell: View {
-    let titleKey: LocalizedStringKey
-    let systemImage: String
-    var usesFlexibleWidth = true
-    var fixedWidth: CGFloat? = nil
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: systemImage)
-                .imageScale(.small)
-            Text(titleKey)
-                .lineLimit(1)
-                .minimumScaleFactor(0.65)
-                .allowsTightening(true)
-        }
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.tertiary)
-            .padding(.horizontal, 10)
-            // 見出しセルは潰れないよう、必要な場合だけ固定幅にする
-            .frame(width: fixedWidth)
-            .frame(maxWidth: usesFlexibleWidth ? .infinity : nil)
-            .padding(.vertical, 7)
-            .background(
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(Color(uiColor: .secondarySystemFill).opacity(0.45))
-            )
-            .allowsHitTesting(false)
-    }
-}
-
-private struct PaymentFilterChip: View {
+private struct PaymentFilterStatusBar: View {
     let title: String
-    let isSelected: Bool
-    let usesFlexibleWidth: Bool
-    let fixedWidth: CGFloat?
-    let action: () -> Void
-
-    init(
-        titleKey: String,
-        isSelected: Bool,
-        usesFlexibleWidth: Bool = true,
-        fixedWidth: CGFloat? = nil,
-        action: @escaping () -> Void
-    ) {
-        self.title = NSLocalizedString(titleKey, comment: "")
-        self.isSelected = isSelected
-        self.usesFlexibleWidth = usesFlexibleWidth
-        self.fixedWidth = fixedWidth
-        self.action = action
-    }
-
-    init(
-        title: String,
-        isSelected: Bool,
-        usesFlexibleWidth: Bool = true,
-        fixedWidth: CGFloat? = nil,
-        action: @escaping () -> Void
-    ) {
-        self.title = title
-        self.isSelected = isSelected
-        self.usesFlexibleWidth = usesFlexibleWidth
-        self.fixedWidth = fixedWidth
-        self.action = action
-    }
+    let isFiltered: Bool
+    let onSelectAll: () -> Void
+    let onSelectBank: () -> Void
+    let onSelectCard: () -> Void
+    let onClear: () -> Void
+    @State private var showFilterMenu = false
 
     var body: some View {
-        Button(action: action) {
-            Text(title)
+        HStack(spacing: 8) {
+            Button {
+                showFilterMenu = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "line.3.horizontal.decrease.circle")
+                        .imageScale(.medium)
+                    Text(title)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                        .allowsTightening(true)
+                    Spacer(minLength: 6)
+                    Image(systemName: "chevron.down")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
                 .font(.caption.weight(.semibold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.55)
-                .allowsTightening(true)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .frame(
-                    minWidth: usesFlexibleWidth ? 74 : 0,
-                    maxWidth: usesFlexibleWidth ? .infinity : nil
-                )
-                // 「すべて」などの固定チップは最低限読める幅を維持する
-                .frame(width: fixedWidth)
-                .fixedSize(horizontal: !usesFlexibleWidth, vertical: false)
-                .foregroundStyle(isSelected ? Color.white : Color.accentColor)
+                .foregroundStyle(isFiltered ? Color.white : Color.accentColor)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     Capsule()
-                        .fill(isSelected ? Color.accentColor : Color.accentColor.opacity(0.10))
+                        .fill(isFiltered ? Color.accentColor : Color.accentColor.opacity(0.10))
                 )
+            }
+            .buttonStyle(.plain)
+
+            if isFiltered {
+                Button(action: onClear) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 34, height: 34)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("label.all"))
+            }
         }
-        .buttonStyle(.plain)
+        .padding(2)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color(uiColor: .tertiarySystemFill))
+        )
+        .confirmationDialog("payment.filter.title", isPresented: $showFilterMenu, titleVisibility: .visible) {
+            Button("label.all") {
+                onSelectAll()
+            }
+            Button("payment.filter.bank") {
+                onSelectBank()
+            }
+            Button("payment.filter.card") {
+                onSelectCard()
+            }
+            Button("button.cancel", role: .cancel) {}
+        }
     }
 }
 

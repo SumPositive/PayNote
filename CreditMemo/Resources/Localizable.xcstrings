@@ -1840,6 +1840,23 @@
         }
       }
     },
+    "payment.filter.bankPrefix": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "口座: %@"
+          }
+        }
+      }
+    },
     "payment.filter.card": {
       "extractionState": "manual",
       "localizations": {
@@ -1853,6 +1870,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "手段"
+          }
+        }
+      }
+    },
+    "payment.filter.cardPrefix": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Method: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "手段: %@"
           }
         }
       }
