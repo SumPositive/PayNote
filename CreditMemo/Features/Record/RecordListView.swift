@@ -11,6 +11,45 @@ struct RecordListView: View {
         case tag
     }
 
+    /// 履歴の対象期間
+    private enum RecordPeriod: String, CaseIterable {
+        case oneMonth
+        case twoMonths
+        case threeMonths
+        case oneYear
+        case threeYears
+        case all
+
+        var localizedKey: LocalizedStringKey {
+            switch self {
+            case .oneMonth:    "record.period.1month"
+            case .twoMonths:   "record.period.2months"
+            case .threeMonths: "record.period.3months"
+            case .oneYear:     "record.period.1year"
+            case .threeYears:  "record.period.3years"
+            case .all:         "record.period.all"
+            }
+        }
+
+        var startDate: Date? {
+            let today = Calendar.current.startOfDay(for: Date())
+            switch self {
+            case .oneMonth:
+                return Calendar.current.date(byAdding: .month, value: -1, to: today)
+            case .twoMonths:
+                return Calendar.current.date(byAdding: .month, value: -2, to: today)
+            case .threeMonths:
+                return Calendar.current.date(byAdding: .month, value: -3, to: today)
+            case .oneYear:
+                return Calendar.current.date(byAdding: .year, value: -1, to: today)
+            case .threeYears:
+                return Calendar.current.date(byAdding: .year, value: -3, to: today)
+            case .all:
+                return nil
+            }
+        }
+    }
+
     /// 履歴のソート対象
     private enum SortTarget: Hashable {
         case date
@@ -41,6 +80,7 @@ struct RecordListView: View {
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
 
     @State private var filterKind: FilterKind = .all
+    @State private var period: RecordPeriod = .oneYear
     @State private var selectedTags: [E5tag] = []
     @State private var sortTarget: SortTarget = .date
     @State private var sortDirection: SortDirection = .descending
@@ -107,6 +147,14 @@ struct RecordListView: View {
             }
             Section {
                 VStack(spacing: 8) {
+                    Picker("record.period.title", selection: $period) {
+                        ForEach(RecordPeriod.allCases, id: \.self) { period in
+                            Text(period.localizedKey)
+                                .tag(period)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
                     HStack(spacing: 8) {
                         Button {
                             showFilterPopover = true
@@ -225,6 +273,9 @@ struct RecordListView: View {
             if records.isEmpty {
                 resetAndLoadRecords()
             }
+        }
+        .onChange(of: period) { _, _ in
+            resetAndLoadRecords()
         }
         .onChange(of: filterKind) { _, _ in
             resetAndLoadRecords()
@@ -383,6 +434,11 @@ struct RecordListView: View {
     }
 
     private func matchesFilter(_ record: E3record) -> Bool {
+        // 対象期間はすべてのフィルターより先に適用する。
+        if let startDate = period.startDate, record.dateUse < startDate {
+            return false
+        }
+
         switch filterKind {
         case .all:
             return true
@@ -413,10 +469,9 @@ struct RecordListView: View {
 
         switch sortTarget {
         case .date:
-            let lhsDate = sortDate(of: lhs)
-            let rhsDate = sortDate(of: rhs)
-            if lhsDate != rhsDate {
-                return sortDirection == .descending ? rhsDate < lhsDate : lhsDate < rhsDate
+            // 表示上の日付（利用日）で並べる。同日内は編集日時で安定化する。
+            if lhs.dateUse != rhs.dateUse {
+                return sortDirection == .descending ? rhs.dateUse < lhs.dateUse : lhs.dateUse < rhs.dateUse
             }
         case .amount:
             if lhs.nAmount != rhs.nAmount {
