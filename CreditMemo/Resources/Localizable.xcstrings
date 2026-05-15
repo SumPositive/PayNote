@@ -3089,13 +3089,30 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Date"
+            "value": "Used"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "日付"
+            "value": "利用日"
+          }
+        }
+      }
+    },
+    "record.sort.edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edited"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "編集日"
           }
         }
       }

@@ -52,7 +52,8 @@ struct RecordListView: View {
 
     /// 履歴のソート対象
     private enum SortTarget: Hashable {
-        case date
+        case edit    // 編集日（dateUpdate ?? dateUse）
+        case date    // 利用日（dateUse）
         case amount
     }
 
@@ -82,7 +83,7 @@ struct RecordListView: View {
     @State private var filterKind: FilterKind = .all
     @State private var period: RecordPeriod = .oneYear
     @State private var selectedTags: [E5tag] = []
-    @State private var sortTarget: SortTarget = .date
+    @State private var sortTarget: SortTarget = .edit
     @State private var sortDirection: SortDirection = .descending
     @State private var records: [E3record] = []
     @State private var recordPage = 0
@@ -228,10 +229,9 @@ struct RecordListView: View {
                     )
                     .fixedSize(horizontal: false, vertical: true)
 
+                    // 「並び順」見出しは外し、ボタンを横幅いっぱいに広げて欠けを防ぐ。
                     HStack(spacing: 8) {
-                        Text("record.sort.title")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                        sortButton(titleKey: "record.sort.edit", target: .edit)
                         sortButton(titleKey: "record.sort.date", target: .date)
                         sortButton(titleKey: "record.sort.amount", target: .amount)
                     }
@@ -468,6 +468,13 @@ struct RecordListView: View {
         }
 
         switch sortTarget {
+        case .edit:
+            // 編集日時（未設定時は利用日へフォールバック）で並べる。
+            let lhsDate = sortDate(of: lhs)
+            let rhsDate = sortDate(of: rhs)
+            if lhsDate != rhsDate {
+                return sortDirection == .descending ? rhsDate < lhsDate : lhsDate < rhsDate
+            }
         case .date:
             // 表示上の日付（利用日）で並べる。同日内は編集日時で安定化する。
             if lhs.dateUse != rhs.dateUse {
