@@ -671,23 +671,8 @@ struct RecordSummaryRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 6) {
-            // 日付は3段表示にして年・月日・曜日を分ける
-            VStack(spacing: 0) {
-                Text(AppDateFormat.yearText(record.dateUse))
-                    .font(.system(size: 10, weight: .regular))
-                    .foregroundStyle(Color(.secondaryLabel))
-                    .lineLimit(1)
-                Text(AppDateFormat.monthDayText(record.dateUse))
-                    .font(.subheadline)
-                    .foregroundStyle(Color(.label))
-                    .lineLimit(1)
-                Text(AppDateFormat.weekdayText(record.dateUse))
-                    .font(.system(size: 10, weight: .regular))
-                    .foregroundStyle(Color(.secondaryLabel))
-                    .lineLimit(1)
-            }
-            .multilineTextAlignment(.center)
-            .fixedSize(horizontal: true, vertical: false)
+            // 共通日付ビュー（年・月日・曜日の3段表示）
+            StackedDateView(date: record.dateUse)
 
             VStack(alignment: .leading, spacing: 4) {
                 ViewThatFits(in: .horizontal) {

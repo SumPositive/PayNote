@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		06CE2D98750923E3AD033A00 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75ECBB517883FD08C1A38217 /* SettingsView.swift */; };
 		158FFDA181FBC568F5DBFAAB /* NumericKeypadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB4F7EAA70EE49D23DA0441 /* NumericKeypadView.swift */; };
+		2D70AB91C9F44E59B12E7D11 /* StackedDateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D70AB90C9F44E59B12E7D10 /* StackedDateView.swift */; };
 		162A501B71D24A57A57D4D01 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162A501A71D24A57A57D4D01 /* Log.swift */; };
 		1698067491EBDA300104D152 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 461FBECA42994F0A6C9BEA37 /* Assets.xcassets */; };
 		1EC1A3B5C7312FB9E9E97EAB /* AppMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0864042EF421461DBA308F5E /* AppMain.swift */; };
@@ -122,6 +123,7 @@
 		F97721A91036068831138735 /* SplitPayListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitPayListView.swift; sourceTree = "<group>"; };
 		FA5C86233C4FE3247A2D008B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		FDB4F7EAA70EE49D23DA0441 /* NumericKeypadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumericKeypadView.swift; sourceTree = "<group>"; };
+		2D70AB90C9F44E59B12E7D10 /* StackedDateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackedDateView.swift; sourceTree = "<group>"; };
 		FFE96F1625157DEB00A17A10 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -305,6 +307,7 @@
 			isa = PBXGroup;
 			children = (
 				FDB4F7EAA70EE49D23DA0441 /* NumericKeypadView.swift */,
+				2D70AB90C9F44E59B12E7D10 /* StackedDateView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -560,6 +563,7 @@
 				162A501B71D24A57A57D4D01 /* Log.swift in Sources */,
 				EAB27B9B73D8E77F8F5188FA /* MigratingFromCoreData.swift in Sources */,
 				158FFDA181FBC568F5DBFAAB /* NumericKeypadView.swift in Sources */,
+				2D70AB91C9F44E59B12E7D11 /* StackedDateView.swift in Sources */,
 				1EC1A3B5C7312FB9E9E97EAB /* AppMain.swift in Sources */,
 				CF1F84FA70C44A2D7D0E4EDC /* PaymentListView.swift in Sources */,
 				2921018F4FA6C238795FFF40 /* RecordEditView.swift in Sources */,

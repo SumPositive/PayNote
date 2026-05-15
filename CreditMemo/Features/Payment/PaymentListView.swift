@@ -801,23 +801,10 @@ private struct PaymentRow: View {
             .buttonStyle(.plain)
 
             HStack(alignment: .center, spacing: 8) {
-                // 日付は2段表示にして中央揃えにする
-                VStack(spacing: 0) {
-                    Text(AppDateFormat.yearWeekdayText(item.date))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                        .allowsTightening(true)
-                    Text(AppDateFormat.monthDayText(item.date))
-                        .font(.subheadline)
-                        .lineLimit(1)
-                }
-                .multilineTextAlignment(.center)
-                .frame(width: 76, alignment: .center)
-                // 日付は優先表示して欠けにくくする
-                .fixedSize(horizontal: true, vertical: false)
-                .layoutPriority(2)
+                // 共通日付ビュー（年・月日・曜日の3段表示）
+                StackedDateView(date: item.date)
+                    // 日付は優先表示して欠けにくくする
+                    .layoutPriority(2)
                 // 右側は1行表示を優先し、収まらない場合のみ2行表示へ切り替える
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {

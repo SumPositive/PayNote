@@ -250,22 +250,9 @@ private struct CardGroupRow: View {
             .buttonStyle(.plain)
 
             HStack(alignment: .center, spacing: 8) {
-                // 日付（左）
-                VStack(spacing: 0) {
-                    Text(AppDateFormat.yearWeekdayText(group.payment.date))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                        .allowsTightening(true)
-                    Text(AppDateFormat.monthDayText(group.payment.date))
-                        .font(.subheadline)
-                        .lineLimit(1)
-                }
-                .multilineTextAlignment(.center)
-                .frame(width: 76, alignment: .center)
-                .fixedSize(horizontal: true, vertical: false)
-                .layoutPriority(2)
+                // 共通日付ビュー（年・月日・曜日の3段表示）
+                StackedDateView(date: group.payment.date)
+                    .layoutPriority(2)
 
                 Spacer(minLength: 8)
 
