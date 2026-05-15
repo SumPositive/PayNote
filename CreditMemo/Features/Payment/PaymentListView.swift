@@ -24,9 +24,11 @@ struct PaymentListView: View {
     @State private var togglingPaymentIDs: Set<String> = []
     /// false のとき自動スクロールをスキップする
     @State private var autoScrollEnabled = true
+    @State private var boundaryScrollRequest = 0
     private let paymentMoveAnimation = Animation.easeInOut(duration: 0.55)
     private let pageSize = 100
     private let overduePageSize = 100
+    private let paymentTopAnchorID = "payment-top-anchor"
     private let paymentBoundaryAnchorID = "payment-boundary-anchor"
     private let paidFirstRowAnchorID = "payment-paid-first-row-anchor"
 
@@ -60,10 +62,15 @@ struct PaymentListView: View {
         !upcomingUnpaidPayments.isEmpty || 0 < overdueUnpaidCount || !paidPayments.isEmpty
     }
 
+    private var shouldCenterBoundaryOnScroll: Bool {
+        // 行数が少ない時は境界中央より先頭表示を優先し、上側が隠れないようにする。
+        2 < selectedUnpaidItems.count || 1 < paidItems.count
+    }
+
     private var scrollPositionKey: String {
         // カウントを含めることで初回データ読み込み後に確実に発火させる。
         // 戻り時の不要スクロールは suppressNextScroll フラグで抑制する。
-        "\(unpaidFilter.rawValue)-\(groupMode.rawValue)-\(filterMode.rawValue)-\(selectedBank?.id ?? "")-\(selectedCard?.id ?? "")-\(selectedUnpaidItems.count)-\(paidItems.count)"
+        "\(boundaryScrollRequest)-\(unpaidFilter.rawValue)-\(groupMode.rawValue)-\(filterMode.rawValue)-\(selectedBank?.id ?? "")-\(selectedCard?.id ?? "")-\(selectedUnpaidItems.count)-\(paidItems.count)"
     }
 
     var body: some View {
@@ -116,6 +123,9 @@ struct PaymentListView: View {
                     ScrollViewReader { proxy in
                         ScrollView {
                             LazyVStack(spacing: 16) {
+                                Color.clear
+                                    .frame(height: 1)
+                                    .id(paymentTopAnchorID)
                                 if userLevel == .beginner {
                                     VStack(alignment: .center, spacing: 4) {
                                         Text("payment.beginner.title")
@@ -206,6 +216,11 @@ struct PaymentListView: View {
             )
             .onDisappear {
                 filterMode = selectedBank == nil ? .all : .bank
+                if selectedBank != nil {
+                    // 口座で絞り込む時は、まず日付別で見せる。
+                    groupMode = .date
+                }
+                requestBoundaryScroll()
             }
         }
         .sheet(isPresented: $showCardPicker) {
@@ -218,7 +233,21 @@ struct PaymentListView: View {
             )
             .onDisappear {
                 filterMode = selectedCard == nil ? .all : .card
+                if selectedCard != nil {
+                    // 手段で絞り込む時は、まず日付別で見せる。
+                    groupMode = .date
+                }
+                requestBoundaryScroll()
             }
+        }
+        .onChange(of: groupMode) { _, _ in
+            requestBoundaryScroll()
+        }
+        .onChange(of: unpaidFilter) { _, _ in
+            requestBoundaryScroll()
+        }
+        .onChange(of: filterMode) { _, _ in
+            requestBoundaryScroll()
         }
     }
 
@@ -240,13 +269,23 @@ struct PaymentListView: View {
             autoScrollEnabled = true
             return
         }
-        // レイアウト確定後に境界を中央へ寄せる
-        try? await Task.sleep(nanoseconds: 50_000_000)
+        // フィルター変更後は高さが変わるため、レイアウト確定を待って境界を中央へ寄せる。
+        try? await Task.sleep(nanoseconds: 120_000_000)
         await MainActor.run {
             withAnimation(.easeInOut(duration: 0.2)) {
-                proxy.scrollTo(paymentBoundaryAnchorID, anchor: .center)
+                if shouldCenterBoundaryOnScroll {
+                    proxy.scrollTo(paymentBoundaryAnchorID, anchor: .center)
+                } else {
+                    proxy.scrollTo(paymentTopAnchorID, anchor: .top)
+                }
             }
         }
+    }
+
+    private func requestBoundaryScroll() {
+        // 条件変更後は必ず未払/済みの境界へ戻す。
+        autoScrollEnabled = true
+        boundaryScrollRequest += 1
     }
 
     private func togglePaid(_ item: PaymentDisplayItem) {
@@ -501,6 +540,8 @@ private enum PaymentGroupMode: String, CaseIterable {
     case bank
     case card
 
+    static let displayOrder: [PaymentGroupMode] = [.date, .card, .bank]
+
     var localizedKey: LocalizedStringKey {
         switch self {
         case .date: "payment.group.date"
@@ -581,7 +622,8 @@ private struct PaymentGroupSegmentedControl: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(PaymentGroupMode.allCases, id: \.self) { mode in
+            // 集計は「日付、手段、口座」の順で表示する。
+            ForEach(PaymentGroupMode.displayOrder, id: \.self) { mode in
                 Button {
                     selection = mode
                 } label: {
@@ -663,15 +705,16 @@ private struct PaymentFilterStatusBar: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(Color(uiColor: .tertiarySystemFill))
         )
-        .confirmationDialog("payment.filter.title", isPresented: $showFilterMenu, titleVisibility: .visible) {
+        // 選択肢だけ見せたいので、フィルター吹き出しのタイトルは非表示にする。
+        .confirmationDialog("payment.filter.title", isPresented: $showFilterMenu, titleVisibility: .hidden) {
             Button("label.all") {
                 onSelectAll()
             }
-            Button("payment.filter.bank") {
-                onSelectBank()
-            }
             Button("payment.filter.card") {
                 onSelectCard()
+            }
+            Button("payment.filter.bank") {
+                onSelectBank()
             }
             Button("button.cancel", role: .cancel) {}
         }
