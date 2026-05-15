@@ -33,7 +33,8 @@ struct CardListView: View {
             }
             ForEach(cards) { card in
                 NavigationLink {
-                    CardInvoiceListView(card: card)
+                    // 決済手段マスタは、選択時に状況ではなく編集画面を開く。
+                    CardEditView(card: card)
                 } label: {
                     CardRow(card: card)
                 }

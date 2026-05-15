@@ -97,6 +97,10 @@ struct PaymentListView: View {
                             )
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(COLOR_UNPAID)
+                            // ja/en とも警告文は1行に収めるため、必要に応じて文字を縮小する。
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.45)
+                            .allowsTightening(true)
                             .frame(maxWidth: .infinity, alignment: .center)
                             .multilineTextAlignment(.center)
                             Picker("payment.overdue.filter", selection: $unpaidFilter) {
