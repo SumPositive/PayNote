@@ -4,6 +4,8 @@ import UIKit
 
 struct PaymentListView: View {
     @Environment(\.modelContext) private var context
+    @Query(sort: \E8bank.nRow) private var banks: [E8bank]
+    @Query(sort: \E1card.nRow) private var cards: [E1card]
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
     @AppStorage(AppStorageKey.paymentWindowDays) private var paymentWindowDays = 15
     @State private var upcomingUnpaidPayments: [E7payment] = []
@@ -13,6 +15,12 @@ struct PaymentListView: View {
     @State private var allPaidCount = 0
     @State private var isLoadingMorePaid = false
     @State private var unpaidFilter: PaymentUnpaidFilter = .upcoming
+    @State private var groupMode: PaymentGroupMode = .date
+    @State private var filterMode: PaymentFilterMode = .all
+    @State private var selectedBank: E8bank?
+    @State private var selectedCard: E1card?
+    @State private var showBankPicker = false
+    @State private var showCardPicker = false
     @State private var togglingPaymentIDs: Set<String> = []
     /// false のとき自動スクロールをスキップする
     @State private var autoScrollEnabled = true
@@ -40,6 +48,14 @@ struct PaymentListView: View {
         unpaidFilter == .upcoming ? upcomingUnpaidPayments : overdueUnpaidPayments
     }
 
+    private var selectedUnpaidItems: [PaymentDisplayItem] {
+        buildDisplayItems(from: selectedUnpaidPayments, isPaid: false)
+    }
+
+    private var paidItems: [PaymentDisplayItem] {
+        buildDisplayItems(from: paidPayments, isPaid: true)
+    }
+
     private var hasAnyPayments: Bool {
         !upcomingUnpaidPayments.isEmpty || 0 < overdueUnpaidCount || !paidPayments.isEmpty
     }
@@ -47,7 +63,7 @@ struct PaymentListView: View {
     private var scrollPositionKey: String {
         // カウントを含めることで初回データ読み込み後に確実に発火させる。
         // 戻り時の不要スクロールは suppressNextScroll フラグで抑制する。
-        "\(unpaidFilter.rawValue)-\(selectedUnpaidPayments.count)-\(paidPayments.count)"
+        "\(unpaidFilter.rawValue)-\(groupMode.rawValue)-\(filterMode.rawValue)-\(selectedBank?.id ?? "")-\(selectedCard?.id ?? "")-\(selectedUnpaidItems.count)-\(paidItems.count)"
     }
 
     var body: some View {
@@ -56,6 +72,18 @@ struct PaymentListView: View {
                 ContentUnavailableView("label.empty", systemImage: "calendar.badge.clock")
             } else {
                 VStack(spacing: 0) {
+                    PaymentDisplayControlBar(
+                        groupMode: $groupMode,
+                        filterMode: $filterMode,
+                        selectedBankName: selectedBank?.zName,
+                        selectedCardName: selectedCard?.zName,
+                        onSelectBank: { showBankPicker = true },
+                        onSelectCard: { showCardPicker = true }
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 4)
+
                     if hasOverdueUnpaid {
                         VStack(alignment: .leading, spacing: 10) {
                             Text(unpaidFilter == .upcoming
@@ -123,8 +151,8 @@ struct PaymentListView: View {
                                     .frame(maxWidth: .infinity, alignment: .center)
                                 }
                                 PaymentCombinedCard(
-                                    unpaidPayments: selectedUnpaidPayments,
-                                    paidPayments: paidPayments,
+                                    unpaidItems: selectedUnpaidItems,
+                                    paidItems: paidItems,
                                     unpaidFilter: unpaidFilter,
                                     onToggle: togglePaid,
                                     togglingPaymentIDs: togglingPaymentIDs,
@@ -159,6 +187,30 @@ struct PaymentListView: View {
                 }
             }
         }
+        .sheet(isPresented: $showBankPicker) {
+            PaymentFilterPickerSheet(
+                title: "payment.filter.bank",
+                items: banks,
+                selected: $selectedBank,
+                label: { $0.zName },
+                noSelectionTitle: "label.all"
+            )
+            .onDisappear {
+                filterMode = selectedBank == nil ? .all : .bank
+            }
+        }
+        .sheet(isPresented: $showCardPicker) {
+            PaymentFilterPickerSheet(
+                title: "payment.filter.card",
+                items: cards,
+                selected: $selectedCard,
+                label: { $0.zName },
+                noSelectionTitle: "label.all"
+            )
+            .onDisappear {
+                filterMode = selectedCard == nil ? .all : .card
+            }
+        }
     }
 
     /// 未払は「今後」と「過去」で分け、済みはページ単位で読む
@@ -188,34 +240,34 @@ struct PaymentListView: View {
         }
     }
 
-    private func togglePaid(_ payment: E7payment) {
+    private func togglePaid(_ item: PaymentDisplayItem) {
         // 連打で同じ支払を二重更新しないよう、短時間ロックする
-        if togglingPaymentIDs.contains(payment.id) {
+        if togglingPaymentIDs.contains(item.id) {
             return
         }
-        let previousIsPaid = payment.isPaid
+        let previousIsPaid = item.isPaid
         let nextIsPaid = !previousIsPaid
         // 決済手段未選択を含む支払は、未払→済みへの更新を禁止する
-        if !previousIsPaid && payment.includesUnselectedCard {
+        if !previousIsPaid && item.includesUnselectedCard {
             return
         }
         // 未払→済みは重め、済み→未払は軽めの触覚フィードバック
         let style: UIImpactFeedbackGenerator.FeedbackStyle = nextIsPaid ? .medium : .light
         UIImpactFeedbackGenerator(style: style).impactOccurred()
-        togglingPaymentIDs.insert(payment.id)
-        applyPaidState(payment, isPaid: nextIsPaid)
+        togglingPaymentIDs.insert(item.id)
+        applyPaidState(item, isPaid: nextIsPaid)
         Task { @MainActor in
             // 画面更新が落ち着くまで短くロックを残す
             try? await Task.sleep(nanoseconds: 400_000_000)
-            togglingPaymentIDs.remove(payment.id)
+            togglingPaymentIDs.remove(item.id)
         }
     }
 
-    private func applyPaidState(_ payment: E7payment, isPaid: Bool) {
+    private func applyPaidState(_ item: PaymentDisplayItem, isPaid: Bool) {
         withAnimation(paymentMoveAnimation) {
             // 未払/済みの変更はサービス層でまとめて保存する
             try? RecordService.setInvoicesPaid(
-                payment.e2invoices,
+                item.invoices,
                 isPaid: isPaid,
                 context: context
             )
@@ -311,28 +363,111 @@ struct PaymentListView: View {
         let end = min(paid.count, offset + limit)
         return Array(paid[offset..<end])
     }
-}
 
-private enum PaymentUnpaidFilter: String {
-    case upcoming
-    case overdue
-}
-
-// MARK: - Row
-
-private struct PaymentRow: View {
-    let payment: E7payment
-    let isToggling: Bool
-    let onToggle: () -> Void
-    private var canToggleToPaid: Bool {
-        // 未選択決済を含む場合は「済み」へ遷移させない
-        payment.isPaid || !payment.includesUnselectedCard
+    private func buildDisplayItems(from payments: [E7payment], isPaid: Bool) -> [PaymentDisplayItem] {
+        // E7payment は「日付+口座」単位なので、画面の集計軸に合わせて表示用モデルへ変換する
+        switch groupMode {
+        case .bank:
+            return payments.compactMap { payment in
+                let invoices = filteredInvoices(in: payment.e2invoices)
+                if invoices.isEmpty {
+                    return nil
+                }
+                return PaymentDisplayItem(
+                    id: "bank-\(payment.id)-\(filterMode.rawValue)-\(selectedCard?.id ?? "")",
+                    date: payment.date,
+                    title: bankTitle(for: payment),
+                    amount: invoices.reduce(Decimal.zero) { $0 + $1.sumAmount },
+                    isPaid: isPaid,
+                    invoices: invoices,
+                    detailPayment: payment
+                )
+            }
+            .sorted { $1.date < $0.date }
+        case .date:
+            let invoices = payments.flatMap { filteredInvoices(in: $0.e2invoices) }
+            return groupedItems(
+                invoices: invoices,
+                isPaid: isPaid,
+                key: { invoice in "date-\(dayKey(invoice.date))" },
+                title: { _ in dateGroupTitleText }
+            )
+        case .card:
+            let invoices = payments.flatMap { filteredInvoices(in: $0.e2invoices) }
+            return groupedItems(
+                invoices: invoices,
+                isPaid: isPaid,
+                key: { invoice in "card-\(dayKey(invoice.date))-\(invoice.e1card?.id ?? "__no_card__")" },
+                title: { invoice in invoice.e1card?.zName ?? NSLocalizedString("payment.card.noSelection", comment: "") }
+            )
+        }
     }
-    private var canTapToggle: Bool {
-        canToggleToPaid && !isToggling
+
+    private func filteredInvoices(in invoices: [E2invoice]) -> [E2invoice] {
+        // 絞り込みは集計軸とは独立して適用する
+        invoices.filter { invoice in
+            switch filterMode {
+            case .all:
+                return true
+            case .bank:
+                return invoice.e7payment?.e8bank?.id == selectedBank?.id
+            case .card:
+                return invoice.e1card?.id == selectedCard?.id
+            }
+        }
     }
 
-    private var bankNameText: String {
+    private var dateGroupTitleText: String {
+        // 日付集計でも、絞り込み中は対象名を行タイトルに出す
+        switch filterMode {
+        case .all:
+            return NSLocalizedString("payment.group.date.all", comment: "")
+        case .bank:
+            return selectedBank?.zName ?? NSLocalizedString("payment.filter.bank", comment: "")
+        case .card:
+            return selectedCard?.zName ?? NSLocalizedString("payment.filter.card", comment: "")
+        }
+    }
+
+    private func groupedItems(
+        invoices: [E2invoice],
+        isPaid: Bool,
+        key: (E2invoice) -> String,
+        title: (E2invoice) -> String
+    ) -> [PaymentDisplayItem] {
+        var buckets: [String: [E2invoice]] = [:]
+        var titles: [String: String] = [:]
+        for invoice in invoices {
+            let bucketKey = key(invoice)
+            buckets[bucketKey, default: []].append(invoice)
+            titles[bucketKey] = title(invoice)
+        }
+        return buckets.map { bucketKey, bucketInvoices in
+            let date = bucketInvoices.map(\.date).min() ?? Date()
+            return PaymentDisplayItem(
+                id: "\(isPaid ? "paid" : "unpaid")-\(bucketKey)",
+                date: date,
+                title: titles[bucketKey] ?? "",
+                amount: bucketInvoices.reduce(Decimal.zero) { $0 + $1.sumAmount },
+                isPaid: isPaid,
+                invoices: bucketInvoices,
+                detailPayment: uniquePayment(in: bucketInvoices)
+            )
+        }
+        .sorted { $1.date < $0.date }
+    }
+
+    private func uniquePayment(in invoices: [E2invoice]) -> E7payment? {
+        // 複数支払を束ねた行では、誤った明細へ遷移しないよう詳細遷移を出さない
+        let payments = invoices.compactMap(\.e7payment)
+        guard let first = payments.first else { return nil }
+        if payments.allSatisfy({ $0.id == first.id }) {
+            return first
+        }
+        return nil
+    }
+
+    private func bankTitle(for payment: E7payment) -> String {
         if !payment.hasAnySelectedCard && payment.includesUnselectedCard {
             return NSLocalizedString("payment.card.noSelection", comment: "")
         }
@@ -342,29 +477,349 @@ private struct PaymentRow: View {
         return NSLocalizedString("payment.bank.noSelection", comment: "")
     }
 
+    private func dayKey(_ date: Date) -> Int {
+        Int(Calendar.current.startOfDay(for: date).timeIntervalSince1970)
+    }
+}
+
+private enum PaymentUnpaidFilter: String {
+    case upcoming
+    case overdue
+}
+
+private enum PaymentGroupMode: String, CaseIterable {
+    case date
+    case bank
+    case card
+
+    var localizedKey: LocalizedStringKey {
+        switch self {
+        case .date: "payment.group.date"
+        case .bank: "payment.group.bank"
+        case .card: "payment.group.card"
+        }
+    }
+}
+
+private enum PaymentFilterMode: String, CaseIterable {
+    case all
+    case bank
+    case card
+
+    var localizedKey: LocalizedStringKey {
+        switch self {
+        case .all: "label.all"
+        case .bank: "payment.filter.bank"
+        case .card: "payment.filter.card"
+        }
+    }
+}
+
+struct PaymentDisplayItem: Identifiable {
+    let id: String
+    let date: Date
+    let title: String
+    let amount: Decimal
+    let isPaid: Bool
+    let invoices: [E2invoice]
+    let detailPayment: E7payment?
+
+    var includesUnselectedCard: Bool {
+        invoices.contains { $0.e1card == nil }
+    }
+}
+
+private struct PaymentDisplayControlBar: View {
+    @Binding var groupMode: PaymentGroupMode
+    @Binding var filterMode: PaymentFilterMode
+    let selectedBankName: String?
+    let selectedCardName: String?
+    let onSelectBank: () -> Void
+    let onSelectCard: () -> Void
+    private let headerWidth: CGFloat = 86
+
+    private var usesDefaultFilterWidths: Bool {
+        // 絞り込み解除時は選択名を隠し、「すべて」「口座」「手段」を等幅に戻す
+        filterMode == .all
+    }
+    private var bankChipTitle: String {
+        filterMode == .bank ? (selectedBankName ?? NSLocalizedString("payment.filter.bank", comment: ""))
+                            : NSLocalizedString("payment.filter.bank", comment: "")
+    }
+    private var cardChipTitle: String {
+        filterMode == .card ? (selectedCardName ?? NSLocalizedString("payment.filter.card", comment: ""))
+                            : NSLocalizedString("payment.filter.card", comment: "")
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            PaymentGroupSegmentedControl(selection: $groupMode)
+
+            HStack(spacing: 6) {
+                PaymentControlHeaderCell(
+                    titleKey: "payment.filter.short",
+                    systemImage: "line.3.horizontal.decrease.circle",
+                    usesFlexibleWidth: false,
+                    fixedWidth: headerWidth
+                )
+
+                PaymentFilterChip(
+                    titleKey: "label.all",
+                    isSelected: filterMode == .all,
+                    usesFlexibleWidth: usesDefaultFilterWidths,
+                    fixedWidth: usesDefaultFilterWidths ? nil : 74
+                ) {
+                    filterMode = .all
+                }
+                .layoutPriority(usesDefaultFilterWidths ? 1 : 0)
+                PaymentFilterChip(
+                    title: bankChipTitle,
+                    isSelected: filterMode == .bank,
+                    usesFlexibleWidth: usesDefaultFilterWidths || filterMode == .bank,
+                    fixedWidth: usesDefaultFilterWidths || filterMode == .bank ? nil : 74,
+                    action: onSelectBank
+                )
+                .layoutPriority(filterMode == .bank ? 3 : 1)
+                PaymentFilterChip(
+                    title: cardChipTitle,
+                    isSelected: filterMode == .card,
+                    usesFlexibleWidth: usesDefaultFilterWidths || filterMode == .card,
+                    fixedWidth: usesDefaultFilterWidths || filterMode == .card ? nil : 74,
+                    action: onSelectCard
+                )
+                .layoutPriority(filterMode == .card ? 3 : 1)
+            }
+            .padding(2)
+            .background(
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(Color(uiColor: .tertiarySystemFill))
+            )
+        }
+    }
+}
+
+private struct PaymentGroupSegmentedControl: View {
+    @Binding var selection: PaymentGroupMode
+    private let headerWidth: CGFloat = 86
+
+    var body: some View {
+        HStack(spacing: 0) {
+            // 「集計」は選択肢に見せるだけで、タップ対象にはしない
+            PaymentControlHeaderCell(
+                titleKey: "payment.group.title",
+                systemImage: "rectangle.grid.1x2",
+                usesFlexibleWidth: false,
+                fixedWidth: headerWidth
+            )
+
+            ForEach(PaymentGroupMode.allCases, id: \.self) { mode in
+                Button {
+                    selection = mode
+                } label: {
+                    Text(mode.localizedKey)
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 7)
+                        .foregroundStyle(selection == mode ? Color.primary : Color.secondary)
+                        .background(
+                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                .fill(selection == mode ? Color(uiColor: .systemBackground) : Color.clear)
+                                .shadow(color: selection == mode ? Color.black.opacity(0.10) : .clear, radius: 1, x: 0, y: 1)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(2)
+        .background(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(Color(uiColor: .tertiarySystemFill))
+        )
+    }
+}
+
+private struct PaymentControlHeaderCell: View {
+    let titleKey: LocalizedStringKey
+    let systemImage: String
+    var usesFlexibleWidth = true
+    var fixedWidth: CGFloat? = nil
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: systemImage)
+                .imageScale(.small)
+            Text(titleKey)
+                .lineLimit(1)
+                .minimumScaleFactor(0.65)
+                .allowsTightening(true)
+        }
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.tertiary)
+            .padding(.horizontal, 10)
+            // 見出しセルは潰れないよう、必要な場合だけ固定幅にする
+            .frame(width: fixedWidth)
+            .frame(maxWidth: usesFlexibleWidth ? .infinity : nil)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(Color(uiColor: .secondarySystemFill).opacity(0.45))
+            )
+            .allowsHitTesting(false)
+    }
+}
+
+private struct PaymentFilterChip: View {
+    let title: String
+    let isSelected: Bool
+    let usesFlexibleWidth: Bool
+    let fixedWidth: CGFloat?
+    let action: () -> Void
+
+    init(
+        titleKey: String,
+        isSelected: Bool,
+        usesFlexibleWidth: Bool = true,
+        fixedWidth: CGFloat? = nil,
+        action: @escaping () -> Void
+    ) {
+        self.title = NSLocalizedString(titleKey, comment: "")
+        self.isSelected = isSelected
+        self.usesFlexibleWidth = usesFlexibleWidth
+        self.fixedWidth = fixedWidth
+        self.action = action
+    }
+
+    init(
+        title: String,
+        isSelected: Bool,
+        usesFlexibleWidth: Bool = true,
+        fixedWidth: CGFloat? = nil,
+        action: @escaping () -> Void
+    ) {
+        self.title = title
+        self.isSelected = isSelected
+        self.usesFlexibleWidth = usesFlexibleWidth
+        self.fixedWidth = fixedWidth
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.55)
+                .allowsTightening(true)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .frame(
+                    minWidth: usesFlexibleWidth ? 74 : 0,
+                    maxWidth: usesFlexibleWidth ? .infinity : nil
+                )
+                // 「すべて」などの固定チップは最低限読める幅を維持する
+                .frame(width: fixedWidth)
+                .fixedSize(horizontal: !usesFlexibleWidth, vertical: false)
+                .foregroundStyle(isSelected ? Color.white : Color.accentColor)
+                .background(
+                    Capsule()
+                        .fill(isSelected ? Color.accentColor : Color.accentColor.opacity(0.10))
+                )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct PaymentFilterPickerSheet<T: Identifiable>: View where T.ID: Equatable {
+    let title: LocalizedStringKey
+    let items: [T]
+    @Binding var selected: T?
+    let label: (T) -> String
+    let noSelectionTitle: String
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Button {
+                    selected = nil
+                    dismiss()
+                } label: {
+                    pickerRow(title: NSLocalizedString(noSelectionTitle, comment: ""), isSelected: selected == nil)
+                }
+                ForEach(items) { item in
+                    Button {
+                        selected = item
+                        dismiss()
+                    } label: {
+                        pickerRow(title: label(item), isSelected: selected?.id == item.id)
+                    }
+                }
+            }
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("button.cancel") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private func pickerRow(title: String, isSelected: Bool) -> some View {
+        HStack {
+            Text(title)
+                .foregroundStyle(.primary)
+            Spacer()
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .foregroundStyle(.blue)
+            }
+        }
+        .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Row
+
+private struct PaymentRow: View {
+    let item: PaymentDisplayItem
+    let isToggling: Bool
+    let onToggle: () -> Void
+    private var canToggleToPaid: Bool {
+        // 未選択決済を含む場合は「済み」へ遷移させない
+        item.isPaid || !item.includesUnselectedCard
+    }
+    private var canTapToggle: Bool {
+        canToggleToPaid && !isToggling
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             // PAID/UNPAID バッジ
             Button(action: onToggle) {
                 // セルと説明フッターで同じ見た目を再利用する
-                PaymentStatusPill(isPaid: payment.isPaid)
+                PaymentStatusPill(isPaid: item.isPaid)
             }
             .disabled(!canTapToggle)
             .opacity(canTapToggle ? 1 : 0.4)
             // 切替操作の意味を読み上げでも伝える
-            .accessibilityLabel(payment.isPaid ? Text("payment.markUnpaid") : Text("payment.markPaid"))
+            .accessibilityLabel(item.isPaid ? Text("payment.markUnpaid") : Text("payment.markPaid"))
             .buttonStyle(.plain)
 
             HStack(alignment: .center, spacing: 8) {
                 // 日付は2段表示にして中央揃えにする
                 VStack(spacing: 0) {
-                    Text(AppDateFormat.yearWeekdayText(payment.date))
+                    Text(AppDateFormat.yearWeekdayText(item.date))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                         .allowsTightening(true)
-                    Text(AppDateFormat.monthDayText(payment.date))
+                    Text(AppDateFormat.monthDayText(item.date))
                         .font(.subheadline)
                         .lineLimit(1)
                 }
@@ -376,20 +831,20 @@ private struct PaymentRow: View {
                 // 右側は1行表示を優先し、収まらない場合のみ2行表示へ切り替える
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(bankNameText)
+                        Text(item.title)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                             .truncationMode(.tail)
                         Spacer(minLength: 8)
-                        Text(payment.sumAmount.currencyString())
+                        Text(item.amount.currencyString())
                             .font(.body.monospacedDigit())
-                            .foregroundStyle(payment.sumAmount < 0 ? Color.red : Color.primary)
+                            .foregroundStyle(item.amount < 0 ? Color.red : Color.primary)
                             .lineLimit(1)
                             .fixedSize(horizontal: true, vertical: false)
                     }
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(bankNameText)
+                        Text(item.title)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
@@ -397,9 +852,9 @@ private struct PaymentRow: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                         HStack(spacing: 8) {
                             Spacer(minLength: 0)
-                            Text(payment.sumAmount.currencyString())
+                            Text(item.amount.currencyString())
                                 .font(.body.monospacedDigit())
-                                .foregroundStyle(payment.sumAmount < 0 ? Color.red : Color.primary)
+                                .foregroundStyle(item.amount < 0 ? Color.red : Color.primary)
                                 .lineLimit(1)
                                 // 金額は最優先で欠けないようにする
                                 .fixedSize(horizontal: true, vertical: false)
@@ -446,10 +901,10 @@ private extension E7payment {
 }
 
 private struct PaymentCombinedCard: View {
-    let unpaidPayments: [E7payment]
-    let paidPayments: [E7payment]
+    let unpaidItems: [PaymentDisplayItem]
+    let paidItems: [PaymentDisplayItem]
     let unpaidFilter: PaymentUnpaidFilter
-    let onToggle: (E7payment) -> Void
+    let onToggle: (PaymentDisplayItem) -> Void
     let togglingPaymentIDs: Set<String>
     let hasMorePaid: Bool
     let onLoadMorePaid: () -> Void
@@ -460,17 +915,17 @@ private struct PaymentCombinedCard: View {
     @State private var boundaryMidY: CGFloat = 0
 
     /// ViewBuilder 内の型推論負荷を下げるため、表示用の添字付き配列を事前に作る
-    private var indexedPaidPayments: [(offset: Int, element: E7payment)] {
-        Array(paidPayments.enumerated())
+    private var indexedPaidItems: [(offset: Int, element: PaymentDisplayItem)] {
+        Array(paidItems.enumerated())
     }
     
     private var unpaidGrouped: PaymentUnpaidGrouped {
-        PaymentUnpaidGrouped.build(from: unpaidPayments, windowDays: windowDays)
+        PaymentUnpaidGrouped.build(from: unpaidItems, windowDays: windowDays)
     }
 
     /// 済み側の区切り線表示可否
     private func showsPaidDivider(after index: Int) -> Bool {
-        index + 1 < paidPayments.count
+        index + 1 < paidItems.count
     }
 
     var body: some View {
@@ -485,7 +940,7 @@ private struct PaymentCombinedCard: View {
                         let indexedItems = Array(section.items.enumerated())
                         ForEach(indexedItems, id: \.element.id) { index, payment in
                             PaymentNavigationRow(
-                                payment: payment,
+                                item: payment,
                                 rowID: payment.id,
                                 isToggling: togglingPaymentIDs.contains(payment.id),
                                 onToggle: onToggle,
@@ -503,19 +958,19 @@ private struct PaymentCombinedCard: View {
                     )
                 }
             } else {
-                if unpaidPayments.isEmpty {
+                if unpaidItems.isEmpty {
                     PaymentEmptyRow()
                 } else {
-                    let indexedItems = Array(unpaidPayments.enumerated())
+                    let indexedItems = Array(unpaidItems.enumerated())
                     ForEach(indexedItems, id: \.element.id) { index, payment in
                         PaymentNavigationRow(
-                            payment: payment,
+                            item: payment,
                             rowID: payment.id,
                             isToggling: togglingPaymentIDs.contains(payment.id),
                             onToggle: onToggle,
                             onNavigateToDetail: onNavigateToDetail
                         )
-                        if index + 1 < unpaidPayments.count {
+                        if index + 1 < unpaidItems.count {
                             PaymentRowDivider()
                         }
                     }
@@ -529,10 +984,10 @@ private struct PaymentCombinedCard: View {
                 .frame(height: 1)
                 .id(boundaryAnchorID)
 
-            if !paidPayments.isEmpty {
-                ForEach(indexedPaidPayments, id: \.element.id) { index, payment in
+            if !paidItems.isEmpty {
+                ForEach(indexedPaidItems, id: \.element.id) { index, payment in
                     PaymentNavigationRow(
-                        payment: payment,
+                        item: payment,
                         rowID: index == 0 ? paidFirstRowAnchorID : payment.id,
                         isToggling: togglingPaymentIDs.contains(payment.id),
                         onToggle: onToggle,
@@ -589,8 +1044,8 @@ private struct PaymentCombinedCard: View {
         )
         .coordinateSpace(name: "paymentCombinedCard")
         // 行が未払/済みの間を移る変化を自然に見せる
-        .animation(.easeInOut(duration: 0.55), value: unpaidPayments.map(\.id))
-        .animation(.easeInOut(duration: 0.55), value: paidPayments.map(\.id))
+        .animation(.easeInOut(duration: 0.55), value: unpaidItems.map(\.id))
+        .animation(.easeInOut(duration: 0.55), value: paidItems.map(\.id))
         .onPreferenceChange(PaymentBoundaryMidYPreferenceKey.self) { y in
             if y > 0 {
                 boundaryMidY = y
@@ -615,25 +1070,41 @@ private struct PaymentEmptyRow: View {
 }
 
 private struct PaymentNavigationRow: View {
-    let payment: E7payment
+    let item: PaymentDisplayItem
     let rowID: String
     let isToggling: Bool
-    let onToggle: (E7payment) -> Void
+    let onToggle: (PaymentDisplayItem) -> Void
     let onNavigateToDetail: () -> Void
 
     var body: some View {
-        NavigationLink {
-            InvoiceListView(payment: payment)
-                .onAppear { onNavigateToDetail() }
-        } label: {
-            PaymentRow(payment: payment, isToggling: isToggling) {
-                onToggle(payment)
+        if let detailPayment = item.detailPayment {
+            NavigationLink {
+                InvoiceListView(payment: detailPayment)
+                    .onAppear { onNavigateToDetail() }
+            } label: {
+                PaymentRow(item: item, isToggling: isToggling) {
+                    onToggle(item)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .buttonStyle(.plain)
+            .id(rowID)
+        } else {
+            NavigationLink {
+                // 複数支払を束ねた行は、口座を出さない明細画面で開く
+                InvoiceListView(displayItem: item)
+                    .onAppear { onNavigateToDetail() }
+            } label: {
+                PaymentRow(item: item, isToggling: isToggling) {
+                    onToggle(item)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+            }
+            .buttonStyle(.plain)
+            .id(rowID)
         }
-        .buttonStyle(.plain)
-        .id(rowID)
     }
 }
 
@@ -814,13 +1285,13 @@ private struct PaymentUnpaidGrouped {
     struct Section: Identifiable {
         let id: String
         let footerTitle: String
-        let items: [E7payment]
+        let items: [PaymentDisplayItem]
         let totalAmount: Decimal
     }
 
     let sections: [Section]
 
-    static func build(from payments: [E7payment], windowDays rawWindowDays: Int) -> PaymentUnpaidGrouped {
+    static func build(from payments: [PaymentDisplayItem], windowDays rawWindowDays: Int) -> PaymentUnpaidGrouped {
         let windowDays = max(1, min(rawWindowDays, 30))
         let sorted = payments.sorted { $0.date < $1.date }
         let today = Calendar.current.startOfDay(for: Date())
@@ -842,9 +1313,9 @@ private struct PaymentUnpaidGrouped {
             .filter { futureLowerBound <= Calendar.current.startOfDay(for: $0.date) }
             .sorted { $1.date < $0.date }
 
-        let currentTotal = currentItems.reduce(Decimal.zero) { $0 + $1.sumAmount }
-        let nextTotal    = nextItems.reduce(Decimal.zero)    { $0 + $1.sumAmount }
-        let futureTotal  = futureItems.reduce(Decimal.zero)  { $0 + $1.sumAmount }
+        let currentTotal = currentItems.reduce(Decimal.zero) { $0 + $1.amount }
+        let nextTotal    = nextItems.reduce(Decimal.zero)    { $0 + $1.amount }
+        let futureTotal  = futureItems.reduce(Decimal.zero)  { $0 + $1.amount }
 
         // 3セクション常に表示（空でも ¥0 フッターで期間の状況を示す）
         return PaymentUnpaidGrouped(

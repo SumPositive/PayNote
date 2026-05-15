@@ -2,12 +2,35 @@ import SwiftUI
 import SwiftData
 
 struct InvoiceListView: View {
-    let payment: E7payment
+    private let payment: E7payment?
+    private let invoices: [E2invoice]
+    private let displayDate: Date
+    private let displayAmount: Decimal
+    private let displayIsPaid: Bool
+    private let showsBankHeader: Bool
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
     @State private var editRecord: E3record?
+
+    init(payment: E7payment) {
+        self.payment = payment
+        self.invoices = payment.e2invoices
+        self.displayDate = payment.date
+        self.displayAmount = payment.sumAmount
+        self.displayIsPaid = payment.isPaid
+        self.showsBankHeader = true
+    }
+
+    init(displayItem: PaymentDisplayItem) {
+        self.payment = displayItem.detailPayment
+        self.invoices = displayItem.invoices
+        self.displayDate = displayItem.date
+        self.displayAmount = displayItem.amount
+        self.displayIsPaid = displayItem.isPaid
+        self.showsBankHeader = false
+    }
 
     // MARK: Check Toggle
 
@@ -18,15 +41,17 @@ struct InvoiceListView: View {
             if let card = invoice.e1card {
                 RecordService.recalculateCard(card)
             }
-            payment.sumNoCheck = payment.e2invoices.reduce(0) { $0 + $1.sumNoCheck }
+            // 複数支払を束ねた画面でも、関係する支払の未確認数を更新する
+            invoice.e7payment?.sumNoCheck = invoice.e7payment?.e2invoices.reduce(0) { $0 + $1.sumNoCheck } ?? 0
         }
     }
 
     private var includesUnselectedCard: Bool {
-        payment.e2invoices.contains { $0.e1card == nil }
+        invoices.contains { $0.e1card == nil }
     }
 
     private var bankNameText: String {
+        guard let payment else { return "" }
         if !payment.hasAnySelectedCard && includesUnselectedCard {
             return NSLocalizedString("payment.card.noSelection", comment: "")
         }
@@ -37,7 +62,7 @@ struct InvoiceListView: View {
     }
 
     private var statementTitleText: String {
-        let dateText = AppDateFormat.singleLineText(payment.date)
+        let dateText = AppDateFormat.singleLineText(displayDate)
         let suffix = NSLocalizedString("invoice.statement.debitSuffix", comment: "")
         return "\(dateText)\(suffix)"
     }
@@ -46,7 +71,7 @@ struct InvoiceListView: View {
         var buckets: [String: [E6part]] = [:]
         var titles: [String: String] = [:]
 
-        for invoice in payment.e2invoices {
+        for invoice in invoices {
             let cardID = invoice.e1card?.id ?? "__no_card__"
             let cardName = invoice.e1card?.zName ?? "—"
             titles[cardID] = cardName
@@ -94,7 +119,7 @@ struct InvoiceListView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
-                        if payment.isPaid {
+                        if displayIsPaid {
                             HStack(alignment: .firstTextBaseline, spacing: 6) {
                                 InvoiceStatusIcon(isPaid: true)
                                     .scaleEffect(0.52)
@@ -121,10 +146,13 @@ struct InvoiceListView: View {
             // 口座名・日付・合計を同一セクションにまとめる
             Section {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(bankNameText)
-                        .font(.headline)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+                    if showsBankHeader {
+                        // 単一支払の明細では従来どおり口座名を表示する
+                        Text(bankNameText)
+                            .font(.headline)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                    }
                     Text(statementTitleText)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -134,9 +162,9 @@ struct InvoiceListView: View {
                     HStack {
                         Text("label.total")
                         Spacer()
-                        Text(payment.sumAmount.currencyString())
+                        Text(displayAmount.currencyString())
                             .font(.headline.monospacedDigit())
-                            .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                            .foregroundStyle(displayIsPaid ? COLOR_PAID : COLOR_UNPAID)
                     }
                 }
             }
@@ -172,7 +200,7 @@ struct InvoiceListView: View {
                             Spacer()
                             Text(section.sumAmount.currencyString())
                                 .font(.subheadline.monospacedDigit().bold())
-                                .foregroundStyle(payment.isPaid ? COLOR_PAID : COLOR_UNPAID)
+                                .foregroundStyle(displayIsPaid ? COLOR_PAID : COLOR_UNPAID)
                         }
                     }
                 } header: {
