@@ -343,6 +343,23 @@
         }
       }
     },
+    "button.clear": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クリア"
+          }
+        }
+      }
+    },
     "button.delete": {
       "extractionState": "manual",
       "localizations": {
@@ -2726,6 +2743,23 @@
         }
       }
     },
+    "record.filter.tagCount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Tags"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タグ %d件"
+          }
+        }
+      }
+    },
     "record.help.label": {
       "extractionState": "manual",
       "localizations": {
@@ -2909,6 +2943,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "履歴から引用"
+          }
+        }
+      }
+    },
+    "record.sort.amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "金額"
+          }
+        }
+      }
+    },
+    "record.sort.date": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日付"
+          }
+        }
+      }
+    },
+    "record.sort.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "並び順"
           }
         }
       }

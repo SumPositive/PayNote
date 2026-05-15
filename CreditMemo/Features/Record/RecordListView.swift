@@ -2,77 +2,87 @@ import SwiftUI
 import SwiftData
 
 struct RecordListView: View {
-    /// フィルターの選択状態を1つの値で扱う
-    private enum FilterOption: Hashable {
+    /// 履歴の絞り込み種別
+    private enum FilterKind: Hashable {
         case all
-        case allByDate
         case incomplete
         case card(String)
+        case bank(String)
+        case tag
+    }
+
+    /// 履歴のソート対象
+    private enum SortTarget: Hashable {
+        case date
+        case amount
+    }
+
+    /// ソート方向
+    private enum SortDirection: Hashable {
+        case descending
+        case ascending
+
+        var symbolName: String {
+            "line.3.horizontal.decrease"
+        }
+
+        var yScale: CGFloat {
+            switch self {
+            case .descending: return 1
+            case .ascending:  return -1
+            }
+        }
     }
 
     @Query(sort: \E1card.nRow)                       private var cards: [E1card]
+    @Query(sort: \E8bank.nRow)                       private var banks: [E8bank]
+    @Query(sort: \E5tag.sortName)                    private var tags: [E5tag]
     @Environment(\.modelContext) private var context
     @AppStorage(AppStorageKey.userLevel) private var userLevel: UserLevel = .beginner
 
-    @State private var filterCard: E1card?
-    @State private var filterIncomplete = false
-    @State private var filterDateSort = false
+    @State private var filterKind: FilterKind = .all
+    @State private var selectedTags: [E5tag] = []
+    @State private var sortTarget: SortTarget = .date
+    @State private var sortDirection: SortDirection = .descending
     @State private var records: [E3record] = []
     @State private var recordPage = 0
     @State private var hasMoreRecords = true
     @State private var isLoadingRecords = false
     @State private var editTarget: E3record?
-    /// filterIncomplete / "すべて" の全件ソート済みキャッシュ。
+    @State private var showFilterPopover = false
+    @State private var showCardPicker = false
+    @State private var showBankPicker = false
+    @State private var showTagPicker = false
+    /// 絞り込み済みの全件ソートキャッシュ。
     /// ページング時に毎回再ソートしないよう、recordPage == 0 のときだけ再構築する。
     @State private var sortedCache: [E3record] = []
 
     private let pageSize = 100
-    private var allFilterText: String {
-        // フィルタの意図を明確化する
-        if Locale.current.language.languageCode?.identifier == "ja" {
-            return "すべて（保存日時順）"
-        }
-        return "All (Saved Order)"
-    }
-    private var allByDateFilterText: String {
-        if Locale.current.language.languageCode?.identifier == "ja" {
-            return "すべて（日付順）"
-        }
-        return "All (Date Order)"
-    }
     private var filtered: [E3record] {
         records
     }
-    private var selectedFilterOption: Binding<FilterOption> {
-        Binding(
-            get: {
-                if filterIncomplete { return .incomplete }
-                if filterDateSort  { return .allByDate }
-                if let filterCard  { return .card(filterCard.id) }
-                return .all
-            },
-            set: { newValue in
-                // Pickerの選択値から既存の状態へ戻す
-                switch newValue {
-                case .all:
-                    filterCard = nil
-                    filterIncomplete = false
-                    filterDateSort = false
-                case .allByDate:
-                    filterCard = nil
-                    filterIncomplete = false
-                    filterDateSort = true
-                case .incomplete:
-                    filterCard = nil
-                    filterIncomplete = true
-                    filterDateSort = false
-                case .card(let id):
-                    filterCard = cards.first { $0.id == id }
-                    filterIncomplete = false
-                    filterDateSort = false
-                }
+    private var selectedTagIDs: [String] {
+        selectedTags.map(\.id).sorted()
+    }
+    private var isFilterActive: Bool {
+        filterKind != .all || !selectedTags.isEmpty
+    }
+    private var filterSummaryText: String {
+        switch filterKind {
+        case .all:
+            return NSLocalizedString("label.all", comment: "")
+        case .incomplete:
+            return NSLocalizedString("record.filter.incomplete", comment: "")
+        case .card(let id):
+            return cards.first { $0.id == id }?.zName ?? NSLocalizedString("payment.filter.card", comment: "")
+        case .bank(let id):
+            return banks.first { $0.id == id }?.zName ?? NSLocalizedString("payment.filter.bank", comment: "")
+        case .tag:
+            if selectedTags.count == 1 {
+                return selectedTags.first?.zName ?? NSLocalizedString("record.field.tag", comment: "")
             }
-        )
+            return String(format: NSLocalizedString("record.filter.tagCount", comment: ""), selectedTags.count)
+        }
     }
 
     var body: some View {
@@ -83,7 +93,8 @@ struct RecordListView: View {
                         (
                             Text("record.list.beginner.guide.leading")
                             + Text(" ")
-                            + Text(Image(systemName: "line.3.horizontal.decrease"))
+                            // ヘルプ内の記号は実際のフィルターボタンと同じ丸枠付きに揃える。
+                            + Text(Image(systemName: "line.3.horizontal.decrease.circle"))
                             + Text(" ")
                             + Text("record.list.beginner.guide.trailing")
                         )
@@ -95,14 +106,89 @@ struct RecordListView: View {
                 }
             }
             Section {
-                HStack {
-                    Image(systemName: "line.3.horizontal.decrease")
-                        .font(.subheadline.weight(.light))
-                        .foregroundStyle(.secondary)
-                    Spacer(minLength: 12)
-                    cardFilterPicker
+                VStack(spacing: 8) {
+                    HStack(spacing: 8) {
+                        Button {
+                            showFilterPopover = true
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "line.3.horizontal.decrease.circle")
+                                    .imageScale(.medium)
+                                Text(filterSummaryText)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.6)
+                                    .allowsTightening(true)
+                                Spacer(minLength: 8)
+                                Image(systemName: "chevron.down")
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(isFilterActive ? Color.white : Color.accentColor)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(
+                                Capsule()
+                                    .fill(isFilterActive ? Color.accentColor : Color.accentColor.opacity(0.10))
+                            )
+                            // 行全体でフィルターを開けるよう、当たり判定をカプセル全体に広げる。
+                            .contentShape(Capsule())
+                        }
+                        .frame(maxWidth: .infinity)
+                        .buttonStyle(.plain)
+                        .popover(
+                            isPresented: $showFilterPopover,
+                            attachmentAnchor: .rect(.bounds),
+                            arrowEdge: .top
+                        ) {
+                            RecordFilterPopover {
+                                clearFilter()
+                                showFilterPopover = false
+                            } onIncomplete: {
+                                selectedTags = []
+                                filterKind = .incomplete
+                                showFilterPopover = false
+                            } onCard: {
+                                presentCardFilter()
+                            } onBank: {
+                                presentBankFilter()
+                            } onTag: {
+                                presentTagFilter()
+                            }
+                            .presentationCompactAdaptation(.popover)
+                            .presentationBackground(Color(.systemBackground))
+                        }
+
+                        if isFilterActive {
+                            Button {
+                                clearFilter()
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 34, height: 34)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(Text("label.all"))
+                        }
+                    }
+                    .padding(2)
+                    .background(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(Color(uiColor: .tertiarySystemFill))
+                    )
+                    .fixedSize(horizontal: false, vertical: true)
+
+                    HStack(spacing: 8) {
+                        Text("record.sort.title")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        sortButton(titleKey: "record.sort.date", target: .date)
+                        sortButton(titleKey: "record.sort.amount", target: .amount)
+                    }
                 }
-                .padding(.vertical, 0)
+                .padding(.vertical, 2)
             }
             .listRowInsets(EdgeInsets(top: 2, leading: 16, bottom: 2, trailing: 16))
             ForEach(filtered) { record in
@@ -140,34 +226,119 @@ struct RecordListView: View {
                 resetAndLoadRecords()
             }
         }
-        .onChange(of: filterCard?.id) { _, _ in
+        .onChange(of: filterKind) { _, _ in
             resetAndLoadRecords()
         }
-        .onChange(of: filterIncomplete) { _, _ in
+        .onChange(of: selectedTagIDs) { _, _ in
             resetAndLoadRecords()
         }
-        .onChange(of: filterDateSort) { _, _ in
+        .onChange(of: sortTarget) { _, _ in
             resetAndLoadRecords()
+        }
+        .onChange(of: sortDirection) { _, _ in
+            resetAndLoadRecords()
+        }
+        .sheet(isPresented: $showCardPicker) {
+            RecordSingleFilterPickerSheet(
+                titleKey: "payment.filter.card",
+                items: cards,
+                name: { $0.zName },
+                onSelect: { card in
+                    selectedTags = []
+                    filterKind = .card(card.id)
+                }
+            )
+            // 選択シートは中段から開き、ハンドルで拡大できるようにする。
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showBankPicker) {
+            RecordSingleFilterPickerSheet(
+                titleKey: "payment.filter.bank",
+                items: banks,
+                name: { $0.zName },
+                onSelect: { bank in
+                    selectedTags = []
+                    filterKind = .bank(bank.id)
+                }
+            )
+            // 選択シートは中段から開き、ハンドルで拡大できるようにする。
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showTagPicker) {
+            RecordTagFilterSheet(tags: tags, selectedTags: $selectedTags) {
+                filterKind = selectedTags.isEmpty ? .all : .tag
+            }
+            // 選択シートは中段から開き、ハンドルで拡大できるようにする。
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
     }
 
     @ViewBuilder
-    private var cardFilterPicker: some View {
-        Picker(selection: selectedFilterOption) {
-            Text(allFilterText)
-                .tag(FilterOption.all)
-            Text(allByDateFilterText)
-                .tag(FilterOption.allByDate)
-            Text("record.filter.incomplete")
-                .tag(FilterOption.incomplete)
-            ForEach(cards) { c in
-                Text(c.zName)
-                    .tag(FilterOption.card(c.id))
+    private func sortButton(titleKey: LocalizedStringKey, target: SortTarget) -> some View {
+        Button {
+            // 同じ条件を押した時だけ昇順/降順を切り替える。
+            if sortTarget == target {
+                sortDirection = sortDirection == .descending ? .ascending : .descending
+            } else {
+                sortTarget = target
+                sortDirection = .descending
             }
         } label: {
-            EmptyView()
+            HStack(spacing: 5) {
+                Text(titleKey)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .allowsTightening(true)
+                if sortTarget == target {
+                    Image(systemName: sortDirection.symbolName)
+                        .font(.caption.weight(.bold))
+                        // 昇順は降順アイコンを上下反転して、同じ記号体系に揃える。
+                        .scaleEffect(x: 1, y: sortDirection.yScale)
+                }
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(sortTarget == target ? Color.white : Color.accentColor)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .frame(maxWidth: .infinity)
+            .background(sortTarget == target ? Color.accentColor : Color.accentColor.opacity(0.12))
+            .clipShape(Capsule())
+            .fixedSize(horizontal: false, vertical: true)
         }
-        .pickerStyle(.menu)
+        .buttonStyle(.plain)
+    }
+
+    private func presentCardFilter() {
+        // ポップオーバーを閉じた次のタイミングでシートを開き、表示競合を避ける。
+        showFilterPopover = false
+        DispatchQueue.main.async {
+            showCardPicker = true
+        }
+    }
+
+    private func presentBankFilter() {
+        // ポップオーバーを閉じた次のタイミングでシートを開き、表示競合を避ける。
+        showFilterPopover = false
+        DispatchQueue.main.async {
+            showBankPicker = true
+        }
+    }
+
+    private func presentTagFilter() {
+        // ポップオーバーを閉じた次のタイミングでシートを開き、表示競合を避ける。
+        showFilterPopover = false
+        DispatchQueue.main.async {
+            showTagPicker = true
+        }
+    }
+
+    private func clearFilter() {
+        // クリアボタンでは絞り込みだけを解除し、並び順は維持する。
+        selectedTags = []
+        filterKind = .all
     }
 
     private func resetAndLoadRecords() {
@@ -185,79 +356,25 @@ struct RecordListView: View {
         isLoadingRecords = true
         defer { isLoadingRecords = false }
 
-        var descriptor: FetchDescriptor<E3record>
-        if filterIncomplete {
-            // 情報不足フィルタは「決済手段→決済ラベル→タグ」の優先順が必要なため、
-            // 全件取得後に優先度で並べ替える。再ソートを避けるため recordPage == 0 のときのみ再構築。
-            if recordPage == 0 {
-                descriptor = FetchDescriptor<E3record>(
-                    sortBy: [SortDescriptor(\E3record.dateUse, order: .reverse)]
-                )
-                let allRecords = (try? context.fetch(descriptor)) ?? []
-                sortedCache = allRecords.compactMap { record -> (priority: Int, record: E3record)? in
-                    guard let priority = incompletePriority(for: record) else { return nil }
-                    return (priority, record)
-                }
-                .sorted { lhs, rhs in
-                    if lhs.priority == rhs.priority {
-                        return sortDate(of: rhs.record) < sortDate(of: lhs.record)
-                    }
-                    return lhs.priority < rhs.priority
-                }
-                .map(\.record)
-            }
-            let start = recordPage * pageSize
-            let end = min(start + pageSize, sortedCache.count)
-            if start < end {
-                records.append(contentsOf: sortedCache[start..<end])
-            }
-            recordPage += 1
-            hasMoreRecords = end < sortedCache.count
-            return
-        } else if filterDateSort {
-            // 「すべて（日付順）」は利用日の降順でフェッチする
-            descriptor = FetchDescriptor<E3record>(
-                sortBy: [SortDescriptor(\E3record.dateUse, order: .reverse)]
-            )
-            descriptor.fetchOffset = recordPage * pageSize
-            descriptor.fetchLimit = pageSize
-            let fetched = (try? context.fetch(descriptor)) ?? []
-            records.append(contentsOf: fetched)
-            recordPage += 1
-            hasMoreRecords = pageSize <= fetched.count
-            return
-        } else if let filterCardID = filterCard?.id {
-            descriptor = FetchDescriptor<E3record>(
-                predicate: #Predicate<E3record> { $0.e1card?.id == filterCardID },
-                sortBy: [SortDescriptor(\E3record.dateUse, order: .reverse)]
-            )
-        } else {
-            // 「すべて」は利用日ではなく直近入力順で表示する。
-            // SwiftData は dateUpdate での直接ソートができないため全件取得後にソート。
-            // 再ソートを避けるため recordPage == 0 のときのみ再構築。
-            if recordPage == 0 {
-                descriptor = FetchDescriptor<E3record>()
-                let allRecords = (try? context.fetch(descriptor)) ?? []
-                sortedCache = allRecords.sorted { lhs, rhs in
-                    sortDate(of: rhs) < sortDate(of: lhs)
-                }
-            }
-            let start = recordPage * pageSize
-            let end = min(start + pageSize, sortedCache.count)
-            if start < end {
-                records.append(contentsOf: sortedCache[start..<end])
-            }
-            recordPage += 1
-            hasMoreRecords = end < sortedCache.count
-            return
+        if recordPage == 0 {
+            rebuildSortedCache()
         }
-        descriptor.fetchOffset = recordPage * pageSize
-        descriptor.fetchLimit = pageSize
 
-        let fetched = (try? context.fetch(descriptor)) ?? []
-        records.append(contentsOf: fetched)
+        let start = recordPage * pageSize
+        let end = min(start + pageSize, sortedCache.count)
+        if start < end {
+            records.append(contentsOf: sortedCache[start..<end])
+        }
         recordPage += 1
-        hasMoreRecords = pageSize <= fetched.count
+        hasMoreRecords = end < sortedCache.count
+    }
+
+    private func rebuildSortedCache() {
+        let descriptor = FetchDescriptor<E3record>()
+        let allRecords = (try? context.fetch(descriptor)) ?? []
+        sortedCache = allRecords
+            .filter(matchesFilter)
+            .sorted(by: shouldPlaceBefore)
     }
 
     /// 入力順ソート用の代表日時（未設定時は利用日へフォールバック）
@@ -265,8 +382,53 @@ struct RecordListView: View {
         record.dateUpdate ?? record.dateUse
     }
 
+    private func matchesFilter(_ record: E3record) -> Bool {
+        switch filterKind {
+        case .all:
+            return true
+        case .incomplete:
+            return incompletePriority(for: record) != nil
+        case .card(let id):
+            return record.e1card?.id == id
+        case .bank(let id):
+            return record.e1card?.e8bank?.id == id
+        case .tag:
+            let selectedIDs = Set(selectedTagIDs)
+            if selectedIDs.isEmpty {
+                return true
+            }
+            return record.e5tags.contains { selectedIDs.contains($0.id) }
+        }
+    }
+
+    private func shouldPlaceBefore(_ lhs: E3record, _ rhs: E3record) -> Bool {
+        // 未入力ありは、手段・ラベル・タグの不足順を優先する。
+        if filterKind == .incomplete {
+            let lhsPriority = incompletePriority(for: lhs) ?? Int.max
+            let rhsPriority = incompletePriority(for: rhs) ?? Int.max
+            if lhsPriority != rhsPriority {
+                return lhsPriority < rhsPriority
+            }
+        }
+
+        switch sortTarget {
+        case .date:
+            let lhsDate = sortDate(of: lhs)
+            let rhsDate = sortDate(of: rhs)
+            if lhsDate != rhsDate {
+                return sortDirection == .descending ? rhsDate < lhsDate : lhsDate < rhsDate
+            }
+        case .amount:
+            if lhs.nAmount != rhs.nAmount {
+                return sortDirection == .descending ? rhs.nAmount < lhs.nAmount : lhs.nAmount < rhs.nAmount
+            }
+        }
+
+        return sortDate(of: rhs) < sortDate(of: lhs)
+    }
+
     /// 情報不足の優先順位（小さいほど優先）
-    /// 1) 決済手段未設定 2) 決済ラベル未設定 3) タグ未設定
+    /// 1) 決済手段未設定 2) 決済ラベル未設定
     private func incompletePriority(for record: E3record) -> Int? {
         if record.e1card == nil {
             return 0
@@ -275,10 +437,133 @@ struct RecordListView: View {
         if label.isEmpty {
             return 1
         }
-        if record.e5tags.isEmpty {
-            return 2
-        }
         return nil
+    }
+}
+
+// MARK: - Record Filter Sheets
+
+/// 履歴フィルター用の不透過ポップオーバー
+private struct RecordFilterPopover: View {
+    let onAll: () -> Void
+    let onIncomplete: () -> Void
+    let onCard: () -> Void
+    let onBank: () -> Void
+    let onTag: () -> Void
+
+    var body: some View {
+        VStack(spacing: 10) {
+            filterButton("label.all", action: onAll)
+            filterButton("record.filter.incomplete", action: onIncomplete)
+            filterButton("payment.filter.card", action: onCard)
+            filterButton("payment.filter.bank", action: onBank)
+            filterButton("record.field.tag", action: onTag)
+        }
+        .padding(18)
+        // 内容に応じて幅を広げ、画面内に収まらない場合だけ文字を縮小する。
+        .frame(minWidth: 240, idealWidth: 280, maxWidth: 340)
+        .fixedSize(horizontal: false, vertical: true)
+        .background(Color(.systemBackground))
+    }
+
+    private func filterButton(_ titleKey: LocalizedStringKey, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(titleKey)
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(Color(.label))
+                .lineLimit(1)
+                .minimumScaleFactor(0.55)
+                .allowsTightening(true)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 13)
+                .background(Color(.secondarySystemBackground))
+                .clipShape(Capsule())
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// 履歴フィルター用の単一選択シート
+private struct RecordSingleFilterPickerSheet<Item: Identifiable>: View {
+    let titleKey: LocalizedStringKey
+    let items: [Item]
+    let name: (Item) -> String
+    let onSelect: (Item) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List(items) { item in
+                Button {
+                    onSelect(item)
+                    dismiss()
+                } label: {
+                    Text(name(item))
+                        .foregroundStyle(Color(.label))
+                }
+            }
+            .scalableNavigationTitle(titleKey)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("button.cancel") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+/// 履歴フィルター用のタグ複数選択シート
+private struct RecordTagFilterSheet: View {
+    let tags: [E5tag]
+    @Binding var selectedTags: [E5tag]
+    let onDone: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    private var selectedIDs: Set<String> {
+        Set(selectedTags.map(\.id))
+    }
+
+    var body: some View {
+        NavigationStack {
+            List(tags) { tag in
+                Button {
+                    toggle(tag)
+                } label: {
+                    HStack {
+                        Text(tag.zName)
+                            .foregroundStyle(Color(.label))
+                        Spacer()
+                        if selectedIDs.contains(tag.id) {
+                            Image(systemName: "checkmark")
+                                .foregroundStyle(Color.accentColor)
+                        }
+                    }
+                }
+            }
+            .scalableNavigationTitle("record.field.tag")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("button.cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("button.done") {
+                        onDone()
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    private func toggle(_ tag: E5tag) {
+        if selectedIDs.contains(tag.id) {
+            selectedTags.removeAll { $0.id == tag.id }
+        } else {
+            selectedTags.append(tag)
+        }
     }
 }
 
