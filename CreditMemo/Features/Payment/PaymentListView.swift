@@ -10,7 +10,6 @@ struct PaymentListView: View {
     @AppStorage(AppStorageKey.paymentWindowDays) private var paymentWindowDays = 15
     @State private var upcomingUnpaidPayments: [E7payment] = []
     @State private var overdueUnpaidPayments: [E7payment] = []
-    @State private var overdueUnpaidCount = 0
     @State private var paidPayments: [E7payment] = []
     @State private var allPaidCount = 0
     @State private var isLoadingMorePaid = false
@@ -54,7 +53,7 @@ struct PaymentListView: View {
     }
 
     private var hasAnyPayments: Bool {
-        !upcomingUnpaidPayments.isEmpty || 0 < overdueUnpaidCount || !paidPayments.isEmpty
+        !upcomingUnpaidPayments.isEmpty || !overdueUnpaidPayments.isEmpty || !paidPayments.isEmpty
     }
 
     private var shouldCenterBoundaryOnScroll: Bool {
@@ -221,7 +220,6 @@ struct PaymentListView: View {
     /// 未払は「今後」と「過去」で分け、済みはページ単位で読む
     private func loadInitialPayments() {
         upcomingUnpaidPayments = fetchUpcomingUnpaidPayments()
-        overdueUnpaidCount = fetchOverdueUnpaidCount()
         overdueUnpaidPayments = fetchOverdueUnpaidPayments(limit: overduePageSize)
         allPaidCount = fetchPaidCount()
         paidPayments = fetchPaidPayments(offset: 0, limit: pageSize)
@@ -292,7 +290,6 @@ struct PaymentListView: View {
     private func reloadPaymentsKeepingPaidPage() {
         let currentPaidCount = paidPayments.count
         upcomingUnpaidPayments = fetchUpcomingUnpaidPayments()
-        overdueUnpaidCount = fetchOverdueUnpaidCount()
         overdueUnpaidPayments = fetchOverdueUnpaidPayments(limit: overduePageSize)
         allPaidCount = fetchPaidCount()
         let nextLimit = max(pageSize, currentPaidCount)
@@ -324,16 +321,6 @@ struct PaymentListView: View {
         return ((try? context.fetch(descriptor)) ?? []).filter { !$0.isPaid }
     }
 
-    /// 前日以前の未払件数だけを先に取る
-    private func fetchOverdueUnpaidCount() -> Int {
-        let today = Calendar.current.startOfDay(for: Date())
-        let startDate = paymentStatusStartDate
-        let predicate = #Predicate<E7payment> { startDate <= $0.date && $0.date < today }
-        let descriptor = FetchDescriptor<E7payment>(predicate: predicate)
-        // 口座未選択の済みも混ざりうるため、件数も実状態で数える
-        return ((try? context.fetch(descriptor)) ?? []).filter { !$0.isPaid }.count
-    }
-
     /// 前日以前の未払は最大件数だけ表示する
     private func fetchOverdueUnpaidPayments(limit: Int) -> [E7payment] {
         let today = Calendar.current.startOfDay(for: Date())
@@ -344,8 +331,8 @@ struct PaymentListView: View {
             sortBy: [SortDescriptor(\E7payment.date, order: .reverse)]
         )
         let fetched = ((try? context.fetch(descriptor)) ?? []).filter { !$0.isPaid }
-        // 直近の過去未払から limit 件だけ取り、表示は古い順へ戻す
-        return Array(fetched.prefix(limit).reversed())
+        // 直近の確認待ちから limit 件だけ表示する
+        return Array(fetched.prefix(limit))
     }
 
     /// 済み件数だけ先に取り、ページングの終端判定に使う
