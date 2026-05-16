@@ -92,11 +92,13 @@ struct RecordEditView: View {
         // 新規・編集とも、いったん表示したら保存/終了まで維持する
         return selectedBankForCard == nil || keepBankPickerRowVisible
     }
-    // 済みレコードはコア項目（金額・利用日・決済手段）を固定する
+    // 済みまたはロック済みの明細を含むレコードは、コア項目を固定する
     private var isCoreFieldsLocked: Bool {
         guard case .edit(let record) = mode else { return false }
         if record.e6parts.isEmpty { return false }
-        return record.e6parts.allSatisfy { $0.e2invoice?.isPaid ?? false }
+        let allPartsPaid = record.e6parts.allSatisfy { $0.e2invoice?.isPaid ?? false }
+        let hasLockedPart = record.e6parts.contains { $0.isChecked }
+        return allPartsPaid || hasLockedPart
     }
     private var shownUsePointCandidates: [String] {
         // フォーカス時に候補をそのまま表示する
@@ -707,7 +709,7 @@ struct RecordEditView: View {
     }
 
     @ViewBuilder private var deleteSection: some View {
-        if !isNew {
+        if !isNew && !isCoreFieldsLocked {
             Section {
                 Button {
                     appLog(.debug, "削除ボタンがタップされました")

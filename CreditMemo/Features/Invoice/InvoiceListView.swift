@@ -106,19 +106,11 @@ struct InvoiceListView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
-                        // 解錠→施錠のインライン説明
-                        (
-                            Text("invoice.beginner.line4a")
-                            + Text(Image(systemName: "lock.open.fill"))
-                                .foregroundStyle(Color(.systemGray3))
-                            + Text("invoice.beginner.line4b")
-                            + Text(Image(systemName: "lock.fill"))
-                                .foregroundStyle(Color(.systemGreen))
-                            + Text("invoice.beginner.line4c")
-                        )
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        // ロックは旧アプリの確認チェックに相当するため、初心者向けに用途を明記する
+                        Text("invoice.beginner.lockHelp")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                         if displayIsPaid {
                             HStack(alignment: .firstTextBaseline, spacing: 6) {
                                 InvoiceStatusIcon(isPaid: true)
@@ -246,6 +238,26 @@ private struct InvoiceStatusIcon: View {
     }
 }
 
+private struct PartLockIcon: View {
+    let isLocked: Bool
+
+    var body: some View {
+        ZStack {
+            Image(systemName: isLocked ? "lock.fill" : "lock.open.fill")
+                .foregroundStyle(isLocked ? Color(.systemGreen) : Color(.systemGray3))
+                .imageScale(.large)
+            if isLocked {
+                // 旧確認チェックを示すため、施錠時だけ鍵の矩形中央にチェックを重ねる
+                Image(systemName: "checkmark")
+                    .font(.system(size: 9, weight: .black))
+                    .foregroundStyle(.white)
+                    .offset(y: 5)
+            }
+        }
+        .frame(width: 30, height: 30)
+    }
+}
+
 private extension E7payment {
     var hasAnySelectedCard: Bool {
         // 明細レコード側に決済手段が残っていれば、口座未選択として扱う
@@ -300,10 +312,7 @@ private struct PartRow: View {
 
                 // 確定ロック（解錠 → 施錠でロック ON/OFF）
                 Button(action: onToggleCheck) {
-                    Image(systemName: isChecked ? "lock.fill" : "lock.open.fill")
-                        .foregroundStyle(isChecked ? Color(.systemGreen) : Color(.systemGray3))
-                        .imageScale(.large)
-                        .frame(width: 30, height: 30)
+                    PartLockIcon(isLocked: isChecked)
                 }
                 .buttonStyle(.plain)
             }

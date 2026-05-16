@@ -1482,6 +1482,23 @@
         }
       }
     },
+    "invoice.beginner.lockHelp": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap the lock icon to lock major fields such as the date and amount. It does not affect totals or classification. This is the same as the check feature from the old app."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "鍵アイコンをタップすると日付や金額などの主要項目がロックされます。集計や分類の処理に影響はありません。旧アプリにあったチェック機能と同じです"
+          }
+        }
+      }
+    },
     "invoice.status.paid": {
       "extractionState": "manual",
       "localizations": {
