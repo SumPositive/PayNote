@@ -14,7 +14,6 @@ struct PaymentListView: View {
     @State private var paidPayments: [E7payment] = []
     @State private var allPaidCount = 0
     @State private var isLoadingMorePaid = false
-    @State private var unpaidFilter: PaymentUnpaidFilter = .upcoming
     @State private var groupMode: PaymentGroupMode = .date
     @State private var filterMode: PaymentFilterMode = .all
     @State private var selectedBank: E8bank?
@@ -42,16 +41,12 @@ struct PaymentListView: View {
         paidPayments.count < allPaidCount
     }
 
-    private var hasOverdueUnpaid: Bool {
-        0 < overdueUnpaidCount
+    private var upcomingItems: [PaymentDisplayItem] {
+        buildDisplayItems(from: upcomingUnpaidPayments, isPaid: false)
     }
 
-    private var selectedUnpaidPayments: [E7payment] {
-        unpaidFilter == .upcoming ? upcomingUnpaidPayments : overdueUnpaidPayments
-    }
-
-    private var selectedUnpaidItems: [PaymentDisplayItem] {
-        buildDisplayItems(from: selectedUnpaidPayments, isPaid: false)
+    private var overdueItems: [PaymentDisplayItem] {
+        buildDisplayItems(from: overdueUnpaidPayments, isPaid: false)
     }
 
     private var paidItems: [PaymentDisplayItem] {
@@ -64,13 +59,13 @@ struct PaymentListView: View {
 
     private var shouldCenterBoundaryOnScroll: Bool {
         // 行数が少ない時は境界中央より先頭表示を優先し、上側が隠れないようにする。
-        2 < selectedUnpaidItems.count || 1 < paidItems.count
+        2 < (upcomingItems.count + overdueItems.count) || 1 < paidItems.count
     }
 
     private var scrollPositionKey: String {
         // カウントを含めることで初回データ読み込み後に確実に発火させる。
         // 戻り時の不要スクロールは suppressNextScroll フラグで抑制する。
-        "\(boundaryScrollRequest)-\(unpaidFilter.rawValue)-\(groupMode.rawValue)-\(filterMode.rawValue)-\(selectedBank?.id ?? "")-\(selectedCard?.id ?? "")-\(selectedUnpaidItems.count)-\(paidItems.count)"
+        "\(boundaryScrollRequest)-\(groupMode.rawValue)-\(filterMode.rawValue)-\(selectedBank?.id ?? "")-\(selectedCard?.id ?? "")-\(upcomingItems.count)-\(overdueItems.count)-\(paidItems.count)"
     }
 
     var body: some View {
@@ -96,30 +91,6 @@ struct PaymentListView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 4)
 
-                    if hasOverdueUnpaid {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text(unpaidFilter == .upcoming
-                                ? "payment.overdue.warning.upcoming"
-                                : "payment.overdue.warning.past"
-                            )
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(COLOR_UNPAID)
-                            // ja/en とも警告文は1行に収めるため、必要に応じて文字を縮小する。
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.45)
-                            .allowsTightening(true)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .multilineTextAlignment(.center)
-                            Picker("payment.overdue.filter", selection: $unpaidFilter) {
-                                Text("payment.overdue.upcoming").tag(PaymentUnpaidFilter.upcoming)
-                                Text("payment.overdue.past").tag(PaymentUnpaidFilter.overdue)
-                            }
-                            .pickerStyle(.segmented)
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 10)
-                        .padding(.bottom, 6)
-                    }
                     ScrollViewReader { proxy in
                         ScrollView {
                             LazyVStack(spacing: 16) {
@@ -170,9 +141,9 @@ struct PaymentListView: View {
                                     .frame(maxWidth: .infinity, alignment: .center)
                                 }
                                 PaymentCombinedCard(
-                                    unpaidItems: selectedUnpaidItems,
+                                    upcomingItems: upcomingItems,
+                                    overdueItems: overdueItems,
                                     paidItems: paidItems,
-                                    unpaidFilter: unpaidFilter,
                                     onToggle: togglePaid,
                                     togglingPaymentIDs: togglingPaymentIDs,
                                     hasMorePaid: hasMorePaid,
@@ -186,7 +157,6 @@ struct PaymentListView: View {
                             .padding(.horizontal, 16)
                             .padding(.vertical, 10)
                         }
-                        .id(unpaidFilter)
                         .task(id: scrollPositionKey) {
                             await scrollToInitialPosition(proxy: proxy)
                         }
@@ -243,9 +213,6 @@ struct PaymentListView: View {
         .onChange(of: groupMode) { _, _ in
             requestBoundaryScroll()
         }
-        .onChange(of: unpaidFilter) { _, _ in
-            requestBoundaryScroll()
-        }
         .onChange(of: filterMode) { _, _ in
             requestBoundaryScroll()
         }
@@ -256,9 +223,6 @@ struct PaymentListView: View {
         upcomingUnpaidPayments = fetchUpcomingUnpaidPayments()
         overdueUnpaidCount = fetchOverdueUnpaidCount()
         overdueUnpaidPayments = fetchOverdueUnpaidPayments(limit: overduePageSize)
-        if overdueUnpaidCount <= 0 {
-            unpaidFilter = .upcoming
-        }
         allPaidCount = fetchPaidCount()
         paidPayments = fetchPaidPayments(offset: 0, limit: pageSize)
     }
@@ -330,9 +294,6 @@ struct PaymentListView: View {
         upcomingUnpaidPayments = fetchUpcomingUnpaidPayments()
         overdueUnpaidCount = fetchOverdueUnpaidCount()
         overdueUnpaidPayments = fetchOverdueUnpaidPayments(limit: overduePageSize)
-        if overdueUnpaidCount <= 0 {
-            unpaidFilter = .upcoming
-        }
         allPaidCount = fetchPaidCount()
         let nextLimit = max(pageSize, currentPaidCount)
         paidPayments = fetchPaidPayments(offset: 0, limit: nextLimit)
@@ -528,11 +489,6 @@ struct PaymentListView: View {
     private func dayKey(_ date: Date) -> Int {
         Int(Calendar.current.startOfDay(for: date).timeIntervalSince1970)
     }
-}
-
-private enum PaymentUnpaidFilter: String {
-    case upcoming
-    case overdue
 }
 
 private enum PaymentGroupMode: String, CaseIterable {
@@ -878,9 +834,9 @@ private extension E7payment {
 }
 
 private struct PaymentCombinedCard: View {
-    let unpaidItems: [PaymentDisplayItem]
+    let upcomingItems: [PaymentDisplayItem]
+    let overdueItems: [PaymentDisplayItem]
     let paidItems: [PaymentDisplayItem]
-    let unpaidFilter: PaymentUnpaidFilter
     let onToggle: (PaymentDisplayItem) -> Void
     let togglingPaymentIDs: Set<String>
     let hasMorePaid: Bool
@@ -895,9 +851,15 @@ private struct PaymentCombinedCard: View {
     private var indexedPaidItems: [(offset: Int, element: PaymentDisplayItem)] {
         Array(paidItems.enumerated())
     }
-    
+    private var indexedOverdueItems: [(offset: Int, element: PaymentDisplayItem)] {
+        Array(overdueItems.enumerated())
+    }
+
+    private var hasOverdue: Bool { !overdueItems.isEmpty }
+    private var overdueAccentColor: Color { Color(.systemRed) }
+
     private var unpaidGrouped: PaymentUnpaidGrouped {
-        PaymentUnpaidGrouped.build(from: unpaidItems, windowDays: windowDays)
+        PaymentUnpaidGrouped.build(from: upcomingItems, windowDays: windowDays)
     }
 
     /// 済み側の区切り線表示可否
@@ -907,38 +869,14 @@ private struct PaymentCombinedCard: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if unpaidFilter == .upcoming {
-                let indexedSections = Array(unpaidGrouped.sections.enumerated())
-                ForEach(indexedSections, id: \.element.id) { sectionIndex, section in
-                    if 0 < sectionIndex {
-                        PaymentSectionSeparator()
-                    }
-                    if !section.items.isEmpty {
-                        let indexedItems = Array(section.items.enumerated())
-                        ForEach(indexedItems, id: \.element.id) { index, payment in
-                            PaymentNavigationRow(
-                                item: payment,
-                                rowID: payment.id,
-                                isToggling: togglingPaymentIDs.contains(payment.id),
-                                onToggle: onToggle,
-                                onNavigateToDetail: onNavigateToDetail
-                            )
-                            if index + 1 < section.items.count {
-                                PaymentRowDivider()
-                            }
-                        }
-                    }
-                    // 空セクションは PaymentEmptyRow を省き、フッター（¥0）のみ表示する
-                    PaymentPeriodFooter(
-                        title: section.footerTitle,
-                        amount: section.totalAmount
-                    )
+            // 1. 未払(今後) — 期間別にセクション化して表示
+            let indexedSections = Array(unpaidGrouped.sections.enumerated())
+            ForEach(indexedSections, id: \.element.id) { sectionIndex, section in
+                if 0 < sectionIndex {
+                    PaymentSectionSeparator()
                 }
-            } else {
-                if unpaidItems.isEmpty {
-                    PaymentEmptyRow()
-                } else {
-                    let indexedItems = Array(unpaidItems.enumerated())
+                if !section.items.isEmpty {
+                    let indexedItems = Array(section.items.enumerated())
                     ForEach(indexedItems, id: \.element.id) { index, payment in
                         PaymentNavigationRow(
                             item: payment,
@@ -947,20 +885,71 @@ private struct PaymentCombinedCard: View {
                             onToggle: onToggle,
                             onNavigateToDetail: onNavigateToDetail
                         )
-                        if index + 1 < unpaidItems.count {
+                        if index + 1 < section.items.count {
                             PaymentRowDivider()
                         }
                     }
                 }
+                // 空セクションは PaymentEmptyRow を省き、フッター（¥0）のみ表示する
+                PaymentPeriodFooter(
+                    title: section.footerTitle,
+                    amount: section.totalAmount
+                )
             }
 
-            // 境目を太線で区切り、上下にラベルを置いて文脈を維持する
-            PaymentBoundaryMarker()
-            // 動的な見た目と切り離した透明アンカーでスクロール位置を安定させる
-            Color.clear
-                .frame(height: 1)
-                .id(boundaryAnchorID)
+            // 2. 過ぎた未払 — 独立した中間エリアとして表示
+            if hasOverdue {
+                // 過ぎた未払がある時は、このエリアの先頭を初期表示の目印にする
+                Color.clear
+                    .frame(height: 1)
+                    .id(boundaryAnchorID)
 
+                VStack(spacing: 0) {
+                    PaymentOverdueHeader(tintColor: overdueAccentColor)
+                    ForEach(indexedOverdueItems, id: \.element.id) { index, payment in
+                        PaymentNavigationRow(
+                            item: payment,
+                            rowID: payment.id,
+                            isToggling: togglingPaymentIDs.contains(payment.id),
+                            onToggle: onToggle,
+                            onNavigateToDetail: onNavigateToDetail
+                        )
+                        if index + 1 < overdueItems.count {
+                            PaymentRowDivider()
+                        }
+                    }
+                }
+                .background(
+                    // 未払色とは違う薄い警告色で、過ぎた未払エリアを区別する
+                    LinearGradient(
+                        colors: [overdueAccentColor.opacity(0.08), .clear, overdueAccentColor.opacity(0.06)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .overlay(
+                    HStack(spacing: 0) {
+                        Rectangle()
+                            .fill(overdueAccentColor)
+                            .frame(width: 3)
+                        Spacer(minLength: 0)
+                        Rectangle()
+                            .fill(overdueAccentColor)
+                            .frame(width: 3)
+                    }
+                    .opacity(0.82)
+                )
+            } else {
+                // 過ぎた未払が無い時は、従来通り境界を初期表示の目印にする
+                Color.clear
+                    .frame(height: 1)
+                    .id(boundaryAnchorID)
+            }
+
+            // 未払/済みの本当の境界は常に1本だけにする
+            PaymentPaidBoundaryMarker()
+
+            // 3. 引き落とし済み
             if !paidItems.isEmpty {
                 ForEach(indexedPaidItems, id: \.element.id) { index, payment in
                     PaymentNavigationRow(
@@ -998,14 +987,14 @@ private struct PaymentCombinedCard: View {
         .overlay(
             GeometryReader { proxy in
                 let cardHeight = proxy.size.height
-                let splitY = min(max(boundaryMidY, 0), cardHeight)
+                let unpaidPaidY = min(max(boundaryMidY, 0), cardHeight)
                 ZStack {
                     // 境界線より上側の外枠は未払色
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .stroke(COLOR_UNPAID, lineWidth: 1.5)
                         .mask(
                             Rectangle()
-                                .frame(width: proxy.size.width, height: splitY)
+                                .frame(width: proxy.size.width, height: unpaidPaidY)
                                 .frame(maxHeight: .infinity, alignment: .top)
                         )
                     // 境界線より下側の外枠は払済み色
@@ -1013,7 +1002,7 @@ private struct PaymentCombinedCard: View {
                         .stroke(COLOR_PAID, lineWidth: 1.5)
                         .mask(
                             Rectangle()
-                                .frame(width: proxy.size.width, height: max(cardHeight - splitY, 0))
+                                .frame(width: proxy.size.width, height: max(cardHeight - unpaidPaidY, 0))
                                 .frame(maxHeight: .infinity, alignment: .bottom)
                         )
                 }
@@ -1021,10 +1010,11 @@ private struct PaymentCombinedCard: View {
         )
         .coordinateSpace(name: "paymentCombinedCard")
         // 行が未払/済みの間を移る変化を自然に見せる
-        .animation(.easeInOut(duration: 0.55), value: unpaidItems.map(\.id))
+        .animation(.easeInOut(duration: 0.55), value: upcomingItems.map(\.id))
+        .animation(.easeInOut(duration: 0.55), value: overdueItems.map(\.id))
         .animation(.easeInOut(duration: 0.55), value: paidItems.map(\.id))
         .onPreferenceChange(PaymentBoundaryMidYPreferenceKey.self) { y in
-            if y > 0 {
+            if 0 < y {
                 boundaryMidY = y
             }
         }
@@ -1092,7 +1082,34 @@ private struct PaymentRowDivider: View {
     }
 }
 
-private struct PaymentBoundaryMarker: View {
+/// 過ぎた未払エリアの見出し
+private struct PaymentOverdueHeader: View {
+    let tintColor: Color
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var labelColor: Color {
+        colorScheme == .dark ? Color.white.opacity(0.92) : tintColor
+    }
+
+    var body: some View {
+        Text("payment.section.overdue")
+            .font(.headline.weight(.semibold))
+            .foregroundStyle(labelColor)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.vertical, 10)
+            .background(
+                LinearGradient(
+                    colors: [tintColor.opacity(colorScheme == .dark ? 0.30 : 0.16), .clear],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+    }
+}
+
+/// 未払/済みの本当の境界マーカー
+private struct PaymentPaidBoundaryMarker: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private var boundaryColor: Color {
@@ -1116,21 +1133,20 @@ private struct PaymentBoundaryMarker: View {
                 .foregroundStyle(labelColor)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, 10)
-            .background(
-                // 上端の色をラベル帯に自然に引き込む
-                LinearGradient(
-                    colors: [COLOR_UNPAID.opacity(edgeHighlightOpacity * 0.55), .clear],
-                    startPoint: .top,
-                    endPoint: .bottom
+                .background(
+                    // 未払側の色を境界に寄せる
+                    LinearGradient(
+                        colors: [COLOR_UNPAID.opacity(edgeHighlightOpacity * 0.55), .clear],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
                 )
-            )
 
-            // 境界線だけ明るくする
+            // 境界線だけ明るくし、外枠色の切替位置として親へ伝える
             Rectangle()
                 .fill(boundaryColor)
                 .frame(height: 2)
                 .background(
-                    // 境界線の位置を親へ伝える
                     GeometryReader { proxy in
                         Color.clear.preference(
                             key: PaymentBoundaryMidYPreferenceKey.self,
@@ -1153,7 +1169,7 @@ private struct PaymentBoundaryMarker: View {
                     )
                 )
         }
-        .padding(.top, 8)
+        .padding(.top, 0)
         .padding(.bottom, 6)
     }
 }
@@ -1163,7 +1179,7 @@ private struct PaymentBoundaryMidYPreferenceKey: PreferenceKey {
 
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         let next = nextValue()
-        if next > 0 {
+        if 0 < next {
             value = next
         }
     }

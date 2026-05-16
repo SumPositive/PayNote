@@ -2214,6 +2214,23 @@
         }
       }
     },
+    "payment.section.overdue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Past Due"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "引き落とし日を過ぎています"
+          }
+        }
+      }
+    },
     "payment.section.paidAfterDebit": {
       "extractionState": "manual",
       "localizations": {
