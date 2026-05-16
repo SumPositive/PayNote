@@ -856,7 +856,7 @@ private struct PaymentCombinedCard: View {
     }
 
     private var hasOverdue: Bool { !overdueItems.isEmpty }
-    private var overdueAccentColor: Color { Color(.systemRed) }
+    private var overdueAccentColor: Color { Color(red: 0.78, green: 0.28, blue: 0.36) }
 
     private var unpaidGrouped: PaymentUnpaidGrouped {
         PaymentUnpaidGrouped.build(from: upcomingItems, windowDays: windowDays)
@@ -897,13 +897,14 @@ private struct PaymentCombinedCard: View {
                 )
             }
 
-            // 2. 過ぎた未払 — 独立した中間エリアとして表示
+            // 2. 未払帯と引き落とし済み帯の間に、確認待ちを挟む
+            Color.clear
+                .frame(height: 1)
+                .id(boundaryAnchorID)
+            PaymentUnpaidBoundaryBand()
+            // 確認待ちが挟まる場合は、白い境界線が上下に分かれたように見せる
+            PaymentBoundaryGlowLine(reportsBoundary: false)
             if hasOverdue {
-                // 過ぎた未払がある時は、このエリアの先頭を初期表示の目印にする
-                Color.clear
-                    .frame(height: 1)
-                    .id(boundaryAnchorID)
-
                 VStack(spacing: 0) {
                     PaymentOverdueHeader(tintColor: overdueAccentColor)
                     ForEach(indexedOverdueItems, id: \.element.id) { index, payment in
@@ -939,15 +940,10 @@ private struct PaymentCombinedCard: View {
                     }
                     .opacity(0.82)
                 )
-            } else {
-                // 過ぎた未払が無い時は、従来通り境界を初期表示の目印にする
-                Color.clear
-                    .frame(height: 1)
-                    .id(boundaryAnchorID)
             }
-
-            // 未払/済みの本当の境界は常に1本だけにする
-            PaymentPaidBoundaryMarker()
+            // 未払/済みの本当の境界線は、確認待ちの下に1本だけ置く
+            PaymentBoundaryGlowLine(reportsBoundary: true)
+            PaymentPaidBoundaryBand()
 
             // 3. 引き落とし済み
             if !paidItems.isEmpty {
@@ -1089,7 +1085,7 @@ private struct PaymentOverdueHeader: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private var labelColor: Color {
-        colorScheme == .dark ? Color.white.opacity(0.92) : tintColor
+        colorScheme == .dark ? tintColor.opacity(0.92) : tintColor.opacity(0.88)
     }
 
     var body: some View {
@@ -1108,68 +1104,118 @@ private struct PaymentOverdueHeader: View {
     }
 }
 
-/// 未払/済みの本当の境界マーカー
-private struct PaymentPaidBoundaryMarker: View {
+/// 未払側の境界帯
+private struct PaymentUnpaidBoundaryBand: View {
     @Environment(\.colorScheme) private var colorScheme
 
-    private var boundaryColor: Color {
-        colorScheme == .dark ? Color.white : Color.black
-    }
-
-    private var edgeHighlightOpacity: Double {
-        // 明るすぎないように、端の発色は抑えめにする
-        colorScheme == .dark ? 0.44 : 0.26
-    }
-
     private var labelColor: Color {
-        // ダーク時のみラベル文字を見やすくする
-        colorScheme == .dark ? Color.white.opacity(0.92) : Color.secondary
+        colorScheme == .dark ? COLOR_UNPAID.opacity(0.95) : COLOR_UNPAID
+    }
+
+    private var bottomColor: Color {
+        colorScheme == .dark ? Color(uiColor: .secondarySystemGroupedBackground) : Color.white
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Text("payment.section.unpaidBeforeDebit")
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(labelColor)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 10)
-                .background(
-                    // 未払側の色を境界に寄せる
-                    LinearGradient(
-                        colors: [COLOR_UNPAID.opacity(edgeHighlightOpacity * 0.55), .clear],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+        Text("payment.section.unpaidBeforeDebit")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(labelColor)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.top, 8)
+            .padding(.bottom, 8)
+            .background(
+                // 未払帯も他色を混ぜず、オレンジから白系へ変化させる
+                LinearGradient(
+                    colors: [
+                        COLOR_UNPAID.opacity(colorScheme == .dark ? 0.42 : 0.26),
+                        bottomColor,
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
                 )
+            )
+    }
+}
 
-            // 境界線だけ明るくし、外枠色の切替位置として親へ伝える
-            Rectangle()
-                .fill(boundaryColor)
-                .frame(height: 2)
-                .background(
-                    GeometryReader { proxy in
-                        Color.clear.preference(
-                            key: PaymentBoundaryMidYPreferenceKey.self,
-                            value: proxy.frame(in: .named("paymentCombinedCard")).midY
-                        )
-                    }
-                )
+/// 未払/済みの本当の境界線
+private struct PaymentBoundaryGlowLine: View {
+    let reportsBoundary: Bool
 
-            Text("payment.section.paidAfterDebit")
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(labelColor)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 10)
-                .background(
-                    // 下端の色をラベル帯に自然に引き込む
-                    LinearGradient(
-                        colors: [.clear, COLOR_PAID.opacity(edgeHighlightOpacity * 0.55)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var glowLineColor: Color {
+        colorScheme == .dark ? Color.white.opacity(0.92) : Color.white
+    }
+
+    var body: some View {
+        // 中央はアプリアイコンの発光線に寄せた白いラインで区切る
+        Rectangle()
+            .fill(
+                LinearGradient(
+                    colors: [
+                        Color.white.opacity(0.26),
+                        glowLineColor,
+                        Color.white.opacity(0.26),
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
                 )
-        }
-        .padding(.top, 0)
+            )
+            .frame(height: 2)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.60 : 0.42), radius: 4, x: 0, y: 0)
+            .background(
+                LinearGradient(
+                    colors: [
+                        COLOR_UNPAID.opacity(colorScheme == .dark ? 0.20 : 0.10),
+                        .clear,
+                        COLOR_PAID.opacity(colorScheme == .dark ? 0.20 : 0.10),
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .background(
+                // 発光線の中央を、外枠色の切替位置として親へ伝える
+                GeometryReader { proxy in
+                    Color.clear.preference(
+                        key: PaymentBoundaryMidYPreferenceKey.self,
+                        value: reportsBoundary ? proxy.frame(in: .named("paymentCombinedCard")).midY : 0
+                    )
+                }
+            )
+    }
+}
+
+/// 引き落とし済み側の境界帯
+private struct PaymentPaidBoundaryBand: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var labelColor: Color {
+        colorScheme == .dark ? COLOR_PAID.opacity(0.95) : COLOR_PAID
+    }
+
+    private var topColor: Color {
+        colorScheme == .dark ? Color(uiColor: .secondarySystemGroupedBackground) : Color.white
+    }
+
+    var body: some View {
+        Text("payment.section.paidAfterDebit")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(labelColor)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.top, 8)
+            .padding(.bottom, 8)
+            .background(
+                // 引き落とし済み帯は他色を混ぜず、白系からグリーンへ変化させる
+                LinearGradient(
+                    colors: [
+                        topColor,
+                        COLOR_PAID.opacity(colorScheme == .dark ? 0.42 : 0.26),
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
         .padding(.bottom, 6)
     }
 }
