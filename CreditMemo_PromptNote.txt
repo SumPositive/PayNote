@@ -1009,4 +1009,8 @@ UIを刷新されるのは構いませんが従来できていた事を大きく
 
 「引き落とし確認待ち」になると未払帯と引き落とす済み帯の間に入った方が良さそうに思う
 
+private var upcomingItems: [PaymentDisplayItem] { buildDisplayItems(...) }
+private var overdueItems: [PaymentDisplayItem]  { buildDisplayItems(...) }
+private var paidItems: [PaymentDisplayItem]     { buildDisplayItems(...) }
+これらが、body 評価のたびに再構築 + animation(_:value:) の値判定で map(\.id) の Array 生成も発生。@State で保持し、upcomingUnpaidPayments 等が変わった時だけ更新するほうが軽量＆安定（特に scrollPositionKey でも再評価されるため、現在は同一フレーム内で何度も呼ばれている可能性大）するように思うがどうだろうか
 

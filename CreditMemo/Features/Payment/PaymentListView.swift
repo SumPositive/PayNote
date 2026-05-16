@@ -11,6 +11,13 @@ struct PaymentListView: View {
     @State private var upcomingUnpaidPayments: [E7payment] = []
     @State private var overdueUnpaidPayments: [E7payment] = []
     @State private var paidPayments: [E7payment] = []
+    @State private var upcomingItems: [PaymentDisplayItem] = []
+    @State private var overdueItems: [PaymentDisplayItem] = []
+    @State private var paidItems: [PaymentDisplayItem] = []
+    @State private var upcomingItemIDs: [String] = []
+    @State private var overdueItemIDs: [String] = []
+    @State private var paidItemIDs: [String] = []
+    @State private var unpaidGrouped = PaymentUnpaidGrouped(sections: [])
     @State private var allPaidCount = 0
     @State private var isLoadingMorePaid = false
     @State private var groupMode: PaymentGroupMode = .date
@@ -38,18 +45,6 @@ struct PaymentListView: View {
 
     private var hasMorePaid: Bool {
         paidPayments.count < allPaidCount
-    }
-
-    private var upcomingItems: [PaymentDisplayItem] {
-        buildDisplayItems(from: upcomingUnpaidPayments, isPaid: false)
-    }
-
-    private var overdueItems: [PaymentDisplayItem] {
-        buildDisplayItems(from: overdueUnpaidPayments, isPaid: false)
-    }
-
-    private var paidItems: [PaymentDisplayItem] {
-        buildDisplayItems(from: paidPayments, isPaid: true)
     }
 
     private var hasAnyPayments: Bool {
@@ -143,13 +138,16 @@ struct PaymentListView: View {
                                     upcomingItems: upcomingItems,
                                     overdueItems: overdueItems,
                                     paidItems: paidItems,
+                                    upcomingItemIDs: upcomingItemIDs,
+                                    overdueItemIDs: overdueItemIDs,
+                                    paidItemIDs: paidItemIDs,
+                                    unpaidGrouped: unpaidGrouped,
                                     onToggle: togglePaid,
                                     togglingPaymentIDs: togglingPaymentIDs,
                                     hasMorePaid: hasMorePaid,
                                     onLoadMorePaid: loadMorePaidIfNeeded,
                                     boundaryAnchorID: paymentBoundaryAnchorID,
                                     paidFirstRowAnchorID: paidFirstRowAnchorID,
-                                    windowDays: paymentWindowDays,
                                     onNavigateToDetail: { autoScrollEnabled = false }
                                 )
                             }
@@ -189,7 +187,7 @@ struct PaymentListView: View {
                     // 口座で絞り込む時は、まず日付別で見せる。
                     groupMode = .date
                 }
-                requestBoundaryScroll()
+                refreshDisplayItemsAndScroll()
             }
         }
         .sheet(isPresented: $showCardPicker) {
@@ -206,14 +204,17 @@ struct PaymentListView: View {
                     // 手段で絞り込む時は、まず日付別で見せる。
                     groupMode = .date
                 }
-                requestBoundaryScroll()
+                refreshDisplayItemsAndScroll()
             }
         }
         .onChange(of: groupMode) { _, _ in
-            requestBoundaryScroll()
+            refreshDisplayItemsAndScroll()
         }
         .onChange(of: filterMode) { _, _ in
-            requestBoundaryScroll()
+            refreshDisplayItemsAndScroll()
+        }
+        .onChange(of: paymentWindowDays) { _, _ in
+            refreshDisplayItemsAndScroll()
         }
     }
 
@@ -223,6 +224,7 @@ struct PaymentListView: View {
         overdueUnpaidPayments = fetchOverdueUnpaidPayments(limit: overduePageSize)
         allPaidCount = fetchPaidCount()
         paidPayments = fetchPaidPayments(offset: 0, limit: pageSize)
+        rebuildDisplayItems()
     }
 
     private func scrollToInitialPosition(proxy: ScrollViewProxy) async {
@@ -248,6 +250,27 @@ struct PaymentListView: View {
         // 条件変更後は必ず未払/済みの境界へ戻す。
         autoScrollEnabled = true
         boundaryScrollRequest += 1
+    }
+
+    private func refreshDisplayItemsAndScroll() {
+        // 集計軸や絞り込みが変わった時だけ表示用モデルを作り直す
+        rebuildDisplayItems()
+        requestBoundaryScroll()
+    }
+
+    private func rebuildDisplayItems() {
+        let nextUpcomingItems = buildDisplayItems(from: upcomingUnpaidPayments, isPaid: false)
+        let nextOverdueItems = buildDisplayItems(from: overdueUnpaidPayments, isPaid: false)
+        let nextPaidItems = buildDisplayItems(from: paidPayments, isPaid: true)
+
+        upcomingItems = nextUpcomingItems
+        overdueItems = nextOverdueItems
+        paidItems = nextPaidItems
+        upcomingItemIDs = nextUpcomingItems.map(\.id)
+        overdueItemIDs = nextOverdueItems.map(\.id)
+        paidItemIDs = nextPaidItems.map(\.id)
+        // 期間別グループも body 評価のたびに作らず、表示条件変更時だけ更新する
+        unpaidGrouped = PaymentUnpaidGrouped.build(from: nextUpcomingItems, windowDays: paymentWindowDays)
     }
 
     private func togglePaid(_ item: PaymentDisplayItem) {
@@ -294,6 +317,7 @@ struct PaymentListView: View {
         allPaidCount = fetchPaidCount()
         let nextLimit = max(pageSize, currentPaidCount)
         paidPayments = fetchPaidPayments(offset: 0, limit: nextLimit)
+        rebuildDisplayItems()
     }
 
     private func loadMorePaidIfNeeded() {
@@ -306,6 +330,7 @@ struct PaymentListView: View {
         isLoadingMorePaid = true
         let nextPage = fetchPaidPayments(offset: paidPayments.count, limit: pageSize)
         paidPayments.append(contentsOf: nextPage)
+        rebuildDisplayItems()
         isLoadingMorePaid = false
     }
 
@@ -824,13 +849,16 @@ private struct PaymentCombinedCard: View {
     let upcomingItems: [PaymentDisplayItem]
     let overdueItems: [PaymentDisplayItem]
     let paidItems: [PaymentDisplayItem]
+    let upcomingItemIDs: [String]
+    let overdueItemIDs: [String]
+    let paidItemIDs: [String]
+    let unpaidGrouped: PaymentUnpaidGrouped
     let onToggle: (PaymentDisplayItem) -> Void
     let togglingPaymentIDs: Set<String>
     let hasMorePaid: Bool
     let onLoadMorePaid: () -> Void
     let boundaryAnchorID: String
     let paidFirstRowAnchorID: String
-    let windowDays: Int
     let onNavigateToDetail: () -> Void
     @State private var boundaryMidY: CGFloat = 0
 
@@ -844,10 +872,6 @@ private struct PaymentCombinedCard: View {
 
     private var hasOverdue: Bool { !overdueItems.isEmpty }
     private var overdueAccentColor: Color { Color(red: 0.78, green: 0.28, blue: 0.36) }
-
-    private var unpaidGrouped: PaymentUnpaidGrouped {
-        PaymentUnpaidGrouped.build(from: upcomingItems, windowDays: windowDays)
-    }
 
     /// 済み側の区切り線表示可否
     private func showsPaidDivider(after index: Int) -> Bool {
@@ -993,9 +1017,9 @@ private struct PaymentCombinedCard: View {
         )
         .coordinateSpace(name: "paymentCombinedCard")
         // 行が未払/済みの間を移る変化を自然に見せる
-        .animation(.easeInOut(duration: 0.55), value: upcomingItems.map(\.id))
-        .animation(.easeInOut(duration: 0.55), value: overdueItems.map(\.id))
-        .animation(.easeInOut(duration: 0.55), value: paidItems.map(\.id))
+        .animation(.easeInOut(duration: 0.55), value: upcomingItemIDs)
+        .animation(.easeInOut(duration: 0.55), value: overdueItemIDs)
+        .animation(.easeInOut(duration: 0.55), value: paidItemIDs)
         .onPreferenceChange(PaymentBoundaryMidYPreferenceKey.self) { y in
             if 0 < y {
                 boundaryMidY = y
